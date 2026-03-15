@@ -44,9 +44,33 @@
                 <!-- PROFILE PAGE -->
                 <div id="tab-profile" class="tab-page">
                     <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Profile</h2>
-                    <form action="{{ route('settings.update', Auth::user()->id) }}" method="POST" class="space-y-4">
+                    <form action="{{ route('settings.update', Auth::user()->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
                         @csrf
                         @method('PATCH')
+
+                        <!-- PROFILE PICTURE -->
+                        <div class="flex items-center gap-6 pb-4 border-b dark:border-stone-700">
+                            <div class="relative group">
+                                <img id="avatar-preview" src="{{ Auth::user()->profile_photo_url }}" 
+                                    class="w-24 h-24 rounded-2xl object-cover shadow-lg border-4 border-white dark:border-stone-900 group-hover:opacity-75 transition-opacity">
+                                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                    <i data-lucide="camera" class="w-8 h-8 text-white"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100">Profile Picture</h3>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">PNG, JPG or GIF. Max 2MB.</p>
+                                <div class="mt-3 flex gap-2">
+                                    <label class="cursor-pointer bg-stone-100 dark:bg-stone-700 hover:bg-stone-200 dark:hover:bg-stone-600 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
+                                        Change Photo
+                                        <input type="file" name="avatar" class="hidden" accept="image/*" onchange="previewImage(this)">
+                                    </label>
+                                    <button type="button" class="text-xs font-bold text-red-500 hover:text-red-600 px-2 py-1.5 transition-colors">
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -174,6 +198,18 @@
                     document.getElementById("tab-" + target).classList.remove("hidden");
                 });
             });
+
+            // --- Image Preview Logic ---
+            window.previewImage = function(input) {
+                const preview = document.getElementById('avatar-preview');
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        preview.src = e.target.result;
+                    }
+                    reader.readAsDataURL(input.files[0]);
+                }
+            }
 
             // --- Dark Mode Toggle Logic ---
             const themeToggleBtn = document.getElementById('theme-toggle');

@@ -22,11 +22,20 @@ class UserFactory extends Factory
      */
     public function definition()
     {
+        $name = $this->faker->name();
         return [
-            'name' => $this->faker->name(),
+            'name' => $name,
+            'username' => strtolower(str_replace(' ', '.', $name)) . $this->faker->numberBetween(1, 99),
             'email' => $this->faker->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
+            'bio' => $this->faker->sentence(),
+            'location' => $this->faker->city() . ', ' . $this->faker->country(),
+            'cultural_background' => $this->faker->randomElement(['Yoruba', 'Igbo', 'Hausa', 'Scottish', 'Maori', 'Navajo', 'Japanese']),
+            'languages' => [$this->faker->languageCode(), $this->faker->languageCode()],
+            'cultural_interests' => [$this->faker->word(), $this->faker->word()],
+            'is_online' => $this->faker->boolean(20),
+            'last_seen' => now(),
             'remember_token' => Str::random(10),
         ];
     }

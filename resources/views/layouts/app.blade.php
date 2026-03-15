@@ -50,6 +50,44 @@
         .animate-backdrop-fade {
             animation: backdrop-fade 0.3s ease-out forwards;
         }
+
+        /* Custom Modern Scrollbar */
+        .modern-scrollbar::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        .modern-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .modern-scrollbar::-webkit-scrollbar-thumb {
+            background: #d6d3d1; /* stone-300 */
+            border-radius: 10px;
+            transition: background 0.2s ease;
+        }
+
+        .modern-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a8a29e; /* stone-400 */
+        }
+
+        .dark .modern-scrollbar::-webkit-scrollbar-thumb {
+            background: #44403c; /* stone-700 */
+        }
+
+        .dark .modern-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #57534e; /* stone-600 */
+        }
+
+        /* Firefox Support */
+        .modern-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #d6d3d1 transparent;
+        }
+
+        .dark .modern-scrollbar {
+            scrollbar-color: #44403c transparent;
+        }
     </style>
     
     <script>
@@ -185,7 +223,7 @@
     </header>
 
     <div class="flex flex-1">
-        <aside class="hidden md:block md:fixed md:left-0 md:top-16 md:w-20 md:h-[calc(100vh-4rem)] md:bg-white dark:md:bg-stone-900 md:border-r md:border-stone-200 dark:md:border-stone-800 md:overflow-y-auto md:overflow-x-hidden scrollbar-hide z-40 transition-colors duration-200">
+        <aside class="hidden md:block md:fixed md:left-0 md:top-16 md:w-20 md:h-[calc(100vh-4rem)] md:bg-white dark:md:bg-stone-900 md:border-r md:border-stone-200 dark:md:border-stone-800 md:overflow-y-auto md:overflow-x-hidden modern-scrollbar z-40 transition-colors duration-200">
             <div class="p-4">
                 <!-- Main Navigation -->
                 <nav class="space-y-3">

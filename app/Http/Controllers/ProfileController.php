@@ -110,20 +110,27 @@ class ProfileController extends Controller
     {
         $user = User::findOrFail($id);
 
-        // Handle POST updates
-        if ($request->isMethod('post')) {
+        // Handle updates
+        if ($request->isMethod('post') || $request->isMethod('patch') || $request->isMethod('put')) {
             // Update basic info
-            if ($request->has('name') || $request->has('email')) {
-                $request->validate([
-                    'name' => 'required|string|max:255',
-                    'email' => 'required|email|unique:users,email,' . $user->id,
-                ]);
+            // Update profile info
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email,' . $user->id,
+                'username' => 'nullable|string|max:255|unique:users,username,' . $user->id,
+                'bio' => 'nullable|string|max:1000',
+                'location' => 'nullable|string|max:255',
+                'website' => 'nullable|url|max:255',
+            ]);
 
-                $user->update([
-                    'name' => $request->name,
-                    'email' => $request->email,
-                ]);
-            }
+            $user->update([
+                'name' => $request->name,
+                'email' => $request->email,
+                'username' => $request->username,
+                'bio' => $request->bio,
+                'location' => $request->location,
+                'website' => $request->website,
+            ]);
 
             // Handle password change
             if ($request->filled('password')) {
