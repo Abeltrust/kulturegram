@@ -17,8 +17,41 @@ class MessageController extends Controller
             ->latest('updated_at')
             ->get();
 
-        // Build "active users" list
-        $activeUsers = User::where('id', '!=', Auth::id())
+        return view('messages.index', [
+            'conversations' => $conversations,
+            'activeUsers' => $this->getActiveUsers(),
+        ]);
+    }
+
+    public function show(Conversation $conversation)
+    {
+        if (!$conversation->participants()->where('user_id', Auth::id())->exists()) {
+            abort(403);
+        }
+
+        $messages = $conversation->messages()
+            ->with('user')
+            ->latest()
+            ->limit(100)
+            ->get()
+            ->reverse();
+
+        // Mark as read
+        $conversation->messages()
+            ->where('user_id', '!=', Auth::id())
+            ->where('status', '!=', 'read')
+            ->update(['status' => 'read']);
+
+        return view('messages.show', [
+            'selectedConversation' => $conversation,
+            'messages' => $messages,
+            'activeUsers' => $this->getActiveUsers(),
+        ]);
+    }
+
+    protected function getActiveUsers()
+    {
+        return User::where('id', '!=', Auth::id())
             ->get()
             ->map(function ($user) {
                 $lastMsg = Message::where(function ($q) use ($user) {
@@ -48,36 +81,6 @@ class MessageController extends Controller
                     'last_status' => $lastMsg?->status ?? null,
                 ];
             });
-
-        return view('messages.index', [
-            'conversations' => $conversations,
-            'activeUsers' => $activeUsers,
-        ]);
-    }
-
-    public function show(Conversation $conversation)
-    {
-        if (!$conversation->participants()->where('user_id', Auth::id())->exists()) {
-            abort(403);
-        }
-
-        $messages = $conversation->messages()
-            ->with('user')
-            ->latest()
-            ->limit(100)
-            ->get()
-            ->reverse();
-
-        // Mark as read
-        $conversation->messages()
-            ->where('user_id', '!=', Auth::id())
-            ->where('status', '!=', 'read')
-            ->update(['status' => 'read']);
-
-        return view('messages.show', [
-            'selectedConversation' => $conversation,
-            'messages' => $messages,
-        ]);
     }
 
     public function store(Request $request, Conversation $conversation)
