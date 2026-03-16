@@ -174,22 +174,30 @@
               $skeletonRoutes = ['timeline.index', 'cultural-hub.index', 'discover.index', 'education.index', 'communities.index', 'events.index'];
               $showSkeleton = collect($skeletonRoutes)->filter(fn($route) => request()->routeIs($route))->isNotEmpty();
           @endphp
-          x-data="{ pageLoading: {{ $showSkeleton ? 'true' : 'false' }}, isMainPage: {{ $showSkeleton ? 'true' : 'false' }} }" 
+          x-data="{ pageLoading: false, isMainPage: {{ $showSkeleton ? 'true' : 'false' }} }" 
           x-init="
             if (isMainPage) {
-                // Use DOMContentLoaded (HTML ready) instead of load (all resources done).
-                // This hides the skeleton as soon as the page structure is visible,
-                // NOT waiting for every image to download.
-                if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', () => pageLoading = false);
-                } else {
-                    pageLoading = false;
+                // Only show skeleton on genuinely poor connections.
+                // Network Information API: effectiveType can be 'slow-2g', '2g', '3g', '4g'
+                const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                const isSlowNetwork = conn && (
+                    conn.saveData === true ||
+                    conn.effectiveType === 'slow-2g' ||
+                    conn.effectiveType === '2g'
+                );
+
+                if (isSlowNetwork) {
+                    pageLoading = true;
+                    // Dismiss as soon as the HTML structure is ready (not waiting for images)
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', () => pageLoading = false);
+                    } else {
+                        pageLoading = false;
+                    }
                 }
             }
-            // Instantly hide skeleton on bfcache restore (browser back/forward)
-            window.addEventListener('pageshow', (event) => {
-                pageLoading = false;
-            });
+            // Always instantly clear on bfcache restore (back/forward navigation)
+            window.addEventListener('pageshow', () => pageLoading = false);
           ">
     <!-- Navigation Progress Bar (appears instantly on link click) -->
     <div id="nav-progress"></div>
