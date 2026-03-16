@@ -16,8 +16,9 @@
                     {{-- Avatar (Overlapping) --}}
                     <div
                         class="relative w-20 h-20 sm:w-36 sm:h-36 rounded-full border-4 border-white dark:border-stone-900 shadow-md overflow-hidden bg-stone-100 dark:bg-stone-800 -mt-10 sm:-mt-18 flex-shrink-0 z-10">
-                        <img src="{{ $user->profile_photo_url }}" alt="{{ $user->name }}"
-                            class="w-full h-full object-cover">
+                            <img src="{{ $user->profile_photo_url }}" alt="{{ $user->name }}"
+                                class="w-full h-full object-cover"
+                                loading="lazy">
 
                         {{-- Upload Profile Photo --}}
                         @auth

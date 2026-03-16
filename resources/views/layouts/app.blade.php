@@ -11,6 +11,12 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
     
+    <!-- Resource Hints: warm up CDN connections early -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="dns-prefetch" href="https://unpkg.com">
+    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+
     <!-- Scripts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
@@ -97,6 +103,26 @@
         .animate-tooltip {
             animation: tooltip-scale 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
+
+        /* ─── Navigation Progress Bar ─────────────────────── */
+        #nav-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            width: 0%;
+            background: linear-gradient(to right, #f59e0b, #ea580c);
+            z-index: 9999;
+            transition: width 0.4s ease, opacity 0.4s ease;
+            opacity: 0;
+            pointer-events: none;
+            border-radius: 0 2px 2px 0;
+            box-shadow: 0 0 8px rgba(245,158,11,0.6);
+        }
+        #nav-progress.active {
+            opacity: 1;
+        }
+        /* ────────────────────────────────────────────────── */
     </style>
     
     <script>
@@ -151,15 +177,23 @@
           x-data="{ pageLoading: {{ $showSkeleton ? 'true' : 'false' }}, isMainPage: {{ $showSkeleton ? 'true' : 'false' }} }" 
           x-init="
             if (isMainPage) {
-                window.addEventListener('load', () => pageLoading = false);
-                window.addEventListener('beforeunload', () => pageLoading = true);
-            }
-            window.addEventListener('pageshow', (event) => {
-                if (event.persisted) {
+                // Use DOMContentLoaded (HTML ready) instead of load (all resources done).
+                // This hides the skeleton as soon as the page structure is visible,
+                // NOT waiting for every image to download.
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', () => pageLoading = false);
+                } else {
                     pageLoading = false;
                 }
+            }
+            // Instantly hide skeleton on bfcache restore (browser back/forward)
+            window.addEventListener('pageshow', (event) => {
+                pageLoading = false;
             });
           ">
+    <!-- Navigation Progress Bar (appears instantly on link click) -->
+    <div id="nav-progress"></div>
+
     <!-- Header -->
     <header class="fixed top-0 left-0 right-0 h-16 bg-white/95 dark:bg-stone-900/95 backdrop-blur-sm border-b border-stone-200 dark:border-stone-800 z-50 flex transition-colors duration-200">
         <div class="w-full flex items-center h-full px-4 md:px-6 gap-4">
@@ -616,6 +650,73 @@
         });
     </script>
     
+    <script>
+        // ─── Navigation Progress Bar ────────────────────────────────────────────
+        (function() {
+            const bar = document.getElementById('nav-progress');
+            let timer = null;
+            let width = 0;
+
+            function start() {
+                clearTimeout(timer);
+                width = 0;
+                bar.style.width = '0%';
+                bar.style.opacity = '1';
+                bar.classList.add('active');
+                // Animate to ~80% quickly, then slow down (simulate loading)
+                step();
+            }
+
+            function step() {
+                if (width < 70) {
+                    width += Math.random() * 12 + 4;
+                } else if (width < 90) {
+                    width += Math.random() * 2 + 0.5;
+                } else {
+                    return; // Hold at ~90% until page finishes
+                }
+                if (width > 90) width = 90;
+                bar.style.width = width + '%';
+                timer = setTimeout(step, 250);
+            }
+
+            function finish() {
+                clearTimeout(timer);
+                bar.style.transition = 'width 0.2s ease, opacity 0.4s ease 0.2s';
+                bar.style.width = '100%';
+                setTimeout(() => {
+                    bar.style.opacity = '0';
+                    setTimeout(() => {
+                        bar.style.width = '0%';
+                        bar.style.transition = 'width 0.4s ease, opacity 0.4s ease';
+                    }, 400);
+                }, 200);
+            }
+
+            // Fire on every internal link click
+            document.addEventListener('click', function(e) {
+                const link = e.target.closest('a');
+                if (!link) return;
+                const href = link.getAttribute('href');
+                if (!href || href.startsWith('#') || href.startsWith('javascript') ||
+                    href.startsWith('mailto') || link.getAttribute('target') === '_blank') return;
+                // Only same-origin navigations
+                try {
+                    const url = new URL(href, window.location.origin);
+                    if (url.origin === window.location.origin) start();
+                } catch(ex) {}
+            });
+
+            // Fire on form submissions too
+            document.addEventListener('submit', function() { start(); });
+
+            // Complete when the new page is ready
+            window.addEventListener('DOMContentLoaded', finish);
+            window.addEventListener('pageshow', finish);
+        })();
+        // ────────────────────────────────────────────────────────────────────────
+    </script>
+
     @stack('scripts')
 </body>
 </html>

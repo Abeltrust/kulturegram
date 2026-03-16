@@ -10,7 +10,10 @@
         <div class="absolute inset-0 opacity-40">
             <div class="absolute inset-0 bg-gradient-to-r from-stone-900 via-stone-900/40 to-transparent z-10"></div>
             {{-- We could use a specific education background image here if available --}}
-            <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&q=80&w=2000" class="w-full h-full object-cover" alt="Hub Background">
+            <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&q=80&w=2000" 
+                 class="w-full h-full object-cover" 
+                 alt="Hub Background"
+                 loading="lazy">
         </div>
         
         <div class="relative z-20 px-8 py-16 md:py-24 max-w-2xl">
@@ -68,7 +71,10 @@
                             {{-- Image Container --}}
                             <div class="relative h-56 overflow-hidden bg-stone-100 dark:bg-stone-800">
                                 @if($event->image)
-                                    <img src="{{ asset('storage/' . $event->image) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="{{ $event->title }}">
+                                    <img src="{{ asset('storage/' . $event->image) }}" 
+                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                         alt="{{ $event->title }}"
+                                         loading="lazy">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center text-stone-300">
                                         <i data-lucide="image" class="w-12 h-12"></i>
@@ -114,10 +120,13 @@
                                     </div>
 
                                     <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-2">
-                                            <img src="{{ $event->organizer->profile_photo_url }}" class="w-7 h-7 rounded-full border border-stone-100 dark:border-stone-800" alt="{{ $event->organizer->name }}">
-                                            <span class="text-xs font-bold text-stone-700 dark:text-stone-300">{{ $event->organizer->name }}</span>
-                                        </div>
+                                    <div class="flex items-center gap-2">
+                                        <img src="{{ $event->organizer->profile_photo_url }}" 
+                                             class="w-7 h-7 rounded-full border border-stone-100 dark:border-stone-800" 
+                                             alt="{{ $event->organizer->name }}"
+                                             loading="lazy">
+                                        <span class="text-xs font-bold text-stone-700 dark:text-stone-300">{{ $event->organizer->name }}</span>
+                                    </div>
                                         <a href="{{ route('events.show', $event) }}" class="text-sm font-black uppercase tracking-widest text-amber-600 dark:text-amber-500 hover:text-orange-600 transition flex items-center gap-1">
                                             View <i data-lucide="chevron-right" class="w-4 h-4"></i>
                                         </a>

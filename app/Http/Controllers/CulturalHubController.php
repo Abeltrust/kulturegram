@@ -13,7 +13,7 @@ class CulturalHubController extends Controller
         $category = $request->get('category', 'all');
         $search = $request->get('search');
 
-        $query = Culture::with(['submitter', 'lockIns', 'resonances'])
+        $query = Culture::with(['submitter', 'lockIns.user', 'resonances.user'])
             ->where(function ($q) {
                 $q->where('status', 'approved')
                     ->orWhere('status', 'featured');

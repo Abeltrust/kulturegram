@@ -100,7 +100,7 @@ class CommunityController extends Controller
 
         // Fetch posts directly with pagination
         $posts = $community->communityPosts()
-            ->with('user')
+            ->with(['user', 'taps', 'comments.user'])
             ->latest()
             ->paginate(10);
 

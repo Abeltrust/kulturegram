@@ -104,7 +104,9 @@
                             <!-- Image Section -->
                             <div class="h-40 relative overflow-hidden bg-stone-100 dark:bg-stone-800/50">
                                 @if($culture->image)
-                                    <img src="{{ Storage::url($culture->image) }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                                    <img src="{{ Storage::url($culture->image) }}" 
+                                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                         loading="lazy">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center">
                                         <i data-lucide="globe" class="w-10 h-10 text-stone-300 dark:text-stone-700"></i>

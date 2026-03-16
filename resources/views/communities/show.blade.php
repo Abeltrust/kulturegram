@@ -71,7 +71,8 @@
                         {{-- User Info --}}
                         <div class="flex items-center gap-3 mb-3">
                             <img src="{{ $post->user->profile_photo_url }}" alt="{{ $post->user->name }}"
-                                class="w-12 h-12 rounded-full object-cover">
+                                class="w-12 h-12 rounded-full object-cover"
+                                loading="lazy">
                             <div>
                                 <p class="font-semibold text-sm sm:text-base text-stone-800 dark:text-stone-100">
                                     {{ $post->user->name }}</p>
@@ -91,7 +92,8 @@
                             @if($post->image)
                                 <div class="w-full bg-stone-50 dark:bg-stone-800/50 rounded-xl overflow-hidden flex items-center justify-center border border-stone-100 dark:border-stone-800">
                                     <img src="{{ asset('storage/' . $post->image) }}"
-                                        class="w-full h-auto max-h-[32rem] object-contain" alt="post image">
+                                        class="w-full h-auto max-h-[32rem] object-contain" alt="post image"
+                                        loading="lazy">
                                 </div>
                             @endif
                             @if($post->video)
@@ -284,7 +286,8 @@
                 {{-- Community Image --}}
                 <div class="relative h-56 sm:h-64 lg:h-72 rounded-t-2xl overflow-hidden bg-stone-100 dark:bg-stone-800">
                     <img src="{{ $community->image ? asset('storage/' . $community->image) : asset('images/community-default.jpg') }}"
-                        class="w-full h-full object-cover" alt="{{ $community->name }}">
+                        class="w-full h-full object-cover" alt="{{ $community->name }}"
+                        loading="lazy">
                 </div>
 
                 {{-- Community Info --}}

@@ -13,7 +13,7 @@ class TimelineController extends Controller
     {
         $filter = $request->get('filter', 'all');
 
-        $query = Post::with(['user', 'taps', 'resonances', 'lockIns', 'checkIns'])
+        $query = Post::with(['user', 'taps', 'resonances.user', 'lockIns', 'checkIns'])
             ->public()
             ->latest();
 

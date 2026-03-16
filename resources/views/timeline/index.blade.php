@@ -108,7 +108,8 @@
                                     <!-- User Avatar -->
                                     <div class="flex-shrink-0">
                                         <img src="{{ $post->user->profile_photo_url }}"
-                                            class="w-10 h-10 rounded-full object-cover border border-stone-100 shadow-sm">
+                                            class="w-10 h-10 rounded-full object-cover border border-stone-100 shadow-sm"
+                                            loading="lazy">
                                     </div>
 
                                     <!-- User Info -->
@@ -161,7 +162,8 @@
                                 @if($post->image)
                                     <div class="mt-4 rounded-xl overflow-hidden">
                                         <img src="{{ Storage::url($post->image) }}"
-                                            class="w-full max-h-[600px] object-contain  rounded-md w-full sm:max-h-[28rem]">
+                                            class="w-full max-h-[600px] object-contain  rounded-md w-full sm:max-h-[28rem]"
+                                            loading="lazy">
                                     </div>
                                 @endif
                             </div>
