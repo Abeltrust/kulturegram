@@ -88,6 +88,15 @@
         .dark .modern-scrollbar {
             scrollbar-color: #44403c transparent;
         }
+
+        /* Premium Tooltip Animation */
+        @keyframes tooltip-scale {
+            0% { opacity: 0; transform: translateY(-50%) scale(0.95); }
+            100% { opacity: 1; transform: translateY(-50%) scale(1); }
+        }
+        .animate-tooltip {
+            animation: tooltip-scale 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
     </style>
     
     <script>
@@ -134,9 +143,23 @@
         }
     </script>
 </head>
-<body class="h-full bg-stone-50 dark:bg-stone-900 antialiased text-stone-800 dark:text-gray-100"
-      x-data="{ pageLoading: true }" 
-      x-init="window.addEventListener('load', () => pageLoading = false); window.addEventListener('beforeunload', () => pageLoading = true)">
+    <body class="h-full bg-stone-50 dark:bg-stone-900 antialiased text-stone-800 dark:text-gray-100"
+          @php
+              $skeletonRoutes = ['timeline.index', 'cultural-hub.index', 'discover.index', 'education.index', 'communities.index', 'events.index'];
+              $showSkeleton = collect($skeletonRoutes)->filter(fn($route) => request()->routeIs($route))->isNotEmpty();
+          @endphp
+          x-data="{ pageLoading: {{ $showSkeleton ? 'true' : 'false' }}, isMainPage: {{ $showSkeleton ? 'true' : 'false' }} }" 
+          x-init="
+            if (isMainPage) {
+                window.addEventListener('load', () => pageLoading = false);
+                window.addEventListener('beforeunload', () => pageLoading = true);
+            }
+            window.addEventListener('pageshow', (event) => {
+                if (event.persisted) {
+                    pageLoading = false;
+                }
+            });
+          ">
     <!-- Header -->
     <header class="fixed top-0 left-0 right-0 h-16 bg-white/95 dark:bg-stone-900/95 backdrop-blur-sm border-b border-stone-200 dark:border-stone-800 z-50 flex transition-colors duration-200">
         <div class="w-full flex items-center h-full px-4 md:px-6 gap-4">
@@ -284,7 +307,8 @@
                 </div>
                 @endauth
 
-                <!-- Brand Section -->
+                <!-- Brand Section (Hidden as requested) -->
+                {{-- 
                 <div class="mt-6 pt-4 border-t border-stone-200 dark:border-stone-800">
                     <div 
                          x-data
@@ -299,6 +323,7 @@
                     </a>
                     @endguest
                 </div>
+                --}}
             </div>
         </aside>
 
@@ -341,12 +366,11 @@
          @show-tooltip.window="tooltipVisible = true; tooltipText = $event.detail.text; tooltipX = $event.detail.x; tooltipY = $event.detail.y"
          @hide-tooltip.window="tooltipVisible = false"
          x-show="tooltipVisible"
-         x-transition.opacity.duration.200ms
-         class="fixed z-[100] bg-stone-800 text-white px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap pointer-events-none shadow-lg"
-         x-bind:style="`left: ${tooltipX}px; top: ${tooltipY}px; transform: translateY(-50%)`"
+         class="fixed z-[100] bg-stone-900/90 dark:bg-stone-800/90 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap pointer-events-none shadow-xl border border-white/10 dark:border-stone-700/50 animate-tooltip"
+         x-bind:style="`left: ${tooltipX}px; top: ${tooltipY}px;`"
          x-cloak>
         <span x-text="tooltipText"></span>
-        <div class="absolute left-0 top-1/2 transform -translate-x-1 -translate-y-1/2 w-2 h-2 bg-stone-800 rotate-45"></div>
+        <div class="absolute left-[-4px] top-1/2 transform -translate-y-1/2 w-2 h-2 bg-stone-900/90 dark:bg-stone-800/90 border-l border-b border-white/10 dark:border-stone-700/50 rotate-45"></div>
     </div>
 
     <!-- Dynamic Reel Mobile Navigation (Double Gap Illusion) -->

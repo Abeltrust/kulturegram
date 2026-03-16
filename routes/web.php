@@ -127,6 +127,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/live-stream/{stream}/end', [LiveStreamController::class, 'end'])->name('live-stream.end');
     Route::post('/live-stream/{stream}/ajax-end', [LiveStreamController::class, 'ajaxEnd'])->name('live-stream.ajax-end');
 
+    // Timeline Meet - Virtual Classroom
+    Route::get('/events/{event}/meet', [EventController::class, 'meet'])->name('events.meet');
 });
 
 Route::get('/cultural-hub/{culture}', [CulturalHubController::class, 'show'])->name('cultural-hub.show');

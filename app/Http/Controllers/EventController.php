@@ -63,6 +63,20 @@ class EventController extends Controller
         return view('events.show', compact('event'));
     }
 
+    public function meet(Event $event)
+    {
+        if (!$event->virtual_room_id) {
+            return redirect()->route('events.show', $event)->with('error', 'This event does not have a virtual classroom.');
+        }
+
+        // Authorization: Only host or attendees
+        if (Auth::id() !== $event->organizer_id && !$event->attendees->contains(Auth::id())) {
+            return redirect()->route('events.show', $event)->with('error', 'You must be registered to enter the virtual classroom.');
+        }
+
+        return view('events.meet', compact('event'));
+    }
+
     public function create(Request $request)
     {
         $community_id = $request->query('community_id');
@@ -82,15 +96,19 @@ class EventController extends Controller
             'price' => 'nullable|numeric|min:0',
             'is_online' => 'boolean',
             'meeting_link' => 'nullable|url',
+            'is_hosted' => 'boolean',
+            'hosted_content' => 'nullable|string',
             'requirements' => 'nullable|array',
             'image' => 'nullable|image|max:10240',
             'community_id' => 'nullable|exists:communities,id',
             'accepts_contributions' => 'boolean',
         ]);
 
-        $event = new Event($request->except('image'));
+        $event = new Event($request->except(['image', 'is_hosted', 'accepts_contributions', 'virtual_room_id']));
         $event->organizer_id = Auth::id();
         $event->price = $request->input('price', 0) ?: 0;
+        $event->is_hosted = $request->boolean('is_hosted');
+        $event->virtual_room_id = $request->input('virtual_room_id');
         $event->accepts_contributions = $request->boolean('accepts_contributions');
 
         if ($request->hasFile('image')) {

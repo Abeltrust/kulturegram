@@ -101,6 +101,38 @@
                     </a>
                 </div>
                 @endif
+
+                {{-- Hosted Content Section --}}
+                @if($event->is_hosted)
+                <div class="pt-8 border-t-4 border-amber-100 dark:border-amber-900/30">
+                    <h3 class="text-2xl font-black text-stone-900 dark:text-stone-100 mb-6 flex items-center gap-3">
+                        <div class="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
+                            <i data-lucide="play" class="w-6 h-6 fill-current"></i>
+                        </div>
+                        Class Content
+                    </h3>
+
+                    @if(auth()->check() && (auth()->id() == $event->organizer_id || $event->attendees->contains(auth()->id())))
+                        <div class="bg-stone-50 dark:bg-stone-800/40 rounded-3xl p-6 sm:p-8 border border-stone-200 dark:border-stone-700 shadow-inner overflow-hidden">
+                            <div class="prose prose-stone dark:prose-invert max-w-none prose-img:rounded-2xl prose-video:rounded-2xl">
+                                {!! $event->hosted_content !!}
+                            </div>
+                        </div>
+                    @else
+                        <div class="bg-gradient-to-br from-stone-100 to-stone-50 dark:from-stone-800 dark:to-stone-900 p-10 rounded-3xl border-2 border-dashed border-stone-200 dark:border-stone-700 text-center">
+                            <i data-lucide="lock" class="w-12 h-12 mx-auto mb-4 text-stone-300 dark:text-stone-600"></i>
+                            <h4 class="text-xl font-black text-stone-800 dark:text-stone-200 mb-2">Exclusive Content</h4>
+                            <p class="text-stone-500 dark:text-stone-400 mb-6 max-w-sm mx-auto">Register or purchase a ticket to access the hosted videos, lessons, and resources for this class.</p>
+                            
+                            @if(!auth()->check())
+                                <a href="{{ route('login') }}" class="inline-flex items-center gap-2 bg-stone-900 dark:bg-white text-white dark:text-stone-900 px-6 py-3 rounded-xl font-bold transition hover:scale-105">
+                                    Login to Access
+                                </a>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+                @endif
             </div>
 
             {{-- Right Column: Sidebar (Date, Time, Location, Registration) --}}
@@ -128,7 +160,12 @@
                         <div>
                             <p class="font-bold text-stone-900 dark:text-stone-100">{{ $event->is_online ? 'Online Event' : 'Location' }}</p>
                             <p class="text-stone-600 dark:text-stone-400 text-sm mt-0.5">{{ $event->location }}</p>
-                            @if($event->is_online && $event->meeting_link && ($event->attendees->contains(auth()->id()) || $event->organizer_id == auth()->id()))
+                            
+                            @if($event->virtual_room_id && (auth()->check() && (auth()->id() == $event->organizer_id || $event->attendees->contains(auth()->id()))))
+                                <a href="{{ route('events.meet', $event) }}" class="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-95">
+                                    <i data-lucide="video" class="w-4 h-4"></i> Enter Classroom
+                                </a>
+                            @elseif($event->is_online && $event->meeting_link && (auth()->check() && (auth()->id() == $event->organizer_id || $event->attendees->contains(auth()->id()))))
                                 <a href="{{ $event->meeting_link }}" target="_blank" class="inline-block mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline font-semibold flex items-center gap-1">
                                     Join Meeting <i data-lucide="external-link" class="w-3 h-3"></i>
                                 </a>

@@ -88,10 +88,31 @@
         </div>
 
         <div id="meeting-link-field" class="hidden">
-            <label for="meeting_link" class="block text-gray-700 dark:text-stone-300 font-semibold mb-2">Meeting Link</label>
+            <label for="meeting_link" class="block text-gray-700 dark:text-stone-300 font-semibold mb-2">External Platform Link</label>
             <input type="url" name="meeting_link" id="meeting_link" value="{{ old('meeting_link') }}"
             class="w-full border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:outline-none"
             placeholder="https://zoom.us/j/123456789">
+            <p class="text-[10px] text-stone-500 mt-1 uppercase font-bold tracking-tight">Optional: Provide a link to an external platform like Zoom or Meet</p>
+        </div>
+
+        <!-- Internal Hosting Toggle -->
+        <div class="mt-4 pt-4 border-t border-stone-200 dark:border-stone-800">
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="hidden" name="is_hosted" value="0">
+                <input type="checkbox" name="is_hosted" value="1" id="is_hosted" class="w-5 h-5 rounded border-stone-300 text-amber-500 focus:ring-amber-500" {{ old('is_hosted') ? 'checked' : '' }} onchange="toggleHostedFields()">
+                <div>
+                    <span class="block text-stone-800 dark:text-stone-200 font-medium">Host class content directly on Timeline</span>
+                    <span class="block text-xs text-stone-500 dark:text-stone-400">Perfect for sharing videos, text lessons, and resources without needing external apps.</span>
+                </div>
+            </label>
+        </div>
+
+        <div id="hosted-content-field" class="hidden mt-4">
+            <label for="hosted_content" class="block text-gray-700 dark:text-stone-300 font-semibold mb-2">Class/Hosted Content</label>
+            <textarea name="hosted_content" id="hosted_content" rows="10"
+              class="w-full border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:outline-none font-mono text-sm"
+              placeholder="Paste your video embed codes, write your lesson content, or list resource links here...">{{ old('hosted_content') }}</textarea>
+            <p class="text-xs text-stone-500 mt-2">You can use HTML embed codes for videos from YouTube, Vimeo, etc.</p>
         </div>
       </div>
 
@@ -128,6 +149,18 @@
                 <span class="block text-stone-600 dark:text-stone-400 text-sm">Allow attendees and viewers to send voluntary donations to support this {{ isset($community_id) ? 'meeting' : 'event' }}.</span>
             </div>
         </label>
+      </div>
+
+      <!-- Virtual Classroom Toggle -->
+      <div class="bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-2xl p-6">
+          <label class="flex items-center gap-4 cursor-pointer">
+              <input type="checkbox" id="enable_virtual" class="w-6 h-6 rounded-lg border-stone-300 text-blue-500 focus:ring-blue-500" onchange="toggleVirtualRoom()">
+              <input type="hidden" name="virtual_room_id" id="virtual_room_id">
+              <div>
+                  <span class="block text-stone-900 dark:text-stone-100 font-black text-lg">Timeline Meet (Virtual Classroom)</span>
+                  <span class="block text-stone-600 dark:text-stone-400 text-sm">Host a live, interactive video meeting with screen sharing on the platform. Participants can join directly from the event page.</span>
+              </div>
+          </label>
       </div>
 
       <!-- Upload Image -->
@@ -171,7 +204,34 @@
         }
         
         // Initialize state on load
-        document.addEventListener('DOMContentLoaded', toggleOnlineFields);
+        document.addEventListener('DOMContentLoaded', () => {
+            toggleOnlineFields();
+            toggleHostedFields();
+        });
+
+        function toggleHostedFields() {
+            const isHosted = document.getElementById('is_hosted').checked;
+            const hostedField = document.getElementById('hosted-content-field');
+            
+            if (isHosted) {
+                hostedField.classList.remove('hidden');
+            } else {
+                hostedField.classList.add('hidden');
+            }
+        }
+
+        function toggleVirtualRoom() {
+            const isEnable = document.getElementById('enable_virtual').checked;
+            const roomIdField = document.getElementById('virtual_room_id');
+            
+            if (isEnable) {
+                // Generate a unique room ID
+                const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
+                roomIdField.value = `TIMELINE-MEET-${randomStr}`;
+            } else {
+                roomIdField.value = '';
+            }
+        }
 
         function previewImage(event) {
           const file = event.target.files[0];

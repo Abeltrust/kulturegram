@@ -23,6 +23,9 @@ class Event extends Model
         'price',
         'is_online',
         'meeting_link',
+        'is_hosted',
+        'hosted_content',
+        'virtual_room_id',
         'requirements',
         'organizer_id',
         'community_id',
@@ -34,6 +37,7 @@ class Event extends Model
         'event_time' => 'datetime:H:i',
         'price' => 'decimal:2',
         'is_online' => 'boolean',
+        'is_hosted' => 'boolean',
         'requirements' => 'array',
     ];
 

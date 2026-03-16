@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class EducationalHubController extends Controller
 {
@@ -23,9 +24,12 @@ class EducationalHubController extends Controller
         $events = $query->paginate(12);
 
         // Featured experts/hosts (those with most events or attendees)
-        $experts = \App\Models\User::whereHas('events', function($q) use ($educationalTypes) {
-            $q->whereIn('type', $educationalTypes);
-        })->withCount('events')->orderBy('events_count', 'desc')->take(5)->get();
+        // Cache this for 60 minutes as it doesn't change frequently
+        $experts = Cache::remember('educational_hub_experts', 3600, function() use ($educationalTypes) {
+            return \App\Models\User::whereHas('events', function($q) use ($educationalTypes) {
+                $q->whereIn('type', $educationalTypes);
+            })->withCount('events')->orderBy('events_count', 'desc')->take(5)->get();
+        });
 
         return view('education.index', compact('events', 'experts'));
     }
