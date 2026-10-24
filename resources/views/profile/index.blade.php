@@ -400,15 +400,15 @@
         </div>
 
         {{-- Activity & Preservation Log Button (Mobile & Desktop) --}}
-        <div class="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200/80 dark:border-stone-800 p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:border-amber-500/40 transition">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                    <i data-lucide="activity" class="w-5 h-5"></i>
+        <div class="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200/80 dark:border-stone-800 p-3 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:border-amber-500/40 transition">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <i data-lucide="activity" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                 </div>
-                <div>
-                    <h3 class="text-xs sm:text-sm font-black text-stone-900 dark:text-white flex items-center gap-2">
+                <div class="min-w-0">
+                    <h3 class="text-xs sm:text-sm font-black text-stone-900 dark:text-white flex items-center gap-2 flex-wrap">
                         <span>Activity & Preservation Log</span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
                             {{ $stats['preservation_score'] }}% Score
                         </span>
                     </h3>
@@ -419,7 +419,7 @@
             </div>
 
             <a href="{{ auth()->id() === $user->id ? route('profile.activity') : route('profile.user.activity', $user) }}"
-                class="inline-flex items-center justify-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md transition shrink-0">
+                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md transition shrink-0">
                 <i data-lucide="list" class="w-4 h-4"></i>
                 <span>View All Activities & Stats</span>
                 <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
@@ -432,9 +432,9 @@
             {{-- Dropdown Trigger Button --}}
             <button type="button" 
                 @click="isTabDropdownOpen = !isTabDropdownOpen; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });"
-                class="w-full bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 rounded-2xl p-3 sm:p-3.5 shadow-sm flex items-center justify-between text-left hover:border-amber-500 transition active:scale-[0.99] cursor-pointer">
+                class="w-full bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 rounded-2xl p-3 sm:p-3.5 shadow-sm flex items-center justify-between text-left hover:border-amber-500 transition active:scale-[0.99] cursor-pointer gap-2.5">
                 
-                <div class="flex items-center gap-3 min-w-0">
+                <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
                     <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm">
                         <template x-if="activeTab === 'timeline'">
                             <i data-lucide="clock" class="w-4 h-4 sm:w-5 sm:h-5"></i>
@@ -459,9 +459,9 @@
                         </template>
                     </div>
 
-                    <div class="min-w-0">
-                        <span class="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">Current Section</span>
-                        <div class="flex items-center gap-2">
+                    <div class="min-w-0 flex-1">
+                        <span class="text-[10px] uppercase font-bold text-stone-400 block tracking-wider truncate">Current Section</span>
+                        <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
                             <h2 class="text-sm sm:text-base font-black text-stone-900 dark:text-white truncate"
                                 x-text="activeTab === 'timeline' ? 'Stories Feed' : 
                                        (activeTab === 'chapters' ? 'Life Chapters' : 
@@ -483,9 +483,9 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2 text-stone-400 shrink-0">
-                    <span class="text-xs font-semibold hidden sm:inline text-stone-500">Switch Section</span>
-                    <div class="w-7 h-7 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center transition-transform duration-200"
+                <div class="flex items-center gap-1.5 sm:gap-2 text-stone-400 shrink-0 ml-1">
+                    <span class="text-xs font-semibold hidden md:inline text-stone-500">Switch Section</span>
+                    <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center transition-transform duration-200"
                         :class="isTabDropdownOpen ? 'rotate-180 bg-amber-500 text-white' : ''">
                         <i data-lucide="chevron-down" class="w-4 h-4"></i>
                     </div>
@@ -505,17 +505,17 @@
                 {{-- Option 1: Stories Feed --}}
                 <button type="button" @click="activeTab = 'timeline'; isTabDropdownOpen = false; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });"
                     :class="activeTab === 'timeline' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-bold' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'"
-                    class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer">
-                    <div class="flex items-center gap-3">
-                        <div class="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center">
+                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer gap-2">
+                    <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                        <div class="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center shrink-0">
                             <i data-lucide="clock" class="w-4 h-4"></i>
                         </div>
-                        <div>
-                            <span class="block">Stories Feed</span>
-                            <span class="text-[10px] text-stone-400 font-normal">Living memories & personal chronicle</span>
+                        <div class="min-w-0 flex-1">
+                            <span class="block truncate">Stories Feed</span>
+                            <span class="text-[10px] text-stone-400 font-normal truncate block">Living memories & personal chronicle</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 shrink-0">
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
                             :class="activeTab === 'timeline' ? 'bg-amber-500 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'">
                             {{ $stats['stories'] }}
@@ -529,17 +529,17 @@
                 {{-- Option 2: Life Chapters --}}
                 <button type="button" @click="activeTab = 'chapters'; isTabDropdownOpen = false; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });"
                     :class="activeTab === 'chapters' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-bold' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'"
-                    class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer">
-                    <div class="flex items-center gap-3">
-                        <div class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center">
+                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer gap-2">
+                    <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                        <div class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0">
                             <i data-lucide="book-open" class="w-4 h-4"></i>
                         </div>
-                        <div>
-                            <span class="block">Life Chapters</span>
-                            <span class="text-[10px] text-stone-400 font-normal">Milestones & historical transitions</span>
+                        <div class="min-w-0 flex-1">
+                            <span class="block truncate">Life Chapters</span>
+                            <span class="text-[10px] text-stone-400 font-normal truncate block">Milestones & historical transitions</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 shrink-0">
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
                             :class="activeTab === 'chapters' ? 'bg-amber-500 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'">
                             {{ $lifeChapters->count() }}
@@ -553,17 +553,17 @@
                 {{-- Option 3: Cultural Stories --}}
                 <button type="button" @click="activeTab = 'cultures'; isTabDropdownOpen = false; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });"
                     :class="activeTab === 'cultures' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-bold' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'"
-                    class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer">
-                    <div class="flex items-center gap-3">
-                        <div class="w-7 h-7 rounded-lg bg-orange-100 dark:bg-orange-950/60 text-orange-600 flex items-center justify-center">
+                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer gap-2">
+                    <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                        <div class="w-7 h-7 rounded-lg bg-orange-100 dark:bg-orange-950/60 text-orange-600 flex items-center justify-center shrink-0">
                             <i data-lucide="archive" class="w-4 h-4"></i>
                         </div>
-                        <div>
-                            <span class="block">Cultural Stories</span>
-                            <span class="text-[10px] text-stone-400 font-normal">Folklore, rituals & oral histories</span>
+                        <div class="min-w-0 flex-1">
+                            <span class="block truncate">Cultural Stories</span>
+                            <span class="text-[10px] text-stone-400 font-normal truncate block">Folklore, rituals & oral histories</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 shrink-0">
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
                             :class="activeTab === 'cultures' ? 'bg-amber-500 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'">
                             {{ $cultures->count() }}
@@ -577,17 +577,17 @@
                 {{-- Option 4: Communities --}}
                 <button type="button" @click="activeTab = 'communities'; isTabDropdownOpen = false; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });"
                     :class="activeTab === 'communities' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-bold' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'"
-                    class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer">
-                    <div class="flex items-center gap-3">
-                        <div class="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center">
+                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer gap-2">
+                    <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                        <div class="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center shrink-0">
                             <i data-lucide="users" class="w-4 h-4"></i>
                         </div>
-                        <div>
-                            <span class="block">Communities & Tribes</span>
-                            <span class="text-[10px] text-stone-400 font-normal">Heritage circles and craft collectives</span>
+                        <div class="min-w-0 flex-1">
+                            <span class="block truncate">Communities & Tribes</span>
+                            <span class="text-[10px] text-stone-400 font-normal truncate block">Heritage circles and craft collectives</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 shrink-0">
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
                             :class="activeTab === 'communities' ? 'bg-amber-500 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'">
                             {{ $communities->count() }}
@@ -601,17 +601,17 @@
                 {{-- Option 5: Gatherings --}}
                 <button type="button" @click="activeTab = 'events'; isTabDropdownOpen = false; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });"
                     :class="activeTab === 'events' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-bold' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'"
-                    class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer">
-                    <div class="flex items-center gap-3">
-                        <div class="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center">
+                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer gap-2">
+                    <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                        <div class="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center shrink-0">
                             <i data-lucide="calendar" class="w-4 h-4"></i>
                         </div>
-                        <div>
-                            <span class="block">Gatherings & Workshops</span>
-                            <span class="text-[10px] text-stone-400 font-normal">Masterclasses, tickets & passes</span>
+                        <div class="min-w-0 flex-1">
+                            <span class="block truncate">Gatherings & Workshops</span>
+                            <span class="text-[10px] text-stone-400 font-normal truncate block">Masterclasses, tickets & passes</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 shrink-0">
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
                             :class="activeTab === 'events' ? 'bg-amber-500 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'">
                             {{ $organizedEvents->count() + $attendingEvents->count() }}
@@ -626,17 +626,17 @@
                 @if(auth()->id() === $user->id || $vaultItems->count() > 0)
                     <button type="button" @click="activeTab = 'vault'; isTabDropdownOpen = false; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });"
                         :class="activeTab === 'vault' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-bold' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'"
-                        class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer">
-                        <div class="flex items-center gap-3">
-                            <div class="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center">
+                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer gap-2">
+                        <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                            <div class="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center shrink-0">
                                 <i data-lucide="lock" class="w-4 h-4"></i>
                             </div>
-                            <div>
-                                <span class="block">Personal Heritage Vault</span>
-                                <span class="text-[10px] text-stone-400 font-normal">Encrypted documents & heirlooms</span>
+                            <div class="min-w-0 flex-1">
+                                <span class="block truncate">Personal Heritage Vault</span>
+                                <span class="text-[10px] text-stone-400 font-normal truncate block">Encrypted documents & heirlooms</span>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 shrink-0">
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
                                 :class="activeTab === 'vault' ? 'bg-amber-500 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'">
                                 {{ $vaultCount }}
@@ -652,18 +652,18 @@
                 @if(auth()->id() === $user->id)
                     <button type="button" @click="activeTab = 'privacy_hub'; isTabDropdownOpen = false; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });"
                         :class="activeTab === 'privacy_hub' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-bold' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'"
-                        class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer">
-                        <div class="flex items-center gap-3">
-                            <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
+                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer gap-2">
+                        <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center shrink-0">
                                 <i data-lucide="shield" class="w-4 h-4"></i>
                             </div>
-                            <div>
-                                <span class="block">Privacy & Sovereignty</span>
-                                <span class="text-[10px] text-stone-400 font-normal">Data rights & vault protection controls</span>
+                            <div class="min-w-0 flex-1">
+                                <span class="block truncate">Privacy & Sovereignty</span>
+                                <span class="text-[10px] text-stone-400 font-normal truncate block">Data rights & vault protection controls</span>
                             </div>
                         </div>
                         <template x-if="activeTab === 'privacy_hub'">
-                            <i data-lucide="check" class="w-4 h-4 text-amber-500"></i>
+                            <i data-lucide="check" class="w-4 h-4 text-amber-500 shrink-0"></i>
                         </template>
                     </button>
                 @endif
@@ -677,13 +677,13 @@
             {{-- Quick Post Trigger (Owner Only) --}}
             @auth
                 @if(auth()->id() === $user->id)
-                    <div class="bg-white dark:bg-stone-900 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border border-stone-200/80 dark:border-stone-800 shadow-sm flex items-center gap-3 sm:gap-4">
+                    <div class="bg-white dark:bg-stone-900 rounded-2xl sm:rounded-3xl p-3 sm:p-5 border border-stone-200/80 dark:border-stone-800 shadow-sm flex items-center gap-2.5 sm:gap-4 overflow-hidden">
                         <img src="{{ $user->profile_photo_url }}" class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl object-cover shrink-0 user-avatar-sync">
                         <a href="{{ route('timeline.index') }}"
-                            class="flex-1 text-left px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700/80 text-stone-500 dark:text-stone-400 text-xs sm:text-sm font-medium transition truncate">
+                            class="flex-1 min-w-0 text-left px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700/80 text-stone-500 dark:text-stone-400 text-xs sm:text-sm font-medium transition truncate">
                             Record a cultural memory or authentic story...
                         </a>
-                        <a href="{{ route('timeline.index') }}" class="px-3.5 sm:px-4 py-2.5 sm:py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shrink-0">
+                        <a href="{{ route('timeline.index') }}" class="px-3 sm:px-4 py-2.5 sm:py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shrink-0">
                             <i data-lucide="plus" class="w-4 h-4"></i>
                             <span class="hidden sm:inline">Post</span>
                         </a>
