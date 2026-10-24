@@ -370,7 +370,11 @@
                         {{-- Avatar --}}
                         <div class="flex items-center gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200/60 dark:border-stone-700/60">
                             <div class="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden bg-stone-200 dark:bg-stone-700 shrink-0 border-2 border-white dark:border-stone-800 shadow">
-                                <img id="settings-avatar-img" :src="avatarPreview ?: '{{ $user->profile_photo_url }}'" class="w-full h-full object-cover">
+                                <img id="settings-avatar-img" 
+                                     src="{{ $user->profile_photo_url }}" 
+                                     :src="avatarPreview || '{{ $user->profile_photo_url }}'" 
+                                     alt="{{ $user->name }}"
+                                     class="w-full h-full object-cover">
                             </div>
                             <div class="flex-1 min-w-0">
                                 <h4 class="text-xs font-bold text-stone-900 dark:text-white uppercase tracking-wider mb-1">Avatar</h4>
@@ -387,9 +391,19 @@
                         <div class="flex items-center gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200/60 dark:border-stone-700/60">
                             <div class="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 shrink-0 border-2 border-white dark:border-stone-800 shadow">
                                 @if($user->cover_photo_url)
-                                    <img id="settings-cover-img" :src="coverPreview ?: '{{ $user->cover_photo_url }}'" class="w-full h-full object-cover">
+                                    <img id="settings-cover-img" 
+                                         src="{{ $user->cover_photo_url }}" 
+                                         :src="coverPreview || '{{ $user->cover_photo_url }}'" 
+                                         alt="Cover Banner"
+                                         class="w-full h-full object-cover">
                                 @else
-                                    <div class="w-full h-full flex items-center justify-center text-white/50">
+                                    <template x-if="coverPreview">
+                                        <img id="settings-cover-img" 
+                                             :src="coverPreview" 
+                                             alt="Cover Banner"
+                                             class="w-full h-full object-cover">
+                                    </template>
+                                    <div x-show="!coverPreview" class="w-full h-full flex items-center justify-center text-white/70">
                                         <i data-lucide="image" class="w-6 h-6"></i>
                                     </div>
                                 @endif
