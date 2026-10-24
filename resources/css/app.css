@@ -20,4 +20,20 @@
     .animate-pulse-subtle {
         animation: pulse-subtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
+
+    /* Scrollbar Utilities */
+    .no-scrollbar::-webkit-scrollbar,
+    .scrollbar-none::-webkit-scrollbar,
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+
+    .no-scrollbar,
+    .scrollbar-none,
+    .scrollbar-hide {
+        -ms-overflow-style: none !important;
+        scrollbar-width: none !important;
+    }
 }

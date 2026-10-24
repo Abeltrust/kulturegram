@@ -95,6 +95,22 @@
             scrollbar-color: #44403c transparent;
         }
 
+        /* Hide Scrollbar Utilities */
+        .no-scrollbar::-webkit-scrollbar,
+        .scrollbar-none::-webkit-scrollbar,
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        .no-scrollbar,
+        .scrollbar-none,
+        .scrollbar-hide {
+            -ms-overflow-style: none !important;
+            scrollbar-width: none !important;
+        }
+
         /* Premium Tooltip Animation */
         @keyframes tooltip-scale {
             0% { opacity: 0; transform: translateY(-50%) scale(0.95); }
