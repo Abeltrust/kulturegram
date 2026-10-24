@@ -245,6 +245,187 @@ class ProfileController extends Controller
     }
 
     /**
+     * Standalone User Activity & Impact History (Auth User)
+     */
+    public function activity(Request $request)
+    {
+        $user = Auth::user();
+        return $this->buildActivityView($user, true);
+    }
+
+    /**
+     * Standalone User Activity & Impact History (Public Profile)
+     */
+    public function userActivity($user)
+    {
+        $targetUser = User::where('id', $user)
+            ->orWhere('username', $user)
+            ->firstOrFail();
+
+        $isOwner = Auth::check() && Auth::id() === $targetUser->id;
+
+        return $this->buildActivityView($targetUser, $isOwner);
+    }
+
+    /**
+     * Helper to assemble unified activity stream and impact stats
+     */
+    private function buildActivityView(User $user, bool $isOwner)
+    {
+        $activities = collect();
+
+        // 1. Stories / Posts
+        foreach ($user->posts()->latest()->take(30)->get() as $post) {
+            $activities->push([
+                'id' => 'post_' . $post->id,
+                'type' => 'stories',
+                'type_label' => 'Story Preserved',
+                'icon' => 'feather',
+                'color' => 'amber',
+                'title' => 'Preserved Living Memory',
+                'description' => \Illuminate\Support\Str::limit($post->content, 140),
+                'url' => route('timeline.index'),
+                'created_at' => $post->created_at,
+                'badge' => $post->chapter ?: null,
+                'metrics' => ($post->taps_count ?? 0) . ' Taps • ' . ($post->resonance_count ?? 0) . ' Resonance'
+            ]);
+        }
+
+        // 2. Cultural Traditions
+        $cultureQuery = $user->cultures()->latest();
+        if (!$isOwner) {
+            $cultureQuery->whereIn('status', ['approved', 'featured']);
+        }
+        foreach ($cultureQuery->take(30)->get() as $culture) {
+            $activities->push([
+                'id' => 'culture_' . $culture->id,
+                'type' => 'traditions',
+                'type_label' => 'Cultural Tradition',
+                'icon' => 'archive',
+                'color' => 'orange',
+                'title' => 'Submitted Tradition: ' . $culture->name,
+                'description' => \Illuminate\Support\Str::limit($culture->description, 140),
+                'url' => route('cultural-hub.show', $culture),
+                'created_at' => $culture->created_at,
+                'badge' => ucfirst($culture->category),
+                'status' => $culture->status,
+                'metrics' => $culture->region
+            ]);
+        }
+
+        // 3. Life Chapters
+        foreach ($user->lifeChapters()->latest()->take(20)->get() as $chapter) {
+            $activities->push([
+                'id' => 'chapter_' . $chapter->id,
+                'type' => 'chapters',
+                'type_label' => 'Life Chapter',
+                'icon' => 'bookmark',
+                'color' => 'amber',
+                'title' => 'Recorded Milestone: ' . $chapter->title,
+                'description' => \Illuminate\Support\Str::limit($chapter->description, 140),
+                'url' => route('profile.show'),
+                'created_at' => $chapter->created_at,
+                'badge' => $chapter->period ?: 'Era',
+                'metrics' => $chapter->location
+            ]);
+        }
+
+        // 4. Communities
+        foreach ($user->communities()->withCount('members')->latest()->take(20)->get() as $community) {
+            $activities->push([
+                'id' => 'community_' . $community->id,
+                'type' => 'communities',
+                'type_label' => 'Tribe / Circle',
+                'icon' => 'users',
+                'color' => 'blue',
+                'title' => ($community->created_by === $user->id ? 'Founded Tribe: ' : 'Joined Community: ') . $community->name,
+                'description' => \Illuminate\Support\Str::limit($community->description, 140),
+                'url' => route('communities.show', $community),
+                'created_at' => $community->created_at,
+                'badge' => $community->category,
+                'metrics' => ($community->members_count ?? 1) . ' members'
+            ]);
+        }
+
+        // 5. Gatherings Organized
+        foreach ($user->events()->latest('event_date')->take(20)->get() as $event) {
+            $activities->push([
+                'id' => 'event_' . $event->id,
+                'type' => 'events',
+                'type_label' => 'Gathering Hosted',
+                'icon' => 'calendar',
+                'color' => 'purple',
+                'title' => 'Organized Gathering: ' . $event->title,
+                'description' => \Illuminate\Support\Str::limit($event->description, 140),
+                'url' => route('events.show', $event),
+                'created_at' => $event->created_at,
+                'badge' => ucfirst($event->type),
+                'metrics' => $event->event_date->format('M j, Y')
+            ]);
+        }
+
+        // 6. Gatherings Attending
+        foreach ($user->attendingEvents()->latest('event_date')->take(20)->get() as $event) {
+            $activities->push([
+                'id' => 'attending_' . $event->id,
+                'type' => 'events',
+                'type_label' => 'Workshop Registered',
+                'icon' => 'ticket',
+                'color' => 'emerald',
+                'title' => 'Attending Gathering: ' . $event->title,
+                'description' => \Illuminate\Support\Str::limit($event->description, 140),
+                'url' => route('events.show', $event),
+                'created_at' => $event->created_at,
+                'badge' => 'Active Pass',
+                'metrics' => $event->event_date->format('M j, Y')
+            ]);
+        }
+
+        // 7. Vault Items
+        $vaultQuery = $user->vaultItems()->latest();
+        if (!$isOwner) {
+            $vaultQuery->where('access_level', 'public');
+        }
+        foreach ($vaultQuery->take(25)->get() as $item) {
+            $activities->push([
+                'id' => 'vault_' . $item->id,
+                'type' => 'vault',
+                'type_label' => 'Vault Heirloom',
+                'icon' => 'lock',
+                'color' => 'rose',
+                'title' => 'Archived Heirloom: ' . $item->title,
+                'description' => \Illuminate\Support\Str::limit($item->description, 140),
+                'url' => route('vault.show', $item),
+                'created_at' => $item->created_at,
+                'badge' => ucfirst($item->access_level),
+                'metrics' => $item->file_size
+            ]);
+        }
+
+        $sortedActivities = $activities->sortByDesc('created_at')->values();
+
+        $totalTaps = (int) $user->posts()->sum('taps_count') + (int) $user->taps_received;
+        $totalResonance = (int) $user->posts()->sum('resonance_count');
+        $contributionsCount = $user->cultures()->count();
+        $storiesCount = $user->posts()->count();
+        $vaultCount = $isOwner ? $user->vaultItems()->count() : $user->vaultItems()->where('access_level', 'public')->count();
+
+        $stats = [
+            'stories' => $storiesCount,
+            'locked_in' => $user->locked_in_count,
+            'vibes' => $totalTaps,
+            'resonance' => $totalResonance,
+            'contributions' => $contributionsCount,
+            'vault' => $vaultCount,
+            'communities' => $user->communities()->count(),
+            'events' => $user->events()->count() + $user->attendingEvents()->count(),
+            'preservation_score' => min(100, round(($contributionsCount * 10) + ($storiesCount * 2) + ($vaultCount * 3) + ($totalResonance * 0.1))),
+        ];
+
+        return view('profile.activity', compact('user', 'stats', 'sortedActivities', 'isOwner'));
+    }
+
+    /**
      * Create life chapter
      */
     public function createChapter()

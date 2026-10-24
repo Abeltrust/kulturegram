@@ -399,101 +399,272 @@
             </div>
         </div>
 
-        {{-- Metrics & Impact Dashboard Cards (Compact & Responsive on Mobile) --}}
-        <div class="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
-            
-            <div class="bg-white dark:bg-stone-900 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 border border-stone-200/80 dark:border-stone-800 text-center shadow-sm">
-                <p class="text-lg sm:text-2xl font-black text-stone-900 dark:text-white">{{ $stats['stories'] }}</p>
-                <p class="text-[10px] sm:text-[11px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider mt-0.5">Stories</p>
+        {{-- Activity & Preservation Log Button (Mobile & Desktop) --}}
+        <div class="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200/80 dark:border-stone-800 p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:border-amber-500/40 transition">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <i data-lucide="activity" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="text-xs sm:text-sm font-black text-stone-900 dark:text-white flex items-center gap-2">
+                        <span>Activity & Preservation Log</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                            {{ $stats['preservation_score'] }}% Score
+                        </span>
+                    </h3>
+                    <p class="text-[11px] sm:text-xs text-stone-500">
+                        Explore complete history of stories, traditions, gatherings, and heritage contributions.
+                    </p>
+                </div>
             </div>
 
-            <div class="bg-white dark:bg-stone-900 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 border border-stone-200/80 dark:border-stone-800 text-center shadow-sm">
-                <p class="text-lg sm:text-2xl font-black text-stone-900 dark:text-white" id="profile-locked-in-count">{{ $stats['locked_in'] }}</p>
-                <p class="text-[10px] sm:text-[11px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider mt-0.5">Locked In</p>
-            </div>
-
-            <div class="bg-white dark:bg-stone-900 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 border border-stone-200/80 dark:border-stone-800 text-center shadow-sm">
-                <p class="text-lg sm:text-2xl font-black text-amber-500" id="profile-vibes-count">{{ $stats['vibes'] }}</p>
-                <p class="text-[10px] sm:text-[11px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider mt-0.5">Vibes / Taps</p>
-            </div>
-
-            <div class="bg-white dark:bg-stone-900 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 border border-stone-200/80 dark:border-stone-800 text-center shadow-sm">
-                <p class="text-lg sm:text-2xl font-black text-orange-500">{{ $stats['contributions'] }}</p>
-                <p class="text-[10px] sm:text-[11px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider mt-0.5">Traditions</p>
-            </div>
-
-            <div class="bg-white dark:bg-stone-900 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 border border-stone-200/80 dark:border-stone-800 text-center shadow-sm">
-                <p class="text-lg sm:text-2xl font-black text-purple-500">{{ $stats['vault'] }}</p>
-                <p class="text-[10px] sm:text-[11px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider mt-0.5">Vault Items</p>
-            </div>
-
-            <div class="bg-white dark:bg-stone-900 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 border border-stone-200/80 dark:border-stone-800 text-center shadow-sm">
-                <p class="text-lg sm:text-2xl font-black text-emerald-500">{{ $stats['preservation_score'] }}%</p>
-                <p class="text-[10px] sm:text-[11px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-wider mt-0.5">Preserve</p>
-            </div>
-
+            <a href="{{ auth()->id() === $user->id ? route('profile.activity') : route('profile.user.activity', $user) }}"
+                class="inline-flex items-center justify-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md transition shrink-0">
+                <i data-lucide="list" class="w-4 h-4"></i>
+                <span>View All Activities & Stats</span>
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </a>
         </div>
 
-        {{-- Interactive Tab Navigation (Smooth Touch Scroll with Zero Scrollbar) --}}
-        <div class="bg-white dark:bg-stone-900 rounded-2xl sm:rounded-3xl shadow-sm border border-stone-200/80 dark:border-stone-800 p-1.5 sm:p-2.5">
-            <div class="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar scrollbar-none py-0.5" style="scrollbar-width: none; -ms-overflow-style: none;">
+        {{-- Section Navigation Dropdown (Mobile & Desktop) --}}
+        <div class="relative w-full z-30" x-data="{ isTabDropdownOpen: false }" @click.away="isTabDropdownOpen = false">
+            
+            {{-- Dropdown Trigger Button --}}
+            <button type="button" 
+                @click="isTabDropdownOpen = !isTabDropdownOpen; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });"
+                class="w-full bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 rounded-2xl p-3 sm:p-3.5 shadow-sm flex items-center justify-between text-left hover:border-amber-500 transition active:scale-[0.99] cursor-pointer">
                 
-                <button @click="activeTab = 'timeline'"
-                    :class="activeTab === 'timeline' ? 'bg-amber-500 text-white shadow-md' : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800'"
-                    class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap flex items-center gap-1.5 sm:gap-2 shrink-0">
-                    <i data-lucide="clock" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-                    <span>Stories Feed</span>
-                    <span class="px-1.5 py-0.5 rounded-full text-[10px]" :class="activeTab === 'timeline' ? 'bg-white/20 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'">{{ $stats['stories'] }}</span>
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                        <template x-if="activeTab === 'timeline'">
+                            <i data-lucide="clock" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                        </template>
+                        <template x-if="activeTab === 'chapters'">
+                            <i data-lucide="book-open" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                        </template>
+                        <template x-if="activeTab === 'cultures'">
+                            <i data-lucide="archive" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                        </template>
+                        <template x-if="activeTab === 'communities'">
+                            <i data-lucide="users" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                        </template>
+                        <template x-if="activeTab === 'events'">
+                            <i data-lucide="calendar" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                        </template>
+                        <template x-if="activeTab === 'vault'">
+                            <i data-lucide="lock" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                        </template>
+                        <template x-if="activeTab === 'privacy_hub'">
+                            <i data-lucide="shield" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                        </template>
+                    </div>
+
+                    <div class="min-w-0">
+                        <span class="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">Current Section</span>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-sm sm:text-base font-black text-stone-900 dark:text-white truncate"
+                                x-text="activeTab === 'timeline' ? 'Stories Feed' : 
+                                       (activeTab === 'chapters' ? 'Life Chapters' : 
+                                       (activeTab === 'cultures' ? 'Cultural Stories' : 
+                                       (activeTab === 'communities' ? 'Communities & Tribes' : 
+                                       (activeTab === 'events' ? 'Gatherings & Workshops' : 
+                                       (activeTab === 'vault' ? 'Personal Heritage Vault' : 'Privacy & Sovereignty')))))">
+                            </h2>
+
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0"
+                                x-text="activeTab === 'timeline' ? '{{ $stats['stories'] }}' : 
+                                       (activeTab === 'chapters' ? '{{ $lifeChapters->count() }}' : 
+                                       (activeTab === 'cultures' ? '{{ $cultures->count() }}' : 
+                                       (activeTab === 'communities' ? '{{ $communities->count() }}' : 
+                                       (activeTab === 'events' ? '{{ $organizedEvents->count() + $attendingEvents->count() }}' : 
+                                       (activeTab === 'vault' ? '{{ $vaultCount }}' : 'Hub')))))">
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 text-stone-400 shrink-0">
+                    <span class="text-xs font-semibold hidden sm:inline text-stone-500">Switch Section</span>
+                    <div class="w-7 h-7 rounded-lg bg-stone-100 dark:bg-stone-800 flex items-center justify-center transition-transform duration-200"
+                        :class="isTabDropdownOpen ? 'rotate-180 bg-amber-500 text-white' : ''">
+                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                    </div>
+                </div>
+            </button>
+
+            {{-- Dropdown Menu (Mobile & Desktop) --}}
+            <div x-show="isTabDropdownOpen" x-cloak 
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+                class="absolute left-0 right-0 mt-2 z-50 bg-white dark:bg-stone-900 border border-stone-200/80 dark:border-stone-800 rounded-2xl shadow-2xl p-2 space-y-1">
+
+                {{-- Option 1: Stories Feed --}}
+                <button type="button" @click="activeTab = 'timeline'; isTabDropdownOpen = false; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });"
+                    :class="activeTab === 'timeline' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-bold' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'"
+                    class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center">
+                            <i data-lucide="clock" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <span class="block">Stories Feed</span>
+                            <span class="text-[10px] text-stone-400 font-normal">Living memories & personal chronicle</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                            :class="activeTab === 'timeline' ? 'bg-amber-500 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'">
+                            {{ $stats['stories'] }}
+                        </span>
+                        <template x-if="activeTab === 'timeline'">
+                            <i data-lucide="check" class="w-4 h-4 text-amber-500"></i>
+                        </template>
+                    </div>
                 </button>
 
-                <button @click="activeTab = 'chapters'"
-                    :class="activeTab === 'chapters' ? 'bg-amber-500 text-white shadow-md' : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800'"
-                    class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap flex items-center gap-1.5 sm:gap-2 shrink-0">
-                    <i data-lucide="book-open" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-                    <span>Life Chapters</span>
-                    <span class="px-1.5 py-0.5 rounded-full text-[10px]" :class="activeTab === 'chapters' ? 'bg-white/20 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'">{{ $lifeChapters->count() }}</span>
+                {{-- Option 2: Life Chapters --}}
+                <button type="button" @click="activeTab = 'chapters'; isTabDropdownOpen = false; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });"
+                    :class="activeTab === 'chapters' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-bold' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'"
+                    class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center">
+                            <i data-lucide="book-open" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <span class="block">Life Chapters</span>
+                            <span class="text-[10px] text-stone-400 font-normal">Milestones & historical transitions</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                            :class="activeTab === 'chapters' ? 'bg-amber-500 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'">
+                            {{ $lifeChapters->count() }}
+                        </span>
+                        <template x-if="activeTab === 'chapters'">
+                            <i data-lucide="check" class="w-4 h-4 text-amber-500"></i>
+                        </template>
+                    </div>
                 </button>
 
-                <button @click="activeTab = 'cultures'"
-                    :class="activeTab === 'cultures' ? 'bg-amber-500 text-white shadow-md' : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800'"
-                    class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap flex items-center gap-1.5 sm:gap-2 shrink-0">
-                    <i data-lucide="archive" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-                    <span>Cultural Stories</span>
-                    <span class="px-1.5 py-0.5 rounded-full text-[10px]" :class="activeTab === 'cultures' ? 'bg-white/20 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'">{{ $cultures->count() }}</span>
+                {{-- Option 3: Cultural Stories --}}
+                <button type="button" @click="activeTab = 'cultures'; isTabDropdownOpen = false; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });"
+                    :class="activeTab === 'cultures' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-bold' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'"
+                    class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-lg bg-orange-100 dark:bg-orange-950/60 text-orange-600 flex items-center justify-center">
+                            <i data-lucide="archive" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <span class="block">Cultural Stories</span>
+                            <span class="text-[10px] text-stone-400 font-normal">Folklore, rituals & oral histories</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                            :class="activeTab === 'cultures' ? 'bg-amber-500 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'">
+                            {{ $cultures->count() }}
+                        </span>
+                        <template x-if="activeTab === 'cultures'">
+                            <i data-lucide="check" class="w-4 h-4 text-amber-500"></i>
+                        </template>
+                    </div>
                 </button>
 
-                <button @click="activeTab = 'communities'"
-                    :class="activeTab === 'communities' ? 'bg-amber-500 text-white shadow-md' : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800'"
-                    class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap flex items-center gap-1.5 sm:gap-2 shrink-0">
-                    <i data-lucide="users" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-                    <span>Communities</span>
-                    <span class="px-1.5 py-0.5 rounded-full text-[10px]" :class="activeTab === 'communities' ? 'bg-white/20 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'">{{ $communities->count() }}</span>
+                {{-- Option 4: Communities --}}
+                <button type="button" @click="activeTab = 'communities'; isTabDropdownOpen = false; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });"
+                    :class="activeTab === 'communities' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-bold' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'"
+                    class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center">
+                            <i data-lucide="users" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <span class="block">Communities & Tribes</span>
+                            <span class="text-[10px] text-stone-400 font-normal">Heritage circles and craft collectives</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                            :class="activeTab === 'communities' ? 'bg-amber-500 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'">
+                            {{ $communities->count() }}
+                        </span>
+                        <template x-if="activeTab === 'communities'">
+                            <i data-lucide="check" class="w-4 h-4 text-amber-500"></i>
+                        </template>
+                    </div>
                 </button>
 
-                <button @click="activeTab = 'events'"
-                    :class="activeTab === 'events' ? 'bg-amber-500 text-white shadow-md' : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800'"
-                    class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap flex items-center gap-1.5 sm:gap-2 shrink-0">
-                    <i data-lucide="calendar" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-                    <span>Gatherings</span>
-                    <span class="px-1.5 py-0.5 rounded-full text-[10px]" :class="activeTab === 'events' ? 'bg-white/20 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'">{{ $organizedEvents->count() + $attendingEvents->count() }}</span>
+                {{-- Option 5: Gatherings --}}
+                <button type="button" @click="activeTab = 'events'; isTabDropdownOpen = false; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });"
+                    :class="activeTab === 'events' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-bold' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'"
+                    class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center">
+                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <span class="block">Gatherings & Workshops</span>
+                            <span class="text-[10px] text-stone-400 font-normal">Masterclasses, tickets & passes</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                            :class="activeTab === 'events' ? 'bg-amber-500 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'">
+                            {{ $organizedEvents->count() + $attendingEvents->count() }}
+                        </span>
+                        <template x-if="activeTab === 'events'">
+                            <i data-lucide="check" class="w-4 h-4 text-amber-500"></i>
+                        </template>
+                    </div>
                 </button>
 
+                {{-- Option 6: Heritage Vault --}}
                 @if(auth()->id() === $user->id || $vaultItems->count() > 0)
-                    <button @click="activeTab = 'vault'"
-                        :class="activeTab === 'vault' ? 'bg-amber-500 text-white shadow-md' : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800'"
-                        class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap flex items-center gap-1.5 sm:gap-2 shrink-0">
-                        <i data-lucide="lock" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-                        <span>Heritage Vault</span>
-                        <span class="px-1.5 py-0.5 rounded-full text-[10px]" :class="activeTab === 'vault' ? 'bg-white/20 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'">{{ $vaultCount }}</span>
+                    <button type="button" @click="activeTab = 'vault'; isTabDropdownOpen = false; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });"
+                        :class="activeTab === 'vault' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-bold' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'"
+                        class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer">
+                        <div class="flex items-center gap-3">
+                            <div class="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center">
+                                <i data-lucide="lock" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <span class="block">Personal Heritage Vault</span>
+                                <span class="text-[10px] text-stone-400 font-normal">Encrypted documents & heirlooms</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                :class="activeTab === 'vault' ? 'bg-amber-500 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'">
+                                {{ $vaultCount }}
+                            </span>
+                            <template x-if="activeTab === 'vault'">
+                                <i data-lucide="check" class="w-4 h-4 text-amber-500"></i>
+                            </template>
+                        </div>
                     </button>
                 @endif
 
+                {{-- Option 7: Privacy Hub (Owner Only) --}}
                 @if(auth()->id() === $user->id)
-                    <button @click="activeTab = 'privacy_hub'"
-                        :class="activeTab === 'privacy_hub' ? 'bg-amber-500 text-white shadow-md' : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800'"
-                        class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap flex items-center gap-1.5 sm:gap-2 shrink-0">
-                        <i data-lucide="shield" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-                        <span>Privacy & Sovereignty</span>
+                    <button type="button" @click="activeTab = 'privacy_hub'; isTabDropdownOpen = false; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });"
+                        :class="activeTab === 'privacy_hub' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 font-bold' : 'text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800'"
+                        class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-left cursor-pointer">
+                        <div class="flex items-center gap-3">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
+                                <i data-lucide="shield" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <span class="block">Privacy & Sovereignty</span>
+                                <span class="text-[10px] text-stone-400 font-normal">Data rights & vault protection controls</span>
+                            </div>
+                        </div>
+                        <template x-if="activeTab === 'privacy_hub'">
+                            <i data-lucide="check" class="w-4 h-4 text-amber-500"></i>
+                        </template>
                     </button>
                 @endif
 

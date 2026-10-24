@@ -73,6 +73,8 @@ Route::middleware('auth')->group(function () {
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show'); // Auth user
+    Route::get('/profile/activity', [ProfileController::class, 'activity'])->name('profile.activity');
+    Route::get('/profile/{user}/activity', [ProfileController::class, 'userActivity'])->name('profile.user.activity');
     Route::get('/profile/{user}', [ProfileController::class, 'showUser'])->name('profile.user'); // Other users
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

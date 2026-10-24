@@ -199,4 +199,34 @@ class ProfileTest extends TestCase
 
         $this->assertNotNull($user->fresh());
     }
+
+    public function test_user_can_view_activity_and_preservation_log_page(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->get(route('profile.activity'));
+
+        $response->assertOk();
+        $response->assertSee('Activity &amp; Preservation Log', false);
+        $response->assertSee('Stories');
+        $response->assertSee('Locked In');
+        $response->assertSee('Vibes / Taps');
+    }
+
+    public function test_user_can_view_another_user_activity_log_page(): void
+    {
+        $user = User::factory()->create(['username' => 'alice_cultural']);
+        $viewer = User::factory()->create();
+
+        $response = $this
+            ->actingAs($viewer)
+            ->get(route('profile.user.activity', $user));
+
+        $response->assertOk();
+        $response->assertSee('Activity &amp; Preservation Log', false);
+        $response->assertSee('alice_cultural');
+    }
 }
+
