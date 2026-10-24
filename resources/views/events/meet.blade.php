@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Timeline Meet - ' . $event->title)
+@section('title', 'Kulturegram Meet - ' . $event->title)
 
 @section('content')
 <div class="fixed inset-0 z-[60] bg-stone-950 flex flex-col pt-16 md:ml-20">
@@ -29,7 +29,7 @@
         </div>
     </div>
 
-    <div id="timeline-meet-container" class="flex-1 w-full bg-stone-950"></div>
+    <div id="kulturegram-meet-container" class="flex-1 w-full bg-stone-950"></div>
 </div>
 
 @push('scripts')
@@ -41,7 +41,7 @@
             roomName: "{{ $event->virtual_room_id }}",
             width: '100%',
             height: '100%',
-            parentNode: document.querySelector('#timeline-meet-container'),
+            parentNode: document.querySelector('#kulturegram-meet-container'),
             userInfo: {
                 displayName: "{{ auth()->user()->name }}",
                 email: "{{ auth()->user()->email }}"

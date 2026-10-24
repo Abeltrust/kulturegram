@@ -70,7 +70,7 @@
         {{-- Upcoming & All Events --}}
         <section class="space-y-6">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <h2 class="text-xl font-bold text-gray-800 dark:text-stone-100">Discovery Timeline</h2>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-stone-100">Discovery Events</h2>
 
                 {{-- Unified Filter Navigation --}}
                 <nav class="flex p-1 bg-stone-100 dark:bg-stone-800 rounded-xl w-fit">

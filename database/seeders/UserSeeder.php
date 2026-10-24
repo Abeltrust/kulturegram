@@ -14,12 +14,13 @@ class UserSeeder extends Seeder
     public function run()
     {
         // Admin user
-        User::firstOrCreate(
+        User::updateOrCreate(
             ['username' => 'admin'],
             [
                 'name' => 'Admin User',
-                'email' => 'admin@timeline.com',
+                'email' => 'admin@kulturegram.com',
                 'password' => \Illuminate\Support\Facades\Hash::make('password'),
+                'is_admin' => true,
             ]
         );
 

@@ -1,8 +1,8 @@
 {
-    "name": "timeline/cultural-platform",
+    "name": "kulturegram/cultural-platform",
     "type": "project",
-    "description": "Timeline - Cultural Preservation Platform",
-    "keywords": ["laravel", "cultural", "heritage", "preservation"],
+    "description": "Kulturegram - Cultural Preservation Platform",
+    "keywords": ["laravel", "cultural", "heritage", "preservation", "kulturegram"],
     "license": "MIT",
     "require": {
         "php": "^8.1",
@@ -15,6 +15,7 @@
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {
+        "doctrine/dbal": "^3.10",
         "fakerphp/faker": "^1.9.1",
         "laravel/breeze": "^1.29",
         "laravel/pint": "^1.0",

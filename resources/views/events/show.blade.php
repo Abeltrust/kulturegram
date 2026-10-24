@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $event->title . ' - Timeline Events')
+@section('title', $event->title . ' - Kulturegram Events')
 
 @section('content')
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
@@ -191,9 +191,14 @@
                 <div class="space-y-3 pt-2">
                     @auth
                         @if($event->organizer_id == auth()->id())
-                            <div class="bg-stone-100 dark:bg-stone-800 p-4 rounded-xl text-center">
-                                <p class="text-xs uppercase font-black text-stone-400 tracking-widest mb-1">Host Controls</p>
-                                <p class="text-stone-600 dark:text-stone-300 font-bold">You are the Organizer</p>
+                            <div class="bg-stone-100 dark:bg-stone-800 p-4 rounded-xl text-center space-y-3">
+                                <div>
+                                    <p class="text-xs uppercase font-black text-stone-400 tracking-widest mb-1">Host Controls</p>
+                                    <p class="text-stone-600 dark:text-stone-300 font-bold">You are the Organizer</p>
+                                </div>
+                                <a href="{{ route('events.edit', $event) }}" class="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm rounded-xl transition shadow-sm">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i> Edit Event Details
+                                </a>
                             </div>
                         @elseif($event->attendees->contains(auth()->id()))
                             <div class="text-center">
@@ -220,7 +225,7 @@
                                     </button>
                                 </form>
                                 @if($event->price > 0)
-                                    <p class="text-[10px] text-center text-stone-400 font-bold uppercase tracking-tight mt-2">Secure Ticketing Powered by Timeline Education</p>
+                                    <p class="text-[10px] text-center text-stone-400 font-bold uppercase tracking-tight mt-2">Secure Ticketing Powered by Kulturegram Education</p>
                                 @endif
                             @endif
                         @endif

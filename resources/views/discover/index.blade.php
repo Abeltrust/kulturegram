@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Discover - Timeline')
+@section('title', 'Discover - Kulturegram')
 
 @section('content')
     <div class="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <title>@yield('title', 'Timeline - Cultural Preservation Platform')</title>
+    <title>@yield('title', 'Kulturegram - Cultural Preservation Platform')</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -211,7 +211,7 @@
                     <i data-lucide="book-open" class="w-4 h-4 sm:w-5 sm:h-5 text-white"></i>
                 </div>
                 <a href="{{ route('timeline.index') }}" class="text-base sm:text-xl font-bold bg-gradient-to-r from-stone-800 to-stone-600 bg-clip-text text-transparent hover:from-amber-600 hover:to-orange-600 transition-all duration-200">
-                    Timeline
+                    Kulturegram
                 </a>
             </div>
 
@@ -269,13 +269,21 @@
                             </button>
 
                             <div x-show="open" @click.away="open = false" x-cloak
-                                class="absolute right-0 mt-2 w-44 sm:w-48 bg-white rounded-lg shadow-lg border border-stone-200 py-2">
-                                <a href="{{ route('profile.show') }}" class="block px-4 py-2 text-xs sm:text-sm text-stone-700 hover:bg-stone-50">My Profile</a>
-                                <a href="{{ route('settings.index',auth()->user()->id) }}" class="block px-4 py-2 text-xs sm:text-sm text-stone-700 hover:bg-stone-50">Settings</a>
-                                <hr class="my-2">
+                                class="absolute right-0 mt-2 w-48 bg-white dark:bg-stone-900 rounded-2xl shadow-xl border border-stone-200 dark:border-stone-800 py-2 z-50">
+                                <a href="{{ route('profile.show') }}" class="block px-4 py-2 text-xs sm:text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 font-medium">My Profile & Story</a>
+                                <a href="{{ route('settings.index', auth()->user()->id) }}" class="block px-4 py-2 text-xs sm:text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 font-medium">Account Settings</a>
+                                <a href="{{ route('privacy') }}" class="block px-4 py-2 text-xs sm:text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 font-medium">Privacy Policy</a>
+                                @if(auth()->user()->is_admin)
+                                    <a href="{{ route('admin.cultures.index') }}" class="block px-4 py-2 text-xs sm:text-sm text-amber-600 font-bold hover:bg-amber-50 dark:hover:bg-amber-950/40">
+                                        <span class="flex items-center gap-1.5">
+                                            <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Admin Center
+                                        </span>
+                                    </a>
+                                @endif
+                                <hr class="my-2 border-stone-100 dark:border-stone-800">
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit" class="block w-full text-left px-4 py-2 text-xs sm:text-sm text-red-600 hover:bg-red-50">Sign Out</button>
+                                    <button type="submit" class="block w-full text-left px-4 py-2 text-xs sm:text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 font-medium">Sign Out</button>
                                 </form>
                             </div>
                         </div>
@@ -354,7 +362,7 @@
                 <div class="mt-6 pt-4 border-t border-stone-200 dark:border-stone-800">
                     <div 
                          x-data
-                         @mouseenter="$dispatch('show-tooltip', { text: 'Timeline preserves your authentic journey', x: $el.getBoundingClientRect().right + 12, y: $el.getBoundingClientRect().top + ($el.offsetHeight / 2) })"
+                         @mouseenter="$dispatch('show-tooltip', { text: 'Kulturegram preserves your authentic journey', x: $el.getBoundingClientRect().right + 12, y: $el.getBoundingClientRect().top + ($el.offsetHeight / 2) })"
                          @mouseleave="$dispatch('hide-tooltip')"
                          class="w-12 h-12 flex items-center justify-center rounded-xl bg-stone-100 dark:bg-stone-800 text-stone-400 dark:text-stone-500 cursor-help">
                          <i data-lucide="activity" class="w-5 h-5"></i>

@@ -166,4 +166,60 @@ class CommunityController extends Controller
 
         return redirect()->back()->with('success', "Left {$community->name}.");
     }
+
+    public function edit(Community $community)
+    {
+        if (Auth::id() !== $community->created_by && !$community->members()->where('user_id', Auth::id())->wherePivot('role', 'admin')->exists()) {
+            abort(403, 'Unauthorized. Only community admins can edit this community.');
+        }
+
+        return view('communities.edit', compact('community'));
+    }
+
+    public function update(Request $request, Community $community)
+    {
+        if (Auth::id() !== $community->created_by && !$community->members()->where('user_id', Auth::id())->wherePivot('role', 'admin')->exists()) {
+            abort(403, 'Unauthorized. Only community admins can update this community.');
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255|unique:communities,name,' . $community->id,
+            'description' => 'required|string',
+            'category' => 'required|string',
+            'rules' => 'nullable|string',
+            'is_private' => 'boolean',
+            'image' => 'nullable|image|max:10240',
+        ]);
+
+        $community->fill($request->except(['image', 'is_private']));
+        $community->is_private = $request->boolean('is_private');
+
+        if ($request->hasFile('image')) {
+            if ($community->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($community->image)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($community->image);
+            }
+            $community->image = $request->file('image')->store('communities', 'public');
+        }
+
+        $community->save();
+
+        return redirect()->route('communities.show', $community)
+            ->with('success', 'Community updated successfully!');
+    }
+
+    public function destroy(Community $community)
+    {
+        if (Auth::id() !== $community->created_by) {
+            abort(403, 'Unauthorized. Only the community creator can delete this community.');
+        }
+
+        if ($community->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($community->image)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($community->image);
+        }
+
+        $community->delete();
+
+        return redirect()->route('communities.index')
+            ->with('success', 'Community removed successfully.');
+    }
 }

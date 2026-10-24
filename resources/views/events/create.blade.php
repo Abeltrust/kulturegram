@@ -101,7 +101,7 @@
                 <input type="hidden" name="is_hosted" value="0">
                 <input type="checkbox" name="is_hosted" value="1" id="is_hosted" class="w-5 h-5 rounded border-stone-300 text-amber-500 focus:ring-amber-500" {{ old('is_hosted') ? 'checked' : '' }} onchange="toggleHostedFields()">
                 <div>
-                    <span class="block text-stone-800 dark:text-stone-200 font-medium">Host class content directly on Timeline</span>
+                    <span class="block text-stone-800 dark:text-stone-200 font-medium">Host class content directly on Kulturegram</span>
                     <span class="block text-xs text-stone-500 dark:text-stone-400">Perfect for sharing videos, text lessons, and resources without needing external apps.</span>
                 </div>
             </label>
@@ -157,7 +157,7 @@
               <input type="checkbox" id="enable_virtual" class="w-6 h-6 rounded-lg border-stone-300 text-blue-500 focus:ring-blue-500" onchange="toggleVirtualRoom()">
               <input type="hidden" name="virtual_room_id" id="virtual_room_id">
               <div>
-                  <span class="block text-stone-900 dark:text-stone-100 font-black text-lg">Timeline Meet (Virtual Classroom)</span>
+                  <span class="block text-stone-900 dark:text-stone-100 font-black text-lg">Kulturegram Meet (Virtual Classroom)</span>
                   <span class="block text-stone-600 dark:text-stone-400 text-sm">Host a live, interactive video meeting with screen sharing on the platform. Participants can join directly from the event page.</span>
               </div>
           </label>
@@ -227,7 +227,7 @@
             if (isEnable) {
                 // Generate a unique room ID
                 const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
-                roomIdField.value = `TIMELINE-MEET-${randomStr}`;
+                roomIdField.value = `KULTUREGRAM-MEET-${randomStr}`;
             } else {
                 roomIdField.value = '';
             }

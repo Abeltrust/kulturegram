@@ -1,7 +1,7 @@
 {
-    "name": "timeline-cultural-platform",
+    "name": "kulturegram-cultural-platform",
     "version": "1.0.0",
-    "description": "Laravel-based cultural preservation platform",
+    "description": "Kulturegram - Cultural preservation and heritage platform",
     "private": true,
     "type": "module",
     "scripts": {

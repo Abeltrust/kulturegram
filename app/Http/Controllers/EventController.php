@@ -47,7 +47,11 @@ class EventController extends Controller
                 }
                 break;
             case 'nearby':
-                // Location filtering mock
+                if (Auth::check() && Auth::user()->location) {
+                    $eventQuery->where('location', 'like', '%' . Auth::user()->location . '%');
+                } elseif ($request->filled('location')) {
+                    $eventQuery->where('location', 'like', '%' . $request->location . '%');
+                }
                 break;
         }
 
@@ -239,5 +243,73 @@ class EventController extends Controller
         ]);
 
         return back()->with('success', 'Thank you for your generous contribution!');
+    }
+
+    public function edit(Event $event)
+    {
+        if (Auth::id() !== $event->organizer_id) {
+            abort(403, 'Unauthorized. Only the event organizer can edit this event.');
+        }
+
+        return view('events.edit', compact('event'));
+    }
+
+    public function update(Request $request, Event $event)
+    {
+        if (Auth::id() !== $event->organizer_id) {
+            abort(403, 'Unauthorized. Only the event organizer can update this event.');
+        }
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'event_date' => 'required|date',
+            'event_time' => 'required',
+            'location' => 'required|string|max:255',
+            'type' => 'required|string|max:50',
+            'max_attendees' => 'nullable|integer|min:1',
+            'price' => 'nullable|numeric|min:0',
+            'is_online' => 'boolean',
+            'meeting_link' => 'nullable|url',
+            'is_hosted' => 'boolean',
+            'hosted_content' => 'nullable|string',
+            'requirements' => 'nullable|array',
+            'image' => 'nullable|image|max:10240',
+            'community_id' => 'nullable|exists:communities,id',
+            'accepts_contributions' => 'boolean',
+        ]);
+
+        $event->fill($request->except(['image', 'is_hosted', 'accepts_contributions']));
+        $event->price = $request->input('price', 0) ?: 0;
+        $event->is_hosted = $request->boolean('is_hosted');
+        $event->accepts_contributions = $request->boolean('accepts_contributions');
+
+        if ($request->hasFile('image')) {
+            if ($event->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($event->image)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($event->image);
+            }
+            $event->image = $request->file('image')->store('events', 'public');
+        }
+
+        $event->save();
+
+        return redirect()->route('events.show', $event)
+            ->with('success', 'Event updated successfully!');
+    }
+
+    public function destroy(Event $event)
+    {
+        if (Auth::id() !== $event->organizer_id) {
+            abort(403, 'Unauthorized. Only the event organizer can delete this event.');
+        }
+
+        if ($event->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($event->image)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($event->image);
+        }
+
+        $event->delete();
+
+        return redirect()->route('events.index')
+            ->with('success', 'Event cancelled and removed successfully.');
     }
 }

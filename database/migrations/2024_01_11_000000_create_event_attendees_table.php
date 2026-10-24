@@ -8,15 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('event_attendees', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('event_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->enum('status', ['registered', 'attended', 'cancelled'])->default('registered');
-            $table->timestamps();
-            
-            $table->unique(['event_id', 'user_id']);
-        });
+        if (!Schema::hasTable('event_attendees')) {
+            Schema::create('event_attendees', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('event_id')->constrained()->onDelete('cascade');
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->enum('status', ['registered', 'attended', 'cancelled'])->default('registered');
+                $table->timestamps();
+                
+                $table->unique(['event_id', 'user_id']);
+            });
+        }
     }
 
     public function down(): void

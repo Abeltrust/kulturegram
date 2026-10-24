@@ -190,7 +190,7 @@
                         </h3>
 
                         <p class="font-semibold text-stone-800 dark:text-stone-100">
-                            {{ $culture->submitter->name ?? 'Timeline Preserver' }}
+                            {{ $culture->submitter->name ?? 'Kulturegram Preserver' }}
                         </p>
 
                         <div class="mt-4 text-xs text-stone-400 space-y-2">

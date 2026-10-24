@@ -104,6 +104,37 @@ class VaultController extends Controller
             ->with('success', 'Item deleted successfully!');
     }
 
+    public function edit(VaultItem $vaultItem)
+    {
+        $this->authorize('update', $vaultItem);
+
+        return view('vault.edit', compact('vaultItem'));
+    }
+
+    public function update(Request $request, VaultItem $vaultItem)
+    {
+        $this->authorize('update', $vaultItem);
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'cultural_significance' => 'nullable|string',
+            'access_level' => 'required|in:private,family,research,public',
+            'is_hidden' => 'boolean',
+        ]);
+
+        $vaultItem->update([
+            'title' => $request->title,
+            'description' => $request->description,
+            'cultural_significance' => $request->cultural_significance,
+            'access_level' => $request->access_level,
+            'is_hidden' => $request->boolean('is_hidden'),
+        ]);
+
+        return redirect()->route('vault.show', $vaultItem)
+            ->with('success', 'Vault item updated successfully!');
+    }
+
     private function formatBytes($size, $precision = 2)
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];

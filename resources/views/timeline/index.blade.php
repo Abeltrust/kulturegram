@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Timeline - Your Cultural Journey')
+@section('title', 'Kulturegram - Your Cultural Journey')
 
 @section('content')
     <div class="max-w-6xl mx-auto p-4 sm:p-6">
@@ -14,7 +14,7 @@
                         <i data-lucide="book-open" class="w-7 h-7 sm:w-8 sm:h-8 text-white"></i>
                     </div>
                     <h2 class="text-2xl sm:text-3xl font-bold text-stone-800 dark:text-white mb-3">
-                        Welcome to Timeline
+                        Welcome to Kulturegram
                     </h2>
                     <p class="text-base sm:text-lg text-stone-600 dark:text-stone-400 leading-relaxed max-w-2xl mx-auto">
                         Your life. Your culture. Your story. A new kind of social platform designed to capture
@@ -62,7 +62,7 @@
                     <p class="text-stone-600 mb-4">Ready to start your timeline?</p>
                     <a href="{{ route('register') }}"
                         class="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 sm:px-8 py-3 rounded-xl font-semibold hover:from-amber-600 hover:to-orange-700 transition-all duration-200 shadow-md hover:shadow-lg">
-                        Join Timeline
+                        Join Kulturegram
                     </a>
                 </div>
             </div>
@@ -245,7 +245,7 @@
                     <i data-lucide="book-open" class="w-14 h-14 sm:w-16 sm:h-16 text-stone-300 mx-auto mb-4"></i>
                     <h3 class="text-base sm:text-lg font-semibold text-stone-600 mb-2">No stories yet</h3>
                     <p class="text-stone-500 mb-4">
-                        @auth Be the first to share your story! @else Join Timeline to start sharing. @endauth
+                        @auth Be the first to share your story! @else Join Kulturegram to start sharing. @endauth
                     </p>
                 </div>
             @endforelse

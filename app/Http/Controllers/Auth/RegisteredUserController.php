@@ -19,7 +19,7 @@ class RegisteredUserController extends Controller
     /**
      * Display the registration view.
      */
-    public function create(): Response
+    public function create()
     {
         return view('auth.register'); 
     }
@@ -31,6 +31,12 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        if (!$request->filled('username') && $request->filled('name')) {
+            $request->merge([
+                'username' => strtolower(preg_replace('/[^A-Za-z0-9]/', '', $request->name)) . rand(10, 99)
+            ]);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users,username',

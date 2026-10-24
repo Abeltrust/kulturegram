@@ -19,13 +19,16 @@ class User extends Authenticatable
         'password',
         'bio',
         'location',
+        'website',
         'avatar',
+        'cover_photo',
         'cultural_background',
         'languages',
         'cultural_interests',
         'is_online',
         'last_seen',
         'preferences',
+        'is_admin',
     ];
 
     protected $hidden = [
@@ -39,6 +42,7 @@ class User extends Authenticatable
         'languages' => 'array',
         'cultural_interests' => 'array',
         'is_online' => 'boolean',
+        'is_admin' => 'boolean',
         'last_seen' => 'datetime',
         'preferences' => 'array',
     ];
@@ -193,6 +197,13 @@ class User extends Authenticatable
         return $this->avatar
             ? asset('storage/avatars/' . $this->avatar)
             : 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=F59E0B&background=FEF3C7';
+    }
+
+    public function getCoverPhotoUrlAttribute()
+    {
+        return $this->cover_photo
+            ? asset('storage/covers/' . $this->cover_photo)
+            : null;
     }
 
     public function markOnline()

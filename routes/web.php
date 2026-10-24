@@ -25,6 +25,8 @@ Route::get('/', [TimelineController::class, 'index'])->name('timeline.index');
 Route::get('/cultural-hub', [CulturalHubController::class, 'index'])->name('cultural-hub.index');
 Route::get('/discover', [DiscoverController::class, 'index'])->name('discover.index');
 Route::get('/education', [EducationalHubController::class, 'index'])->name('education.index');
+Route::get('/privacy', function () { return view('pages.privacy'); })->name('privacy');
+Route::get('/terms', function () { return view('pages.terms'); })->name('terms');
 
 
 //  Auth routes
@@ -42,7 +44,7 @@ Route::get('/register', function () {
 
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    return redirect()->route('timeline.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 //  Protected routes (require login)
@@ -77,13 +79,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/profile/chapters/create', [ProfileController::class, 'createChapter'])->name('profile.chapters.create');
     Route::post('/profile/chapters', [ProfileController::class, 'storeChapter'])->name('profile.chapters.store');
+    Route::delete('/profile/chapters/{chapter}', [ProfileController::class, 'deleteChapter'])->name('profile.chapters.destroy');
     Route::post('/profile/photo', [ProfileController::class, 'photo'])->name('profile.photo.upload');
+    Route::post('/profile/cover', [ProfileController::class, 'cover'])->name('profile.cover.upload');
     Route::get('/settings/{id}', [ProfileController::class, 'settings'])->name('settings.index');
     Route::patch('/settings/{id}', [ProfileController::class, 'updateSettings'])->name('settings.update');
 
 
     // Vault
-    Route::resource('vault', VaultController::class);
+    Route::resource('vault', VaultController::class)->parameters(['vault' => 'vaultItem']);
     Route::get('/vault/{vaultItem}/download', [VaultController::class, 'download'])->name('vault.download');
 
     // Events
@@ -127,8 +131,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/live-stream/{stream}/end', [LiveStreamController::class, 'end'])->name('live-stream.end');
     Route::post('/live-stream/{stream}/ajax-end', [LiveStreamController::class, 'ajaxEnd'])->name('live-stream.ajax-end');
 
-    // Timeline Meet - Virtual Classroom
+    // Kulturegram Meet - Virtual Classroom
     Route::get('/events/{event}/meet', [EventController::class, 'meet'])->name('events.meet');
+
+    // Admin Moderation
+    Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/cultures', [\App\Http\Controllers\Admin\ModerationController::class, 'index'])->name('cultures.index');
+        Route::post('/cultures/{culture}/approve', [\App\Http\Controllers\Admin\ModerationController::class, 'approve'])->name('cultures.approve');
+        Route::post('/cultures/{culture}/feature', [\App\Http\Controllers\Admin\ModerationController::class, 'feature'])->name('cultures.feature');
+        Route::delete('/cultures/{culture}', [\App\Http\Controllers\Admin\ModerationController::class, 'destroy'])->name('cultures.destroy');
+    });
 });
 
 Route::get('/cultural-hub/{culture}', [CulturalHubController::class, 'show'])->name('cultural-hub.show');

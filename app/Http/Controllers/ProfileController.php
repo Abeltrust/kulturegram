@@ -3,88 +3,304 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\LifeChapter;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
-use Inertia\Inertia;
-use Inertia\Response;
-use App\Models\User;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * Upload or update user avatar.
      */
     public function photo(Request $request)
     {
         $request->validate([
-            'profile_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'profile_photo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ]);
 
         $user = Auth::user();
 
-        // Delete old avatar if exists
-        if ($user->avatar && Storage::exists('public/avatars/' . $user->avatar)) {
-            Storage::delete('public/avatars/' . $user->avatar);
+        // Delete old avatar if exists in local storage
+        if ($user->avatar && Storage::disk('public')->exists('avatars/' . $user->avatar)) {
+            Storage::disk('public')->delete('avatars/' . $user->avatar);
         }
 
-        $avatarName = time() . '.' . $request->profile_photo->extension();
-        $request->profile_photo->storeAs('public/avatars', $avatarName);
+        $avatarName = time() . '_' . uniqid() . '.' . $request->file('profile_photo')->extension();
+        $request->file('profile_photo')->storeAs('avatars', $avatarName, 'public');
 
         $user->update([
             'avatar' => $avatarName,
         ]);
 
-        return back()->with('success', 'Profile photo updated successfully.');
-    }
-    public function show()
-    {
-        $user = auth()->User()->loadCount([
-            //  'stories', 
-            // 'lockedIns', 
-            // 'taps', 
-            // 'lifeChapters'
-        ])->load('lifeChapters');
-
-        return view('profile.index', compact('user'));
-    }
-
-    public function showUser($user)
-    {
-        $user = User::withCount([
-            'posts',
-            'lifeChapters'
-        ])
-            ->with('lifeChapters')
-            ->where('id', $user)
-            ->orWhere('username', $user) // optional if you have usernames
-            ->firstOrFail();
-
-        $isLockedIn = false;
-        $hasVibed = false;
-
-        if (auth()->check()) {
-            $isLockedIn = auth()->user()->hasLockedIn($user);
-            $hasVibed = auth()->user()->hasTapped($user);
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'avatar_url' => $user->fresh()->profile_photo_url,
+                'message' => 'Profile picture updated successfully.'
+            ]);
         }
 
-        return view('profile.index', compact('user', 'isLockedIn', 'hasVibed'));
-    }
-
-    public function edit(Request $request): Response
-    {
-        return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
-            'status' => session('status'),
-        ]);
+        return back()->with('success', 'Profile picture updated successfully.');
     }
 
     /**
-     * Update the user's profile information.
+     * Upload or update custom cover photo.
+     */
+    public function cover(Request $request)
+    {
+        $request->validate([
+            'cover_photo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:8192',
+        ]);
+
+        $user = Auth::user();
+
+        if ($user->cover_photo && Storage::disk('public')->exists('covers/' . $user->cover_photo)) {
+            Storage::disk('public')->delete('covers/' . $user->cover_photo);
+        }
+
+        $coverName = time() . '_' . uniqid() . '.' . $request->file('cover_photo')->extension();
+        $request->file('cover_photo')->storeAs('covers', $coverName, 'public');
+
+        $user->update([
+            'cover_photo' => $coverName,
+        ]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'cover_url' => $user->fresh()->cover_photo_url,
+                'message' => 'Cover banner updated successfully.'
+            ]);
+        }
+
+        return back()->with('success', 'Cover banner updated successfully.');
+    }
+
+    /**
+     * Authenticated User Profile & Dashboard
+     */
+    public function show()
+    {
+        $user = Auth::user();
+
+        $posts = $user->posts()
+            ->with(['taps', 'comments.user'])
+            ->latest()
+            ->paginate(10);
+
+        $lifeChapters = $user->lifeChapters()
+            ->orderBy('order', 'asc')
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $cultures = $user->cultures()
+            ->latest()
+            ->get();
+
+        $communities = $user->communities()
+            ->withCount('members')
+            ->latest()
+            ->get();
+
+        $organizedEvents = $user->events()
+            ->latest('event_date')
+            ->get();
+
+        $attendingEvents = $user->attendingEvents()
+            ->latest('event_date')
+            ->get();
+
+        $vaultItems = $user->vaultItems()
+            ->latest()
+            ->take(8)
+            ->get();
+
+        $vaultCount = $user->vaultItems()->count();
+
+        $totalTaps = (int) $user->posts()->sum('taps_count') + (int) $user->taps_received;
+        $totalResonance = (int) $user->posts()->sum('resonance_count');
+        $contributionsCount = $user->cultures()->count();
+        $storiesCount = $user->posts()->count();
+
+        $stats = [
+            'stories' => $storiesCount,
+            'locked_in' => $user->locked_in_count,
+            'vibes' => $totalTaps,
+            'resonance' => $totalResonance,
+            'contributions' => $contributionsCount,
+            'vault' => $vaultCount,
+            'communities' => $communities->count(),
+            'events' => $organizedEvents->count() + $attendingEvents->count(),
+            'preservation_score' => min(100, round(($contributionsCount * 10) + ($storiesCount * 2) + ($vaultCount * 3) + ($totalResonance * 0.1))),
+        ];
+
+        return view('profile.index', compact(
+            'user',
+            'posts',
+            'lifeChapters',
+            'cultures',
+            'communities',
+            'organizedEvents',
+            'attendingEvents',
+            'vaultItems',
+            'vaultCount',
+            'stats'
+        ));
+    }
+
+    /**
+     * Public User Profile
+     */
+    public function showUser($user)
+    {
+        $targetUser = User::where('id', $user)
+            ->orWhere('username', $user)
+            ->firstOrFail();
+
+        // If authenticated user is looking at their own profile, redirect to dashboard
+        if (Auth::check() && Auth::id() === $targetUser->id) {
+            return redirect()->route('profile.show');
+        }
+
+        $isLockedIn = Auth::check() ? Auth::user()->hasLockedIn($targetUser) : false;
+        $hasVibed = Auth::check() ? Auth::user()->hasTapped($targetUser) : false;
+
+        $posts = $targetUser->posts()
+            ->with(['taps', 'comments.user'])
+            ->latest()
+            ->paginate(10);
+
+        $lifeChapters = $targetUser->lifeChapters()
+            ->orderBy('order', 'asc')
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $cultures = $targetUser->cultures()
+            ->whereIn('status', ['approved', 'featured'])
+            ->latest()
+            ->get();
+
+        $communities = $targetUser->communities()
+            ->withCount('members')
+            ->latest()
+            ->get();
+
+        $organizedEvents = $targetUser->events()
+            ->latest('event_date')
+            ->get();
+
+        $attendingEvents = $targetUser->attendingEvents()
+            ->latest('event_date')
+            ->get();
+
+        // Public vault items
+        $vaultItems = $targetUser->vaultItems()
+            ->where('access_level', 'public')
+            ->latest()
+            ->take(8)
+            ->get();
+
+        $vaultCount = $targetUser->vaultItems()
+            ->where('access_level', 'public')
+            ->count();
+
+        $totalTaps = (int) $targetUser->posts()->sum('taps_count') + (int) $targetUser->taps_received;
+        $totalResonance = (int) $targetUser->posts()->sum('resonance_count');
+        $contributionsCount = $cultures->count();
+        $storiesCount = $targetUser->posts()->count();
+
+        $stats = [
+            'stories' => $storiesCount,
+            'locked_in' => $targetUser->locked_in_count,
+            'vibes' => $totalTaps,
+            'resonance' => $totalResonance,
+            'contributions' => $contributionsCount,
+            'vault' => $vaultCount,
+            'communities' => $communities->count(),
+            'events' => $organizedEvents->count() + $attendingEvents->count(),
+            'preservation_score' => min(100, round(($contributionsCount * 10) + ($storiesCount * 2) + ($vaultCount * 3) + ($totalResonance * 0.1))),
+        ];
+
+        $user = $targetUser;
+
+        return view('profile.index', compact(
+            'user',
+            'posts',
+            'lifeChapters',
+            'cultures',
+            'communities',
+            'organizedEvents',
+            'attendingEvents',
+            'vaultItems',
+            'vaultCount',
+            'stats',
+            'isLockedIn',
+            'hasVibed'
+        ));
+    }
+
+    /**
+     * Create life chapter
+     */
+    public function createChapter()
+    {
+        return view('profile.chapters.create');
+    }
+
+    /**
+     * Store life chapter
+     */
+    public function storeChapter(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:2000',
+            'period' => 'nullable|string|max:100',
+            'location' => 'nullable|string|max:255',
+        ]);
+
+        Auth::user()->lifeChapters()->create([
+            'title' => $request->title,
+            'description' => $request->description,
+            'period' => $request->period,
+            'location' => $request->location,
+        ]);
+
+        Auth::user()->increment('chapters_count');
+
+        return redirect()->route('profile.show')->with('success', 'Life chapter recorded successfully!');
+    }
+
+    /**
+     * Delete life chapter
+     */
+    public function deleteChapter(LifeChapter $chapter)
+    {
+        if ($chapter->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $chapter->delete();
+        Auth::user()->decrement('chapters_count');
+
+        return back()->with('success', 'Life chapter removed.');
+    }
+
+    /**
+     * Redirect edit to settings
+     */
+    public function edit(Request $request)
+    {
+        return redirect()->route('settings.index', Auth::id());
+    }
+
+    /**
+     * Update basic profile info (Breeze compatibility)
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
@@ -96,24 +312,36 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        return Redirect::route('profile.edit');
+        return Redirect::route('profile.show')->with('success', 'Profile updated successfully.');
     }
 
+    /**
+     * Settings Dashboard View
+     */
     public function settings($id)
     {
+        if (Auth::id() != $id && (!Auth::user() || !Auth::user()->is_admin)) {
+            abort(403, 'Unauthorized access to settings.');
+        }
+
         $user = User::findOrFail($id);
 
         return view('profile.settings', compact('user'));
     }
 
+    /**
+     * Update Settings (all tabs)
+     */
     public function updateSettings(Request $request, $id)
     {
+        if (Auth::id() != $id && (!Auth::user() || !Auth::user()->is_admin)) {
+            abort(403, 'Unauthorized access to settings.');
+        }
+
         $user = User::findOrFail($id);
 
-        // Handle updates
         if ($request->isMethod('post') || $request->isMethod('patch') || $request->isMethod('put')) {
-            // Update basic info
-            // Update profile info
+            // Validation
             $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users,email,' . $user->id,
@@ -121,20 +349,34 @@ class ProfileController extends Controller
                 'bio' => 'nullable|string|max:1000',
                 'location' => 'nullable|string|max:255',
                 'website' => 'nullable|url|max:255',
+                'cultural_background' => 'nullable|string|max:255',
+                'languages' => 'nullable|array',
+                'cultural_interests' => 'nullable|array',
             ]);
 
-            $user->update([
+            $userData = [
                 'name' => $request->name,
                 'email' => $request->email,
                 'username' => $request->username,
                 'bio' => $request->bio,
                 'location' => $request->location,
                 'website' => $request->website,
-            ]);
+                'cultural_background' => $request->cultural_background,
+            ];
 
-            // Handle password change
+            if ($request->has('languages')) {
+                $userData['languages'] = $request->languages;
+            }
+            if ($request->has('cultural_interests')) {
+                $userData['cultural_interests'] = $request->cultural_interests;
+            }
+
+            $user->update($userData);
+
+            // Password update
             if ($request->filled('password')) {
                 $request->validate([
+                    'current_password' => 'nullable|current_password',
                     'password' => 'required|string|min:8|confirmed',
                 ]);
 
@@ -143,38 +385,51 @@ class ProfileController extends Controller
                 ]);
             }
 
-            // Handle avatar upload
+            // Avatar upload in settings form
             if ($request->hasFile('avatar')) {
                 $request->validate([
-                    'avatar' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+                    'avatar' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
                 ]);
 
-                // Delete old avatar if exists
-                if ($user->avatar && Storage::exists('public/avatars/' . $user->avatar)) {
-                    Storage::delete('public/avatars/' . $user->avatar);
+                if ($user->avatar && Storage::disk('public')->exists('avatars/' . $user->avatar)) {
+                    Storage::disk('public')->delete('avatars/' . $user->avatar);
                 }
 
-                $avatarName = time() . '.' . $request->avatar->extension();
-                $request->avatar->storeAs('public/avatars', $avatarName);
+                $avatarName = time() . '_' . uniqid() . '.' . $request->file('avatar')->extension();
+                $request->file('avatar')->storeAs('avatars', $avatarName, 'public');
 
-                $user->update([
-                    'avatar' => $avatarName,
-                ]);
+                $user->update(['avatar' => $avatarName]);
             }
 
-            // Handle preferences (e.g., notifications, theme)
+            // Cover banner upload in settings form
+            if ($request->hasFile('cover_photo')) {
+                $request->validate([
+                    'cover_photo' => 'image|mimes:jpeg,png,jpg,gif,webp|max:8192',
+                ]);
+
+                if ($user->cover_photo && Storage::disk('public')->exists('covers/' . $user->cover_photo)) {
+                    Storage::disk('public')->delete('covers/' . $user->cover_photo);
+                }
+
+                $coverName = time() . '_' . uniqid() . '.' . $request->file('cover_photo')->extension();
+                $request->file('cover_photo')->storeAs('covers', $coverName, 'public');
+
+                $user->update(['cover_photo' => $coverName]);
+            }
+
+            // Preferences (theme, privacy, notifications)
             if ($request->has('preferences')) {
-                $user->preferences = json_encode($request->preferences);
+                $currentPrefs = is_array($user->preferences) ? $user->preferences : [];
+                $newPrefs = is_array($request->preferences) ? $request->preferences : (json_decode($request->preferences, true) ?? []);
+                $user->preferences = array_merge($currentPrefs, $newPrefs);
                 $user->save();
             }
 
-            return redirect()->back()->with('success', 'Settings updated successfully.');
+            return redirect()->back()->with('success', 'Profile and preferences updated successfully.');
         }
 
-        // GET request → show settings page
         return view('profile.settings', compact('user'));
     }
-
 
     /**
      * Delete the user's account.
@@ -196,11 +451,14 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+
+    /**
+     * Tap / Vibe user profile
+     */
     public function tap(User $user)
     {
         $authUser = Auth::user();
 
-        // Cannot tap yourself
         if ($authUser->id === $user->id) {
             return response()->json(['error' => 'Cannot tap yourself'], 400);
         }
@@ -224,7 +482,6 @@ class ProfileController extends Controller
             $user->increment('taps_received');
             $tapped = true;
 
-            // Create notification
             $user->notifications()->create([
                 'from_user_id' => $authUser->id,
                 'type' => 'tap',
@@ -240,11 +497,13 @@ class ProfileController extends Controller
         ]);
     }
 
+    /**
+     * Lock-in user connection
+     */
     public function lockin(User $user)
     {
         $authUser = Auth::user();
 
-        // Cannot lockin yourself
         if ($authUser->id === $user->id) {
             return response()->json(['error' => 'Cannot lock-in yourself'], 400);
         }
@@ -268,7 +527,6 @@ class ProfileController extends Controller
             $user->increment('locked_in_count');
             $lockedIn = true;
 
-            // Create notification
             $user->notifications()->create([
                 'from_user_id' => $authUser->id,
                 'type' => 'lockin',

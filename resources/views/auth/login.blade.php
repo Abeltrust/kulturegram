@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Login - Timeline')
+@section('title', 'Login - Kulturegram')
 
 @section('content')
     <div
@@ -60,7 +60,7 @@
             <div class="mt-2 text-center">
                 <p class="text-sm text-stone-600 dark:text-stone-400">
                     Don’t have an account?
-                    <a href="{{ route('register') }}" class="font-medium text-amber-600 hover:underline">Join Timeline</a>
+                    <a href="{{ route('register') }}" class="font-medium text-amber-600 hover:underline">Join Kulturegram</a>
                 </p>
             </div>
         </div>

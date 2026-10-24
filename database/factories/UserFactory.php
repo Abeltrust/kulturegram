@@ -28,7 +28,7 @@ class UserFactory extends Factory
             'username' => strtolower(str_replace(' ', '.', $name)) . $this->faker->numberBetween(1, 99),
             'email' => $this->faker->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
+            'password' => 'password',
             'bio' => $this->faker->sentence(),
             'location' => $this->faker->city() . ', ' . $this->faker->country(),
             'cultural_background' => $this->faker->randomElement(['Yoruba', 'Igbo', 'Hausa', 'Scottish', 'Maori', 'Navajo', 'Japanese']),

@@ -303,9 +303,15 @@
 
                     {{-- Action Buttons --}}
                     <div class="mt-4 flex flex-col gap-2">
-                        <a href=""
-                            class="w-full px-4 py-2 rounded-lg border border-stone-200 dark:border-stone-700 text-stone-800 dark:text-stone-200 text-sm sm:text-base hover:bg-stone-50 dark:hover:bg-stone-800 text-center transition">View
-                            Activity / Settings</a>
+                        @auth
+                            @if(auth()->id() === $community->created_by || $community->members()->where('user_id', auth()->id())->wherePivot('role', 'admin')->exists())
+                                <a href="{{ route('communities.edit', $community) }}"
+                                    class="w-full px-4 py-2 rounded-lg border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 font-semibold text-sm sm:text-base hover:bg-amber-50 dark:hover:bg-amber-950/30 text-center transition flex items-center justify-center gap-2">
+                                    <i data-lucide="settings" class="w-4 h-4"></i>
+                                    Community Settings / Edit
+                                </a>
+                            @endif
+                        @endauth
 
                         @auth
                             @if($community->members->contains(auth()->id()))

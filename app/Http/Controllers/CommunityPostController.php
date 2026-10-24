@@ -48,6 +48,32 @@ class CommunityPostController extends Controller
 
 
     /**
+     * Update a community post (only owner).
+     */
+    public function update(Request $request, Community $community, CommunityPost $post)
+    {
+        if ($post->user_id !== Auth::id()) {
+            abort(403, 'You are not allowed to update this post.');
+        }
+
+        $request->validate([
+            'content' => 'required|string|max:2000',
+        ]);
+
+        $post->update([
+            'content' => $request->input('content'),
+        ]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'post' => $post]);
+        }
+
+        return redirect()
+            ->route('communities.show', $community->id)
+            ->with('success', 'Post updated successfully!');
+    }
+
+    /**
      * Delete a community post (only owner or admin).
      */
     public function destroy(Community $community, CommunityPost $post)
