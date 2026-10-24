@@ -225,7 +225,7 @@
         <span class="text-xs sm:text-sm font-bold" x-text="toastMessage"></span>
     </div>
 
-    <div class="max-w-6xl mx-auto px-2.5 sm:px-6 pt-3 sm:pt-6 space-y-4 sm:space-y-6 w-full">
+    <div class="max-w-6xl mx-auto px-2.5 sm:px-6 pt-3 sm:pt-6 space-y-4 sm:space-y-6 w-full max-w-full overflow-x-hidden">
 
         {{-- Session Flash Notifications --}}
         @if(session('success'))

@@ -8,7 +8,7 @@
     currentFilter: 'all',
     searchQuery: ''
 }">
-    <div class="max-w-5xl mx-auto px-3 sm:px-6 pt-4 sm:pt-8 space-y-6">
+    <div class="max-w-5xl mx-auto px-3 sm:px-6 pt-4 sm:pt-8 space-y-6 w-full max-w-full overflow-x-hidden">
 
         {{-- Top Navigation & Header --}}
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

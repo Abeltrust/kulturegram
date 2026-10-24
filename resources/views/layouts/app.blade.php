@@ -24,6 +24,10 @@
     
     <style>
         [x-cloak] { display: none !important; }
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
         body { font-family: 'Inter', sans-serif; }
         
         /* Mobile footprint reduction */
@@ -185,7 +189,7 @@
         }
     </script>
 </head>
-    <body class="h-full bg-stone-50 dark:bg-stone-900 antialiased text-stone-800 dark:text-gray-100"
+    <body class="h-full bg-stone-50 dark:bg-stone-900 antialiased text-stone-800 dark:text-gray-100 overflow-x-hidden w-full max-w-full"
           @php
               $skeletonRoutes = ['timeline.index', 'cultural-hub.index', 'discover.index', 'education.index', 'communities.index', 'events.index'];
               $showSkeleton = collect($skeletonRoutes)->filter(fn($route) => request()->routeIs($route))->isNotEmpty();
@@ -311,7 +315,7 @@
 
     </header>
 
-    <div class="flex flex-1">
+    <div class="flex flex-1 w-full max-w-full overflow-x-hidden">
         <aside class="hidden md:block md:fixed md:left-0 md:top-16 md:w-20 md:h-[calc(100vh-4rem)] md:bg-white dark:md:bg-stone-900 md:border-r md:border-stone-200 dark:md:border-stone-800 md:overflow-y-auto md:overflow-x-hidden modern-scrollbar z-40 transition-colors duration-200">
             <div class="p-4">
                 <!-- Main Navigation -->
@@ -395,7 +399,7 @@
 
 
         <!-- Main Content -->
-        <main class="flex-1 pt-16 md:ml-20 {{ (request()->routeIs('messages.*')) ? 'pb-0' : 'pb-16' }} md:pb-0 min-h-screen relative">
+        <main class="flex-1 w-full max-w-full min-w-0 overflow-x-hidden pt-16 md:ml-20 {{ (request()->routeIs('messages.*')) ? 'pb-0' : 'pb-16' }} md:pb-0 min-h-screen relative">
             
             <!-- Global Skeleton Loader -->
             <div x-show="pageLoading" 
