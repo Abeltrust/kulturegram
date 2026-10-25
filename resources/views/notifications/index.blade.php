@@ -18,7 +18,8 @@
                     'unread' => 'Unread',
                     'tap' => 'TAPs',
                     'lock-in' => 'Lock-Ins',
-                    'resonance' => 'Resonance'
+                    'resonance' => 'Resonance',
+                    'mention' => 'Mentions'
                 ];
             @endphp
 
@@ -41,11 +42,18 @@
                     <div class="flex items-start gap-3">
                         <!-- AVATAR / ICON -->
                         <div
-                            class="w-10 h-10 rounded-full flex items-center justify-center shrink-0
-                                        {{ $notification->read ? 'bg-gray-200 dark:bg-stone-800 text-gray-500 dark:text-stone-500' : 'bg-amber-500 text-amber-600 dark:text-amber-100' }}">
+                            class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 relative
+                                        {{ $notification->read ? 'bg-gray-200 dark:bg-stone-800 text-gray-500 dark:text-stone-500' : 'bg-amber-500 text-white' }}">
                             <span class="font-bold text-sm">
                                 {{ strtoupper(substr($notification->fromUser->name ?? 'N/A', 0, 2)) }}
                             </span>
+                            @if($notification->type === 'mention')
+                                <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center text-[9px] font-bold">@</span>
+                            @elseif($notification->type === 'tap')
+                                <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[9px]"><i data-lucide="heart" class="w-2.5 h-2.5 fill-current"></i></span>
+                            @elseif($notification->type === 'resonance')
+                                <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-purple-500 text-white rounded-full flex items-center justify-center text-[9px]"><i data-lucide="message-circle" class="w-2.5 h-2.5"></i></span>
+                            @endif
                         </div>
 
                         <!-- MESSAGE -->
@@ -53,6 +61,11 @@
                             <p class="text-sm sm:text-base text-gray-800 dark:text-stone-200">
                                 {!! $notification->message !!}
                             </p>
+                            @if(isset($notification->data['post_id']))
+                                <a href="{{ route('timeline.index') }}#post-{{ $notification->data['post_id'] }}" class="inline-block mt-1 text-xs text-amber-600 dark:text-amber-400 font-semibold hover:underline">
+                                    View Story &rarr;
+                                </a>
+                            @endif
                             <p class="text-xs text-stone-500 dark:text-stone-500 mt-1">
                                 {{ $notification->created_at->diffForHumans() }}
                             </p>

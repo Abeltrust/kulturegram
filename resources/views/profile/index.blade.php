@@ -330,6 +330,69 @@
                                     <i data-lucide="shield-check" class="w-4 h-4 text-amber-500"></i>
                                     <span>Privacy</span>
                                 </a>
+
+                                {{-- Hidden Profile Dropdown Menu --}}
+                                <div x-data="{ openProfileMenu: false }" class="relative">
+                                    <button type="button" 
+                                        @click="openProfileMenu = !openProfileMenu; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); })" 
+                                        class="inline-flex items-center justify-center p-2.5 bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-300 rounded-xl transition-all shadow-sm active:scale-95"
+                                        title="Profile Options">
+                                        <i data-lucide="more-horizontal" class="w-4 h-4"></i>
+                                    </button>
+
+                                    <div x-show="openProfileMenu" 
+                                        @click.away="openProfileMenu = false" 
+                                        x-cloak
+                                        x-transition:enter="transition ease-out duration-150"
+                                        x-transition:enter-start="opacity-0 scale-95"
+                                        x-transition:enter-end="opacity-100 scale-100"
+                                        x-transition:leave="transition ease-in duration-100"
+                                        x-transition:leave-start="opacity-100 scale-100"
+                                        x-transition:leave-end="opacity-0 scale-95"
+                                        class="absolute right-0 mt-2 w-52 bg-white dark:bg-stone-900 rounded-2xl shadow-xl border border-stone-200 dark:border-stone-800 py-2 z-50">
+                                        
+                                        <a href="{{ route('settings.index', $user->id) }}" class="flex items-center gap-2 px-4 py-2 text-xs sm:text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 font-medium">
+                                            <i data-lucide="settings" class="w-3.5 h-3.5 text-stone-500"></i>
+                                            <span>Account Settings</span>
+                                        </a>
+
+                                        <a href="{{ route('privacy') }}" class="flex items-center gap-2 px-4 py-2 text-xs sm:text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 font-medium">
+                                            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-amber-500"></i>
+                                            <span>Privacy Policy</span>
+                                        </a>
+
+                                        @if(auth()->user()->is_admin)
+                                            <a href="{{ route('admin.cultures.index') }}" class="flex items-center gap-2 px-4 py-2 text-xs sm:text-sm text-amber-600 font-bold hover:bg-amber-50 dark:hover:bg-amber-950/40">
+                                                <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+                                                <span>Admin Center</span>
+                                            </a>
+                                        @endif
+                                        
+                                        <hr class="my-2 border-stone-100 dark:border-stone-800">
+                                        
+                                        {{-- Subtly hidden Session fold --}}
+                                        <div class="px-4 py-1">
+                                            <details class="group">
+                                                <summary class="text-[10px] uppercase font-bold tracking-wider text-stone-400 dark:text-stone-500 cursor-pointer hover:text-stone-600 dark:hover:text-stone-300 flex items-center justify-between list-none">
+                                                    <span class="flex items-center gap-1.5">
+                                                        <i data-lucide="lock" class="w-3 h-3"></i>
+                                                        Session
+                                                    </span>
+                                                    <i data-lucide="chevron-down" class="w-3 h-3 group-open:rotate-180 transition-transform"></i>
+                                                </summary>
+                                                <div class="mt-2 pt-1">
+                                                    <form method="POST" action="{{ route('logout') }}">
+                                                        @csrf
+                                                        <button type="submit" class="w-full text-left flex items-center gap-1.5 text-xs text-red-600/80 hover:text-red-600 font-medium py-1 transition">
+                                                            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                                                            <span>Sign Out</span>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </details>
+                                        </div>
+                                    </div>
+                                </div>
                             @else
                                 {{-- Vibe Button --}}
                                 <button onclick="toggleUserTap({{ $user->id }})" id="profile-vibe-btn"
@@ -715,8 +778,19 @@
 
                             {{-- Post Content --}}
                             <div class="text-stone-800 dark:text-stone-200 text-xs sm:text-sm leading-relaxed whitespace-pre-line">
-                                {{ $post->content }}
+                                {!! $post->formatted_content !!}
                             </div>
+
+                            @if(!empty($post->tags))
+                                <div class="flex flex-wrap gap-1.5 pt-1">
+                                    @foreach($post->tags as $tag)
+                                        <a href="{{ route('timeline.index', ['tag' => $tag]) }}"
+                                            class="inline-flex items-center text-[11px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full hover:bg-amber-100 dark:hover:bg-amber-900/60 transition">
+                                            #{{ $tag }}
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @endif
 
                             {{-- Media Attachment --}}
                             @if($post->image)
@@ -746,16 +820,41 @@
                                         <i data-lucide="zap" class="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current"></i>
                                         {{ $post->taps_count ?? 0 }} Taps
                                     </span>
-                                    <span class="flex items-center gap-1 font-bold text-purple-500 text-[11px] sm:text-xs">
-                                        <i data-lucide="radio" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-                                        {{ $post->resonance_count ?? 0 }} Resonance
-                                    </span>
-                                    <span class="flex items-center gap-1 text-[11px] sm:text-xs">
-                                        <i data-lucide="message-square" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-                                        {{ $post->comments->count() }} Comments
-                                    </span>
+                                    <button type="button" onclick="toggleProfileResonanceBox({{ $post->id }})" 
+                                        class="flex items-center gap-1 font-bold text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 text-[11px] sm:text-xs transition cursor-pointer">
+                                        <i data-lucide="message-circle" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+                                        <span data-resonance-count="{{ $post->id }}">{{ $post->resonance_count ?? $post->resonances->count() }} Resonance</span>
+                                    </button>
                                 </div>
-                                <a href="{{ route('timeline.index') }}" class="hover:text-amber-500 font-bold text-[11px] sm:text-xs">View</a>
+                                <a href="{{ route('timeline.index') }}" class="hover:text-amber-500 font-bold text-[11px] sm:text-xs">View on Timeline</a>
+                            </div>
+
+                            {{-- Resonance (Comments) Box --}}
+                            <div id="resonance-box-{{ $post->id }}" class="hidden pt-3 border-t border-stone-100 dark:border-stone-800 space-y-3">
+                                <div id="resonance-list-{{ $post->id }}" class="space-y-2 sm:space-y-2.5">
+                                    @forelse($post->resonances as $resonance)
+                                        <div class="p-2.5 sm:p-3 bg-stone-50 dark:bg-stone-800/60 rounded-xl border border-stone-100 dark:border-stone-800 text-xs">
+                                            <div class="flex items-center justify-between mb-1">
+                                                <span class="font-bold text-stone-900 dark:text-stone-200">{{ $resonance->user->name }}</span>
+                                                <span class="text-[10px] text-stone-400">{{ $resonance->created_at->diffForHumans() }}</span>
+                                            </div>
+                                            <div class="text-stone-700 dark:text-stone-300 leading-relaxed">{!! $resonance->formatted_content !!}</div>
+                                        </div>
+                                    @empty
+                                        <p class="text-xs text-stone-400 dark:text-stone-500 py-1 italic">No resonances yet. Be the first to resonate!</p>
+                                    @endforelse
+                                </div>
+
+                                @auth
+                                    <div class="flex items-center gap-2 pt-1">
+                                        <input type="text" id="resonance-input-{{ $post->id }}" placeholder="Write a resonance..."
+                                            class="flex-1 border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/80 dark:text-stone-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                                        <button type="button" onclick="submitProfileResonance({{ $post->id }})"
+                                            class="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:opacity-95 text-white rounded-xl text-xs font-bold transition flex items-center justify-center shrink-0">
+                                            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    </div>
+                                @endauth
                             </div>
 
                         </div>
@@ -1606,6 +1705,57 @@
             })
             .catch(err => console.error(err));
         }
+
+        function submitProfileResonance(postId) {
+            const input = document.getElementById(`resonance-input-${postId}`);
+            if (!input) return;
+            const content = input.value.trim();
+            if (!content) return;
+
+            fetch(`/timeline/${postId}/resonance`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ content })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const list = document.getElementById(`resonance-list-${postId}`);
+                    if (list) {
+                        const emptyPlaceholder = list.querySelector('.italic');
+                        if (emptyPlaceholder) emptyPlaceholder.remove();
+
+                        const newDiv = document.createElement('div');
+                        newDiv.className = 'p-2.5 sm:p-3 bg-stone-50 dark:bg-stone-800/60 rounded-xl border border-stone-100 dark:border-stone-800 text-xs';
+                        newDiv.innerHTML = `
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-bold text-stone-900 dark:text-stone-200">${data.resonance.user.name}</span>
+                                <span class="text-[10px] text-stone-400">Just now</span>
+                            </div>
+                            <div class="text-stone-700 dark:text-stone-300 leading-relaxed">${data.resonance.formatted_content || data.resonance.content}</div>
+                        `;
+                        list.appendChild(newDiv);
+                    }
+                    input.value = '';
+                    const countBadge = document.querySelector(`[data-resonance-count="${postId}"]`);
+                    if (countBadge) {
+                        countBadge.textContent = `${data.count} Resonance`;
+                    }
+                }
+            })
+            .catch(err => console.error('Profile resonance error:', err));
+        }
     @endauth
+
+    function toggleProfileResonanceBox(postId) {
+        const box = document.getElementById(`resonance-box-${postId}`);
+        if (box) {
+            box.classList.toggle('hidden');
+        }
+    }
 </script>
 @endpush

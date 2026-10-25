@@ -22,4 +22,9 @@ class Resonance extends Model
     {
         return $this->morphTo();
     }
+
+    public function getFormattedContentAttribute()
+    {
+        return \App\Services\ContentParserService::format($this->content);
+    }
 }

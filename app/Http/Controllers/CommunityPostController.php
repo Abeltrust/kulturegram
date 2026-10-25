@@ -141,7 +141,7 @@ class CommunityPostController extends Controller
 
         $comment = $post->comments()->create([
             'user_id' => Auth::id(),
-            'content' => $request->content,
+            'content' => $request->input('content'),
             'parent_id' => $request->parent_id,
         ]);
 

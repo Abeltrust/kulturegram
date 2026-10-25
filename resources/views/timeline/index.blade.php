@@ -94,10 +94,22 @@
             </div>
         @endauth
 
+        @if(request()->filled('tag'))
+            <div class="mb-6 flex items-center justify-between bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl">
+                <span class="text-sm font-medium text-amber-800 dark:text-amber-200 flex items-center gap-1.5">
+                    <i data-lucide="hash" class="w-4 h-4 text-amber-600"></i>
+                    Filtering stories tagged with <span class="font-bold">#{{ request('tag') }}</span>
+                </span>
+                <a href="{{ route('timeline.index') }}" class="text-xs font-semibold text-amber-700 dark:text-amber-300 hover:underline flex items-center gap-1">
+                    <i data-lucide="x" class="w-3.5 h-3.5"></i> Clear filter
+                </a>
+            </div>
+        @endif
+
         <!-- Feed -->
         <div class="space-y-6">
             @forelse($posts as $post)
-                <article
+                <article id="post-{{ $post->id }}"
                     class="bg-white dark:bg-stone-900/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-stone-100 dark:border-stone-800 hover:shadow-md transition-all duration-300">
                     <div class="flex flex-col sm:flex-row items-start sm:space-x-4">
                         <!-- Post Content -->
@@ -157,13 +169,38 @@
 
                             <!-- Body -->
                             <div class="mb-4">
-                                <p class="text-stone-700 dark:text-stone-300 leading-relaxed text-sm sm:text-base">
-                                    {{ $post->content }}</p>
+                                <div class="text-stone-700 dark:text-stone-300 leading-relaxed text-sm sm:text-base">
+                                    {!! $post->formatted_content !!}
+                                </div>
+
+                                @if(!empty($post->tags))
+                                    <div class="flex flex-wrap gap-1.5 mt-3">
+                                        @foreach($post->tags as $tag)
+                                            <a href="{{ route('timeline.index', ['tag' => $tag]) }}"
+                                                class="inline-flex items-center text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-0.5 rounded-full hover:bg-amber-100 dark:hover:bg-amber-900/60 transition">
+                                                #{{ $tag }}
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                @endif
+
                                 @if($post->image)
                                     <div class="mt-4 rounded-xl overflow-hidden">
                                         <img src="{{ Storage::url($post->image) }}"
-                                            class="w-full max-h-[600px] object-contain  rounded-md w-full sm:max-h-[28rem]"
+                                            class="w-full max-h-[600px] object-contain rounded-md w-full sm:max-h-[28rem]"
                                             loading="lazy">
+                                    </div>
+                                @endif
+
+                                @if($post->video)
+                                    <div class="mt-4 rounded-xl overflow-hidden bg-black max-h-[600px]">
+                                        <video src="{{ Storage::url($post->video) }}" controls class="w-full max-h-[600px] object-contain rounded-md sm:max-h-[28rem]"></video>
+                                    </div>
+                                @endif
+
+                                @if($post->audio)
+                                    <div class="mt-4 p-3 bg-stone-100 dark:bg-stone-800 rounded-xl">
+                                        <audio src="{{ Storage::url($post->audio) }}" controls class="w-full"></audio>
                                     </div>
                                 @endif
                             </div>
@@ -217,8 +254,8 @@
                                         <div class="p-2 sm:p-3 bg-stone-50 dark:bg-stone-800/50 rounded-lg">
                                             <span
                                                 class="font-medium text-stone-800 dark:text-stone-200 text-xs sm:text-sm text-strong">{{ $resonance->user->name }}</span>
-                                            <p class="text-stone-700 dark:text-stone-400 text-xs sm:text-sm leading-snug">
-                                                {{ $resonance->content }}</p>
+                                            <div class="text-stone-700 dark:text-stone-400 text-xs sm:text-sm leading-snug">
+                                                {!! $resonance->formatted_content !!}</div>
                                             <span
                                                 class="text-[10px] sm:text-xs text-stone-500 dark:text-stone-500">{{ $resonance->created_at->diffForHumans() }}</span>
                                         </div>
@@ -457,7 +494,7 @@
                             box.insertAdjacentHTML('beforeend', `
                                         <div class="p-2 sm:p-3 bg-stone-50 dark:bg-stone-800/50 rounded-lg">
                                             <span class="font-medium text-stone-800 dark:text-stone-200 text-xs sm:text-sm">${data.resonance.user.name}</span>
-                                            <p class="text-stone-700 dark:text-stone-400 text-xs sm:text-sm leading-snug">${data.resonance.content}</p>
+                                            <div class="text-stone-700 dark:text-stone-400 text-xs sm:text-sm leading-snug">${data.resonance.formatted_content || data.resonance.content}</div>
                                             <span class="text-[10px] sm:text-xs text-stone-500 dark:text-stone-500">${data.resonance.time}</span>
                                         </div>
                                     `);

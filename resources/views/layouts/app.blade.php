@@ -279,34 +279,14 @@
                             @endif
                         </a>
 
-                        <!-- User Menu -->
-                        <div x-data="{ open: false }" class="relative">
-                            <button @click="open = !open" 
-                                class="flex items-center space-x-1 sm:space-x-2 hover:bg-stone-100 rounded-lg p-1 transition-colors">
-                                <img src="{{ auth()->user()->profile_photo_url }}" 
-                                     class="w-8 h-8 rounded-full object-cover border border-stone-200">
-                                <span class="hidden lg:block text-sm font-black text-stone-700">{{ auth()->user()->name }}</span>
-                            </button>
-
-                            <div x-show="open" @click.away="open = false" x-cloak
-                                class="absolute right-0 mt-2 w-48 bg-white dark:bg-stone-900 rounded-2xl shadow-xl border border-stone-200 dark:border-stone-800 py-2 z-50">
-                                <a href="{{ route('profile.show') }}" class="block px-4 py-2 text-xs sm:text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 font-medium">My Profile & Story</a>
-                                <a href="{{ route('settings.index', auth()->user()->id) }}" class="block px-4 py-2 text-xs sm:text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 font-medium">Account Settings</a>
-                                <a href="{{ route('privacy') }}" class="block px-4 py-2 text-xs sm:text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 font-medium">Privacy Policy</a>
-                                @if(auth()->user()->is_admin)
-                                    <a href="{{ route('admin.cultures.index') }}" class="block px-4 py-2 text-xs sm:text-sm text-amber-600 font-bold hover:bg-amber-50 dark:hover:bg-amber-950/40">
-                                        <span class="flex items-center gap-1.5">
-                                            <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Admin Center
-                                        </span>
-                                    </a>
-                                @endif
-                                <hr class="my-2 border-stone-100 dark:border-stone-800">
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <button type="submit" class="block w-full text-left px-4 py-2 text-xs sm:text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 font-medium">Sign Out</button>
-                                </form>
-                            </div>
-                        </div>
+                        <!-- Direct Profile Link (No Dropdown) -->
+                        <a href="{{ route('profile.show') }}" 
+                            class="flex items-center space-x-1 sm:space-x-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg p-1 transition-colors"
+                            title="My Profile & Story">
+                            <img src="{{ auth()->user()->profile_photo_url }}" 
+                                 class="w-8 h-8 rounded-full object-cover border border-stone-200 dark:border-stone-700">
+                            <span class="hidden lg:block text-sm font-black text-stone-700 dark:text-stone-300">{{ auth()->user()->name }}</span>
+                        </a>
                     @else
                         <a href="{{ route('login') }}" class="text-sm sm:text-base text-stone-600 hover:text-stone-800 font-medium transition-colors">Sign In</a>
                     @endauth
@@ -539,7 +519,7 @@
             <textarea 
                 name="content" 
                 required 
-                placeholder="What's happening in your story today? Share your cultural insights, daily experiences, or heritage discoveries..." 
+                placeholder="What's happening in your story today? Share your cultural insights, daily experiences, or heritage discoveries... (Tip: use @username to tag people and #hashtag to categorize!)" 
                 class="w-full h-24 md:h-32 resize-none border-2 border-stone-200 dark:border-stone-700 bg-transparent text-stone-800 dark:text-stone-100 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:focus:border-amber-500 hover:border-amber-500 dark:hover:border-stone-600 placeholder-stone-400 dark:placeholder-stone-500 leading-relaxed p-2 md:p-3 transition-all text-sm md:text-base"></textarea>
 
             <!-- Life Chapter -->
@@ -593,16 +573,39 @@
                 </div>
             </div>
 
-            <!-- Drag & Drop Image Upload -->
-            <div>
-                <label class="block text-xs md:text-sm font-medium text-stone-700 dark:text-stone-300 mb-1 md:mb-2">Add Image (Optional)</label>
-                <div 
-                    id="dropzone" 
-                    class="w-full border-2 border-dashed border-stone-300 dark:border-stone-700 rounded-lg p-4 md:p-6 text-center cursor-pointer hover:border-amber-500 dark:hover:border-stone-500 focus-within:border-amber-500 transition-colors">
+            <!-- Media Upload (Photo, Video, Audio) -->
+            <div x-data="{ mediaType: 'image' }">
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="text-xs md:text-sm font-medium text-stone-700 dark:text-stone-300">Media Attachment (Optional)</label>
+                    <div class="flex items-center space-x-1 text-xs">
+                        <button type="button" @click="mediaType = 'image'" :class="mediaType === 'image' ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-bold' : 'text-stone-500 hover:text-stone-700'" class="px-2 py-0.5 rounded transition">Photo</button>
+                        <button type="button" @click="mediaType = 'video'" :class="mediaType === 'video' ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-bold' : 'text-stone-500 hover:text-stone-700'" class="px-2 py-0.5 rounded transition">Video</button>
+                        <button type="button" @click="mediaType = 'audio'" :class="mediaType === 'audio' ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-bold' : 'text-stone-500 hover:text-stone-700'" class="px-2 py-0.5 rounded transition">Audio</button>
+                    </div>
+                </div>
+
+                <!-- Image Dropzone -->
+                <div x-show="mediaType === 'image'" id="dropzone" class="w-full border-2 border-dashed border-stone-300 dark:border-stone-700 rounded-lg p-3 md:p-5 text-center cursor-pointer hover:border-amber-500 dark:hover:border-stone-500 transition-colors">
                     <input type="file" name="image" accept="image/*" id="fileInput" class="hidden">
-                    <i data-lucide="image" class="mx-auto w-8 h-8 md:w-10 md:h-10 text-stone-400 dark:text-stone-500 mb-2"></i>
-                    <p class="text-xs md:text-sm text-stone-500 dark:text-stone-400">Drag & drop an image here or click to select</p>
-                    <p id="fileName" class="mt-2 text-xs md:text-sm text-stone-700 dark:text-stone-300 font-medium"></p>
+                    <i data-lucide="image" class="mx-auto w-7 h-7 text-stone-400 mb-1"></i>
+                    <p class="text-xs md:text-sm text-stone-500 dark:text-stone-400">Drag & drop a photo or click to select</p>
+                    <p id="fileName" class="mt-1 text-xs text-amber-600 dark:text-amber-400 font-medium"></p>
+                </div>
+
+                <!-- Video Dropzone -->
+                <div x-show="mediaType === 'video'" class="w-full border-2 border-dashed border-stone-300 dark:border-stone-700 rounded-lg p-3 md:p-5 text-center cursor-pointer hover:border-amber-500 dark:hover:border-stone-500 transition-colors" onclick="document.getElementById('videoInput').click()">
+                    <input type="file" name="video" accept="video/mp4,video/webm,video/quicktime" id="videoInput" class="hidden" onchange="document.getElementById('videoFileName').textContent = this.files[0]?.name || ''">
+                    <i data-lucide="video" class="mx-auto w-7 h-7 text-stone-400 mb-1"></i>
+                    <p class="text-xs md:text-sm text-stone-500 dark:text-stone-400">Select or drop a video clip (MP4, WebM)</p>
+                    <p id="videoFileName" class="mt-1 text-xs text-amber-600 dark:text-amber-400 font-medium"></p>
+                </div>
+
+                <!-- Audio Dropzone -->
+                <div x-show="mediaType === 'audio'" class="w-full border-2 border-dashed border-stone-300 dark:border-stone-700 rounded-lg p-3 md:p-5 text-center cursor-pointer hover:border-amber-500 dark:hover:border-stone-500 transition-colors" onclick="document.getElementById('audioInput').click()">
+                    <input type="file" name="audio" accept="audio/mp3,audio/wav,audio/ogg,audio/m4a" id="audioInput" class="hidden" onchange="document.getElementById('audioFileName').textContent = this.files[0]?.name || ''">
+                    <i data-lucide="mic" class="mx-auto w-7 h-7 text-stone-400 mb-1"></i>
+                    <p class="text-xs md:text-sm text-stone-500 dark:text-stone-400">Select or drop an audio recording (MP3, WAV, M4A)</p>
+                    <p id="audioFileName" class="mt-1 text-xs text-amber-600 dark:text-amber-400 font-medium"></p>
                 </div>
             </div>
 

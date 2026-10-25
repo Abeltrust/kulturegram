@@ -56,6 +56,11 @@ class Post extends Model
         return $this->hasMany(Resonance::class);
     }
 
+    public function comments()
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+
 
     public function lockIns()
     {
@@ -92,6 +97,11 @@ class Post extends Model
     public function getTimeAgoAttribute()
     {
         return $this->created_at->diffForHumans();
+    }
+
+    public function getFormattedContentAttribute()
+    {
+        return \App\Services\ContentParserService::format($this->content);
     }
 
     public function incrementTaps()

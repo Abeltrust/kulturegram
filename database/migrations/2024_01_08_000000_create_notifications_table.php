@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('from_user_id')->nullable()->constrained('users')->onDelete('cascade');
-            $table->enum('type', ['tap', 'lockin', 'resonance', 'collaboration', 'event', 'community']);
+            $table->string('type');
             $table->string('title');
             $table->text('message');
             $table->json('data')->nullable();

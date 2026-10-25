@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\LifeChapter;
+use App\Models\Post;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -16,6 +17,7 @@ class ProfileTest extends TestCase
     public function test_profile_page_is_displayed(): void
     {
         $user = User::factory()->create();
+        Post::factory()->create(['user_id' => $user->id]);
 
         $response = $this
             ->actingAs($user)

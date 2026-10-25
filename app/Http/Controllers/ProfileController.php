@@ -89,7 +89,7 @@ class ProfileController extends Controller
         $user = Auth::user();
 
         $posts = $user->posts()
-            ->with(['taps', 'comments.user'])
+            ->with(['taps', 'resonances.user'])
             ->latest()
             ->paginate(10);
 
@@ -171,7 +171,7 @@ class ProfileController extends Controller
         $hasVibed = Auth::check() ? Auth::user()->hasTapped($targetUser) : false;
 
         $posts = $targetUser->posts()
-            ->with(['taps', 'comments.user'])
+            ->with(['taps', 'resonances.user'])
             ->latest()
             ->paginate(10);
 

@@ -635,7 +635,7 @@
                     </div>
                 </div>
 
-                <!-- TAB 6: DATA & ACCOUNT -->
+                    <!-- TAB 6: DATA & ACCOUNT -->
                 <div x-show="activeTab === 'data'" class="space-y-5 sm:space-y-6">
                     <div class="border-b border-stone-100 dark:border-stone-800 pb-3 sm:pb-4">
                         <h2 class="text-base sm:text-xl font-black text-stone-900 dark:text-white">Data & Account Deletion</h2>
@@ -650,6 +650,23 @@
                         <a href="{{ route('vault.index') }}" class="px-4 py-2 bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 text-stone-800 dark:text-white rounded-xl text-xs font-bold transition w-fit">
                             Access Vault Archive
                         </a>
+                    </div>
+
+                    <!-- Active Session & Sign Out -->
+                    <div class="p-4 sm:p-5 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200/60 dark:border-stone-700/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                        <div>
+                            <h4 class="font-bold text-stone-800 dark:text-stone-200 text-xs sm:text-sm flex items-center gap-1.5">
+                                <i data-lucide="log-out" class="w-4 h-4 text-stone-500"></i>
+                                <span>Active Device Session</span>
+                            </h4>
+                            <p class="text-[11px] sm:text-xs text-stone-500 mt-0.5">Terminate and sign out of your active authenticated session on this device.</p>
+                        </div>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="px-4 py-2 bg-stone-200 hover:bg-stone-300 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-800 dark:text-white rounded-xl text-xs font-bold transition shadow-sm w-fit">
+                                Sign Out
+                            </button>
+                        </form>
                     </div>
 
                     <div class="p-4 sm:p-5 rounded-2xl bg-red-50/60 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
