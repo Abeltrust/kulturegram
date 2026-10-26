@@ -27,10 +27,10 @@ return [
     | client authentication infrastructure.
     */
     'models' => [
-        'spark' => env('META_MUSE_SPARK_MODEL', 'muse-spark'),
-        'wonder' => env('META_MUSE_WONDER_MODEL', 'muse-wonder'),
-        'image' => env('META_MUSE_IMAGE_MODEL', 'muse-image'),
-        'voice_transcribe' => env('META_VOICE_TRANSCRIBE_MODEL', 'muse-voice-transcribe'),
+        'spark' => env('META_MUSE_SPARK_MODEL', 'muse-spark-1.3'),
+        'wonder' => env('META_MUSE_WONDER_MODEL', 'muse-wonder-1.0'),
+        'image' => env('META_MUSE_IMAGE_MODEL', 'muse-image-1.0'),
+        'voice_transcribe' => env('META_VOICE_TRANSCRIBE_MODEL', 'muse-voice-transcribe-1.0'),
         'sam' => env('META_SAM_MODEL', 'sam-3.1'),
     ],
 

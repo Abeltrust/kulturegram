@@ -31,10 +31,10 @@ META_MODEL_API_TIMEOUT=45
 META_MODEL_API_CONNECT_TIMEOUT=10
 
 # Individual Model Identifiers (all authenticated with the key above)
-META_MUSE_SPARK_MODEL=muse-spark
-META_MUSE_WONDER_MODEL=muse-wonder
-META_MUSE_IMAGE_MODEL=muse-image
-META_VOICE_TRANSCRIBE_MODEL=muse-voice-transcribe
+META_MUSE_SPARK_MODEL=muse-spark-1.3
+META_MUSE_WONDER_MODEL=muse-wonder-1.0
+META_MUSE_IMAGE_MODEL=muse-image-1.0
+META_VOICE_TRANSCRIBE_MODEL=muse-voice-transcribe-1.0
 META_SAM_MODEL=sam-3.1
 ```
 

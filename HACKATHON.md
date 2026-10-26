@@ -62,14 +62,15 @@ A 5-stage preservation workflow assisting contributors without replacing human a
 
 | Model | Integration Status | Automated Test Verification | Live Credential Verification |
 | :--- | :--- | :--- | :--- |
-| **Muse Voice Transcribe** | Implemented (`MuseVoiceTranscribeService`) | Verified (`Http::fake()`, multipart upload, language parsing) | Pending hackathon credits |
-| **Muse Spark** | Implemented (`MuseSparkService`) | Verified (`Http::fake()`, schema validation, anti-hallucination) | Pending hackathon credits |
-| **Muse Wonder** | Implemented (`MuseWonderService`) | Verified (`Http::fake()`, bounded preservation checklist) | Pending hackathon credits |
-| **Muse Image** | Implemented (`MuseImageService`) | Verified (`Http::fake()`, attribution disclaimer, storage) | Pending hackathon credits |
-| **SAM 3.1** | Implemented (`SamSegmentationService`) | Verified (`Http::fake()`, cutout isolation, authenticity notice) | Pending hackathon credits |
-| **Muse Glimmer** | Implemented (`MuseGlimmerService`) | Verified (independent provider architecture) | Pending open-weight endpoint |
-| **Muse Spark Open** | Implemented (`MuseSparkOpenService`) | Verified (independent provider architecture) | Pending open-weight endpoint |
-| **Muse Code** | Used as development tool | Verified (development & testing workflows) | N/A (Dev Tool) |
+| **Meta Model API Key** | Shared Key Architecture | Verified (`MetaModelApiClientTest`, 6 tests) | **LIVE VERIFIED** (HTTP 200 via `GET /models`) |
+| **Muse Spark** | `muse-spark-1.3` | Verified (`LivingHeritageCaptureTest`) | **LIVE VERIFIED** (Extracted structured archival record in ~2.9s) |
+| **Muse Wonder** | `muse-wonder-1.0` | Verified (`LivingHeritageCaptureTest`) | **LIVE VERIFIED** (Bounded preservation plan & checklist generated) |
+| **Muse Voice Transcribe**| `muse-voice-transcribe-1.0` | Verified (`Http::fake()`, multipart upload, language parsing) | Wired to verified live model ID; ready for audio test |
+| **Muse Image** | `muse-image-1.0` | Verified (`Http::fake()`, attribution disclaimer, storage) | Wired to verified live model ID; ready for generation test |
+| **SAM 3.1** | `sam-3.1` | Verified (`Http::fake()`, cutout isolation, authenticity notice) | Wired to verified live model ID; ready for segmentation test |
+| **Muse Glimmer** | Open-Weight Service | Verified (independent provider architecture) | Pending open-weight endpoint (e.g. Ollama/vLLM) |
+| **Muse Spark Open** | Open-Weight Service | Verified (independent provider architecture) | Pending open-weight endpoint (e.g. Ollama/vLLM) |
+| **Muse Code** | Development Tool | Verified (development & testing workflows) | N/A (Dev Tool) |
 
 ---
 

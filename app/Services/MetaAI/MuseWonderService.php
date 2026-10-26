@@ -45,7 +45,7 @@ class MuseWonderService
                 ['role' => 'user', 'content' => $userPrompt],
             ],
             'temperature' => 0.3,
-            'max_tokens' => 1500,
+            'max_tokens' => 4096,
         ];
 
         $response = $this->client->postJson('chat/completions', $payload, $this->model);
@@ -139,11 +139,15 @@ PROMPT;
 
     protected function extractMessageContent(array $data): string
     {
-        if (isset($data['choices'][0]['message']['content'])) {
+        if (!empty($data['choices'][0]['message']['content'])) {
             return (string) $data['choices'][0]['message']['content'];
         }
 
-        if (isset($data['content'])) {
+        if (!empty($data['choices'][0]['message']['reasoning_content'])) {
+            return (string) $data['choices'][0]['message']['reasoning_content'];
+        }
+
+        if (!empty($data['content'])) {
             return (string) $data['content'];
         }
 
@@ -156,10 +160,12 @@ PROMPT;
     public function sanitizePreservationPlan(string $rawContent): ?array
     {
         $clean = trim($rawContent);
-        if (str_starts_with($clean, '```')) {
-            $clean = preg_replace('/^```[a-zA-Z0-9_-]*\s*\n?/', '', $clean);
-            $clean = preg_replace('/\n?```$/', '', $clean);
-            $clean = trim($clean);
+
+        // Extract JSON if wrapped in markdown code fence or embedded in explanatory text
+        if (preg_match('/```(?:json)?\s*([\s\S]*?)\s*```/i', $clean, $matches)) {
+            $clean = trim($matches[1]);
+        } elseif (preg_match('/(\{[\s\S]*\})/s', $clean, $matches)) {
+            $clean = trim($matches[1]);
         }
 
         $decoded = json_decode($clean, true);
