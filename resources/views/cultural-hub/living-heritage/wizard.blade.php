@@ -516,6 +516,101 @@
                 </div>
             </div>
 
+            <!-- SUB-FEATURE: MUSE WONDER FACT-CHECK & PLAGIARISM AUDIT -->
+            <div class="p-5 rounded-2xl bg-stone-50 dark:bg-stone-800/40 border border-stone-200 dark:border-stone-700/80 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-stone-900 dark:text-stone-100 flex items-center space-x-2">
+                            <i data-lucide="shield-check" class="w-4 h-4 text-amber-600"></i>
+                            <span>Muse Wonder Fact-Check & Originality Audit</span>
+                        </h3>
+                        <p class="text-xs text-stone-500">
+                            Evaluates oral tradition authenticity, generic web copy/plagiarism risk, and flags historical claims for elder corroboration.
+                        </p>
+                    </div>
+                    <button type="button"
+                            @click="runOriginalityAudit()"
+                            :disabled="isAuditLoading"
+                            class="px-4 py-2 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 font-bold rounded-xl text-xs hover:bg-stone-800 transition-colors inline-flex items-center space-x-1.5 flex-shrink-0">
+                        <template x-if="isAuditLoading">
+                            <span>Auditing Originality...</span>
+                        </template>
+                        <template x-if="!isAuditLoading">
+                            <span>Run Fact-Check & Plagiarism Screen</span>
+                        </template>
+                    </button>
+                </div>
+
+                <!-- Audit Output Panel -->
+                <div x-show="originalityAudit" class="space-y-4 pt-3 border-t border-stone-200 dark:border-stone-700">
+                    <!-- Metrics Row -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="p-3 bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 space-y-1">
+                            <span class="text-[10px] font-bold uppercase text-stone-500">Oral Authenticity Score</span>
+                            <div class="flex items-baseline space-x-2">
+                                <span class="text-2xl font-black text-amber-600" x-text="(originalityAudit?.oral_authenticity_score ?? 0) + '/100'"></span>
+                            </div>
+                            <span class="inline-block text-[10px] font-semibold text-stone-600 dark:text-stone-400" x-text="originalityAudit?.authenticity_label"></span>
+                        </div>
+
+                        <div class="p-3 bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 space-y-1">
+                            <span class="text-[10px] font-bold uppercase text-stone-500">Plagiarism / Copy Risk</span>
+                            <div class="flex items-baseline space-x-2">
+                                <span class="text-lg font-black uppercase"
+                                      :class="{
+                                          'text-green-600 dark:text-green-400': originalityAudit?.plagiarism_risk === 'low',
+                                          'text-amber-600 dark:text-amber-400': originalityAudit?.plagiarism_risk === 'medium',
+                                          'text-red-600 dark:text-red-400': originalityAudit?.plagiarism_risk === 'high'
+                                      }"
+                                      x-text="(originalityAudit?.plagiarism_risk || 'low') + ' RISK'"></span>
+                            </div>
+                            <span class="inline-block text-[10px] text-stone-500"
+                                  x-text="originalityAudit?.plagiarism_risk === 'low' ? 'Original oral cadence detected' : 'Requires closer review'"></span>
+                        </div>
+
+                        <div class="p-3 bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 space-y-1">
+                            <span class="text-[10px] font-bold uppercase text-stone-500">Source Fidelity</span>
+                            <div class="flex items-center space-x-1.5 pt-1">
+                                <i data-lucide="check-circle-2" class="w-4 h-4 text-green-500"></i>
+                                <span class="text-xs font-bold text-stone-800 dark:text-stone-200"
+                                      x-text="originalityAudit?.fidelity_check?.is_faithful_to_source ? 'Faithful to Source' : 'Discrepancies Noted'"></span>
+                            </div>
+                            <span class="inline-block text-[10px] text-stone-500">No AI-invented claims</span>
+                        </div>
+                    </div>
+
+                    <!-- Plagiarism & Oral Analysis Note -->
+                    <div x-show="originalityAudit?.plagiarism_risk_reason" class="text-xs text-stone-700 dark:text-stone-300 p-3 bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800">
+                        <span class="font-bold text-stone-900 dark:text-stone-100 block mb-0.5">Integrity Analysis:</span>
+                        <p class="text-xs leading-relaxed" x-text="originalityAudit?.plagiarism_risk_reason"></p>
+                    </div>
+
+                    <!-- Historical Fact-Check Flags -->
+                    <div x-show="originalityAudit?.historical_fact_check_flags?.length" class="space-y-2">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-stone-500">Historical & Elder Verification Flags:</span>
+                        <div class="space-y-1.5">
+                            <template x-for="(flag, idx) in originalityAudit?.historical_fact_check_flags || []">
+                                <div class="p-2.5 bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 text-xs space-y-1">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <span class="font-semibold text-stone-800 dark:text-stone-200" x-text="flag.claim"></span>
+                                        <span class="text-[9px] uppercase px-1.5 py-0.5 rounded font-bold shrink-0"
+                                              :class="flag.verification_status === 'consistent_with_known_history' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-800'"
+                                              x-text="(flag.verification_status || '').replace(/_/g, ' ')"></span>
+                                    </div>
+                                    <p class="text-[11px] text-stone-500 italic" x-text="flag.guidance"></p>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Cultural Advisory Disclaimer -->
+                    <div class="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-800 dark:text-amber-300 flex items-start space-x-2">
+                        <i data-lucide="info" class="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-amber-600"></i>
+                        <span>AI advisory screen to support community stewardship — not legal copyright certification. Community elders and moderators retain final authority.</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- SUB-FEATURE B: MUSE IMAGE CULTURAL ILLUSTRATION -->
             <div class="p-5 rounded-2xl bg-stone-50 dark:bg-stone-800/40 border border-stone-200 dark:border-stone-700/80 space-y-4">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -784,9 +879,11 @@ function livingHeritageWizard(config) {
         cultureChallenges: '',
         cultureTags: '',
 
-        // Stage 4 State (Wonder, Image, SAM)
+        // Stage 4 State (Wonder, Image, SAM, Audit)
         isWonderLoading: false,
         wonderPlan: null,
+        isAuditLoading: false,
+        originalityAudit: null,
         isImageLoading: false,
         generatedImageUrl: '',
         generatedImagePath: '',
@@ -993,6 +1090,46 @@ function livingHeritageWizard(config) {
             }
         },
 
+        async runOriginalityAudit() {
+            const story = this.rawStory || this.transcript || this.cultureDescription;
+            if (!story || story.trim().length < 20) {
+                this.errorMessage = 'Please provide at least 20 characters of story or transcript to audit.';
+                return;
+            }
+
+            this.isAuditLoading = true;
+            this.errorMessage = '';
+
+            try {
+                const response = await fetch("{{ route('cultural-hub.living-heritage.audit') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': this.csrfToken,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        story: story,
+                        name: this.cultureName,
+                        region: this.cultureRegion,
+                        category: this.cultureCategory,
+                        description: this.cultureDescription
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success && data.audit) {
+                    this.originalityAudit = data.audit;
+                } else {
+                    this.errorMessage = data.error || 'Muse Wonder originality audit could not run.';
+                }
+            } catch (err) {
+                this.errorMessage = 'Failed to run Fact-Check & Originality Audit: ' + err.message;
+            } finally {
+                this.isAuditLoading = false;
+            }
+        },
+
         async runGenerateIllustration() {
             const story = this.cultureDescription || this.transcript || this.rawStory;
             if (!story) {
@@ -1105,6 +1242,10 @@ function livingHeritageWizard(config) {
 
             if (this.wonderPlan) {
                 formData.append('wonder_plan_json', JSON.stringify(this.wonderPlan));
+            }
+
+            if (this.originalityAudit) {
+                formData.append('originality_audit_json', JSON.stringify(this.originalityAudit));
             }
 
             if (this.coverImageFile) {

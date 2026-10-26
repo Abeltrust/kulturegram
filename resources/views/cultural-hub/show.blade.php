@@ -234,6 +234,62 @@
                         </div>
                     @endif
 
+                    <!-- LIVING HERITAGE: MUSE WONDER ORIGINALITY & FACT-CHECK AUDIT -->
+                    @if(!empty($culture->wonder_preservation_plan['originality_audit']))
+                        @php $audit = $culture->wonder_preservation_plan['originality_audit']; @endphp
+                        <div class="bg-white dark:bg-[#141419] border border-stone-200 dark:border-white/5 p-6 rounded-2xl shadow-xl space-y-4">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-lg font-semibold text-amber-500 flex items-center space-x-2">
+                                    <i data-lucide="shield-check" class="w-5 h-5"></i>
+                                    <span>Archival Integrity & Fact-Check Screen</span>
+                                </h2>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider
+                                    {{ ($audit['plagiarism_risk'] ?? '') === 'low' ? 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400' }}">
+                                    {{ strtoupper($audit['plagiarism_risk'] ?? 'low') }} RISK
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3 pt-1">
+                                <div class="p-3 bg-stone-50 dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800">
+                                    <span class="text-[10px] font-bold uppercase text-stone-400 block">Oral Authenticity</span>
+                                    <span class="text-xl font-black text-amber-500">{{ $audit['oral_authenticity_score'] ?? 0 }}/100</span>
+                                    <span class="text-[10px] text-stone-400 block">{{ $audit['authenticity_label'] ?? '' }}</span>
+                                </div>
+                                <div class="p-3 bg-stone-50 dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800">
+                                    <span class="text-[10px] font-bold uppercase text-stone-400 block">Source Fidelity</span>
+                                    <span class="text-sm font-bold text-stone-200 flex items-center gap-1 mt-1">
+                                        <i data-lucide="check-circle-2" class="w-4 h-4 text-green-500"></i>
+                                        Faithful to Source
+                                    </span>
+                                    <span class="text-[10px] text-stone-400 block">No fabricated claims</span>
+                                </div>
+                            </div>
+
+                            @if(!empty($audit['plagiarism_risk_reason']))
+                                <p class="text-xs text-stone-400 italic bg-stone-50 dark:bg-stone-900 p-3 rounded-xl border border-stone-200 dark:border-stone-800">
+                                    {{ $audit['plagiarism_risk_reason'] }}
+                                </p>
+                            @endif
+
+                            @if(!empty($audit['historical_fact_check_flags']))
+                                <div class="space-y-1.5 pt-1">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-stone-400">Claims Flagged for Elder Corroboration:</span>
+                                    @foreach($audit['historical_fact_check_flags'] as $flag)
+                                        <div class="p-2.5 bg-stone-50 dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 text-xs space-y-0.5">
+                                            <div class="flex items-center justify-between">
+                                                <span class="font-semibold text-stone-200">{{ $flag['claim'] ?? '' }}</span>
+                                                <span class="text-[9px] uppercase px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
+                                                    {{ str_replace('_', ' ', $flag['verification_status'] ?? 'elder check') }}
+                                                </span>
+                                            </div>
+                                            <p class="text-[11px] text-stone-400 italic">{{ $flag['guidance'] ?? '' }}</p>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
                 </div>
 
 

@@ -77,6 +77,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/cultural-hub/living-heritage/transcribe', [LivingHeritageController::class, 'transcribeAudio'])->middleware('throttle:20,1')->name('cultural-hub.living-heritage.transcribe');
     Route::post('/cultural-hub/living-heritage/prepare', [LivingHeritageController::class, 'prepareStory'])->middleware('throttle:20,1')->name('cultural-hub.living-heritage.prepare');
     Route::post('/cultural-hub/living-heritage/wonder-plan', [LivingHeritageController::class, 'preservationPlan'])->middleware('throttle:20,1')->name('cultural-hub.living-heritage.wonder-plan');
+    Route::post('/cultural-hub/living-heritage/audit-originality', [LivingHeritageController::class, 'auditOriginality'])->middleware('throttle:20,1')->name('cultural-hub.living-heritage.audit');
     Route::post('/cultural-hub/living-heritage/generate-illustration', [LivingHeritageController::class, 'generateIllustration'])->middleware('throttle:15,1')->name('cultural-hub.living-heritage.illustration');
     Route::post('/cultural-hub/living-heritage/segment-artifact', [LivingHeritageController::class, 'segmentArtifact'])->middleware('throttle:15,1')->name('cultural-hub.living-heritage.segment');
     Route::post('/cultural-hub/living-heritage/store', [LivingHeritageController::class, 'store'])->name('cultural-hub.living-heritage.store');

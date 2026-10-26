@@ -206,4 +206,200 @@ PROMPT;
             'preservation_checklist' => array_slice($checklist, 0, 10),
         ];
     }
+
+    /**
+     * Run an AI-powered Cultural Fact-Check & Originality Audit.
+     * Evaluates oral authenticity, generic/plagiarism risk against standard reference materials,
+     * historical assertion consistency, and flags claims needing elder verification.
+     *
+     * @param string $sourceStory Original oral narrative or transcription
+     * @param array $draft Structured cultural draft fields
+     * @return array Standardized result envelope with originality audit
+     */
+    public function auditOriginalityAndFacts(string $sourceStory, array $draft = []): array
+    {
+        $cleanStory = trim($sourceStory);
+        if (empty($cleanStory)) {
+            return [
+                'success' => false,
+                'configured' => $this->client->isConfigured(),
+                'audit' => null,
+                'model' => $this->model,
+                'error' => 'Source story or transcript is required for originality and fact-check audit.',
+                'latency_ms' => 0.0,
+            ];
+        }
+
+        if (!$this->client->isConfigured()) {
+            return [
+                'success' => false,
+                'configured' => false,
+                'audit' => null,
+                'model' => $this->model,
+                'error' => 'Meta Model API key is not configured. Please add META_MODEL_API_KEY to your .env file.',
+                'latency_ms' => 0.0,
+            ];
+        }
+
+        $systemPrompt = $this->buildAuditSystemPrompt();
+        $userPrompt = $this->buildAuditUserPrompt($cleanStory, $draft);
+
+        $payload = [
+            'model' => $this->model,
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $userPrompt],
+            ],
+            'temperature' => 0.2,
+            'max_tokens' => 4096,
+        ];
+
+        $response = $this->client->postJson('chat/completions', $payload, $this->model);
+
+        if (!$response['success']) {
+            return [
+                'success' => false,
+                'configured' => true,
+                'audit' => null,
+                'model' => $this->model,
+                'error' => $response['error'] ?? 'Muse Wonder originality audit failed.',
+                'status_code' => $response['status_code'] ?? 500,
+                'latency_ms' => $response['latency_ms'] ?? 0.0,
+            ];
+        }
+
+        $rawContent = $this->extractMessageContent($response['data']);
+        $audit = $this->sanitizeOriginalityAudit($rawContent);
+
+        if ($audit === null) {
+            return [
+                'success' => false,
+                'configured' => true,
+                'audit' => null,
+                'model' => $this->model,
+                'error' => 'Muse Wonder returned an unparseable originality audit payload.',
+                'status_code' => 200,
+                'latency_ms' => $response['latency_ms'] ?? 0.0,
+            ];
+        }
+
+        return [
+            'success' => true,
+            'configured' => true,
+            'audit' => $audit,
+            'model' => $this->model,
+            'error' => null,
+            'status_code' => 200,
+            'latency_ms' => $response['latency_ms'] ?? 0.0,
+        ];
+    }
+
+    protected function buildAuditSystemPrompt(): string
+    {
+        return <<<PROMPT
+You are Muse Wonder, a bounded cultural preservation and archival integrity assistant for Kulturegram.
+Your task is to conduct an Originality, Plagiarism, and Factual Integrity Audit on a submitted cultural heritage record.
+
+CULTURAL AUDIT PRINCIPLES:
+1. Oral traditions, folklore, and proverbs are shared communal heritage. Do NOT treat shared ancestral folktales as plagiarism unless the narrative is a verbatim copy-paste of a published modern textbook or encyclopedia article (e.g. Wikipedia).
+2. Measure "oral_authenticity_score" (0-100): High scores (75-100) reflect personal memory, clan recollections, conversational cadence, dialect words, and local context. Low scores (0-45) reflect generic, encyclopedic, or tourist brochure summaries.
+3. Measure "plagiarism_risk" ("low", "medium", "high"): "high" means phrasing closely matches public web articles or published books; "medium" means mixed; "low" means original firsthand account.
+4. "historical_fact_check_flags": Identify any specific dates, royal lineages, deity origins, or historical assertions that require confirmation with community elders or archival custodians.
+5. "fidelity_check": Check if the structured draft remains faithful to the contributor's raw story without invented details.
+
+Return your response EXCLUSIVELY in valid JSON matching this schema:
+{
+  "oral_authenticity_score": 85,
+  "authenticity_label": "High Firsthand Oral Fidelity",
+  "plagiarism_risk": "low",
+  "plagiarism_risk_reason": "Explanation of the assessment",
+  "suspected_source_parallels": ["phrase or source type if any"],
+  "fidelity_check": {
+    "is_faithful_to_source": true,
+    "hallucination_warnings": []
+  },
+  "historical_fact_check_flags": [
+    {
+      "claim": "Specific historical assertion",
+      "verification_status": "consistent_with_known_history|requires_elder_verification|potential_anachronism",
+      "guidance": "Recommended elder question or archive check"
+    }
+  ],
+  "moderator_recommendations": ["Archival advice for reviewer"]
+}
+PROMPT;
+    }
+
+    protected function buildAuditUserPrompt(string $cleanStory, array $draft): string
+    {
+        $prompt = "Source Cultural Narrative / Oral Transcript:\n\"\"\"\n{$cleanStory}\n\"\"\"\n\n";
+
+        if (!empty($draft)) {
+            $prompt .= "Draft Metadata:\n";
+            if (!empty($draft['name'])) $prompt .= "- Title: " . $draft['name'] . "\n";
+            if (!empty($draft['region'])) $prompt .= "- Region: " . $draft['region'] . "\n";
+            if (!empty($draft['category'])) $prompt .= "- Category: " . $draft['category'] . "\n";
+            if (!empty($draft['description'])) $prompt .= "- Description: " . $draft['description'] . "\n";
+        }
+
+        $prompt .= "\nPlease generate the Originality, Plagiarism, and Factual Integrity Audit.";
+        return $prompt;
+    }
+
+    public function sanitizeOriginalityAudit(string $rawContent): ?array
+    {
+        $clean = trim($rawContent);
+
+        if (preg_match('/```(?:json)?\s*([\s\S]*?)\s*```/i', $clean, $matches)) {
+            $clean = trim($matches[1]);
+        } elseif (preg_match('/(\{[\s\S]*\})/s', $clean, $matches)) {
+            $clean = trim($matches[1]);
+        }
+
+        $decoded = json_decode($clean, true);
+        if (!is_array($decoded) || json_last_error() !== JSON_ERROR_NONE) {
+            Log::warning('[MuseWonder] Failed to decode JSON from originality audit', ['raw' => substr($clean, 0, 300)]);
+            return null;
+        }
+
+        $score = isset($decoded['oral_authenticity_score']) ? (int) $decoded['oral_authenticity_score'] : 70;
+        $score = max(0, min(100, $score));
+
+        $risk = strtolower(trim((string) ($decoded['plagiarism_risk'] ?? 'low')));
+        if (!in_array($risk, ['low', 'medium', 'high'], true)) {
+            $risk = 'low';
+        }
+
+        $flags = [];
+        if (isset($decoded['historical_fact_check_flags']) && is_array($decoded['historical_fact_check_flags'])) {
+            foreach ($decoded['historical_fact_check_flags'] as $flag) {
+                if (is_array($flag) && !empty($flag['claim'])) {
+                    $status = in_array($flag['verification_status'] ?? '', ['consistent_with_known_history', 'requires_elder_verification', 'potential_anachronism'], true)
+                        ? $flag['verification_status']
+                        : 'requires_elder_verification';
+
+                    $flags[] = [
+                        'claim' => strip_tags((string) $flag['claim']),
+                        'verification_status' => $status,
+                        'guidance' => strip_tags((string) ($flag['guidance'] ?? '')),
+                    ];
+                }
+            }
+        }
+
+        return [
+            'oral_authenticity_score' => $score,
+            'authenticity_label' => strip_tags(trim((string) ($decoded['authenticity_label'] ?? 'Oral Heritage Assessment'))),
+            'plagiarism_risk' => $risk,
+            'plagiarism_risk_reason' => strip_tags(trim((string) ($decoded['plagiarism_risk_reason'] ?? 'Evaluated for oral cadence and source fidelity.'))),
+            'suspected_source_parallels' => array_map('strip_tags', (array) ($decoded['suspected_source_parallels'] ?? [])),
+            'fidelity_check' => [
+                'is_faithful_to_source' => (bool) ($decoded['fidelity_check']['is_faithful_to_source'] ?? true),
+                'hallucination_warnings' => array_map('strip_tags', (array) ($decoded['fidelity_check']['hallucination_warnings'] ?? [])),
+            ],
+            'historical_fact_check_flags' => array_slice($flags, 0, 10),
+            'moderator_recommendations' => array_map('strip_tags', (array) ($decoded['moderator_recommendations'] ?? [])),
+            'audited_at' => now()->toIso8601String(),
+        ];
+    }
 }

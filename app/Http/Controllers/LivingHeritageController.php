@@ -204,6 +204,40 @@ class LivingHeritageController extends Controller
     }
 
     /**
+     * Run Cultural Fact-Check & Originality Audit using Muse Wonder.
+     */
+    public function auditOriginality(Request $request): JsonResponse
+    {
+        $request->validate([
+            'story' => 'required|string|min:20',
+            'name' => 'nullable|string|max:255',
+            'region' => 'nullable|string|max:255',
+            'category' => 'nullable|string',
+            'description' => 'nullable|string',
+        ], [
+            'story.min' => 'Please provide at least 20 characters of source narrative or transcript to audit.',
+        ]);
+
+        $draft = [
+            'name' => $request->input('name'),
+            'region' => $request->input('region'),
+            'category' => $request->input('category'),
+            'description' => $request->input('description'),
+        ];
+
+        $result = $this->wonderService->auditOriginalityAndFacts($request->input('story'), $draft);
+
+        return response()->json([
+            'success' => $result['success'],
+            'configured' => $result['configured'],
+            'audit' => $result['audit'] ?? null,
+            'model' => $result['model'],
+            'latency_ms' => $result['latency_ms'] ?? 0.0,
+            'error' => $result['error'] ?? null,
+        ], $result['success'] ? 200 : ($result['status_code'] ?? 400));
+    }
+
+    /**
      * Generate cultural illustration using Muse Image.
      */
     public function generateIllustration(Request $request): JsonResponse
@@ -286,6 +320,7 @@ class LivingHeritageController extends Controller
             'artifact_segmented_path' => 'nullable|string',
             'artifact_label' => 'nullable|string',
             'wonder_plan_json' => 'nullable|string',
+            'originality_audit_json' => 'nullable|string',
             'tags' => 'nullable|string',
             'action' => 'required|in:draft,submit',
         ]);
@@ -327,6 +362,17 @@ class LivingHeritageController extends Controller
         $wonderPlan = null;
         if ($request->filled('wonder_plan_json')) {
             $wonderPlan = json_decode($request->input('wonder_plan_json'), true);
+        }
+
+        // Originality & Fact-check audit decoding
+        if ($request->filled('originality_audit_json')) {
+            $auditData = json_decode($request->input('originality_audit_json'), true);
+            if (is_array($auditData)) {
+                if (!is_array($wonderPlan)) {
+                    $wonderPlan = [];
+                }
+                $wonderPlan['originality_audit'] = $auditData;
+            }
         }
 
         $culture = new Culture();

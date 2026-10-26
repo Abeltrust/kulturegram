@@ -480,4 +480,54 @@ class LivingHeritageCaptureTest extends TestCase
             $this->assertStringNotContainsString($secretKey, $response->getContent(), "Secret API key leaked in HTML on {$url}");
         }
     }
+
+    public function test_muse_wonder_runs_originality_and_fact_check_audit(): void
+    {
+        Config::set('meta_ai.api_key', 'test_key');
+
+        $mockAudit = [
+            'oral_authenticity_score' => 91,
+            'authenticity_label' => 'High Firsthand Oral Fidelity',
+            'plagiarism_risk' => 'low',
+            'plagiarism_risk_reason' => 'Firsthand narrative with specific clan memory and oral dialect markers.',
+            'suspected_source_parallels' => [],
+            'fidelity_check' => [
+                'is_faithful_to_source' => true,
+                'hallucination_warnings' => [],
+            ],
+            'historical_fact_check_flags' => [
+                [
+                    'claim' => 'Eyo masquerade emerged in 1775 to honor Oba Gbadebo',
+                    'verification_status' => 'requires_elder_verification',
+                    'guidance' => 'Verify specific royal ascension dates with Lagos Kingmakers.',
+                ],
+            ],
+            'moderator_recommendations' => ['Corroborate date with palace records.'],
+        ];
+
+        Http::fake([
+            'https://api.meta.ai/v1/chat/completions' => Http::response([
+                'choices' => [
+                    ['message' => ['content' => json_encode($mockAudit)]],
+                ],
+            ], 200),
+        ]);
+
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->postJson(route('cultural-hub.living-heritage.audit'), [
+            'story' => 'My grandmother recounted how the Eyo masquerades carried Opambata staffs during the 18th century.',
+            'name' => 'Eyo Royal Procession',
+            'region' => 'Lagos',
+            'category' => 'Festivals & Ceremonies',
+            'description' => 'Traditional oral history of the Adamu Orisha play.',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertTrue($response->json('success'));
+        $this->assertEquals(91, $response->json('audit.oral_authenticity_score'));
+        $this->assertEquals('low', $response->json('audit.plagiarism_risk'));
+        $this->assertTrue($response->json('audit.fidelity_check.is_faithful_to_source'));
+        $this->assertCount(1, $response->json('audit.historical_fact_check_flags'));
+    }
 }

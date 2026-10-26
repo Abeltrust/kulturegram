@@ -93,6 +93,21 @@
                                     {{ $culture->status === 'pending_review' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400' : '' }}">
                                     {{ str_replace('_', ' ', $culture->status) }}
                                 </span>
+                                @if($culture->is_ai_assisted)
+                                    <span class="px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 flex items-center gap-1">
+                                        <i data-lucide="sparkles" class="w-3 h-3"></i> AI Assisted
+                                    </span>
+                                @endif
+                                @if(!empty($culture->wonder_preservation_plan['originality_audit']))
+                                    @php $audit = $culture->wonder_preservation_plan['originality_audit']; @endphp
+                                    <span class="px-2 py-0.5 rounded-md text-[11px] font-bold tracking-wider bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300">
+                                        Authenticity: {{ $audit['oral_authenticity_score'] ?? 0 }}%
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider
+                                        {{ ($audit['plagiarism_risk'] ?? '') === 'low' ? 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400' }}">
+                                        Plagiarism Risk: {{ $audit['plagiarism_risk'] ?? 'low' }}
+                                    </span>
+                                @endif
                             </div>
 
                             <p class="text-stone-600 dark:text-stone-400 text-sm line-clamp-2">
