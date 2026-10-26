@@ -3,9 +3,8 @@
 @section('title', 'Login - Kulturegram')
 
 @section('content')
-    <div
-        class="flex items-center justify-center min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-stone-900 dark:via-stone-950 dark:to-stone-900">
-        <div class="bg-white dark:bg-stone-900 p-8 rounded-2xl shadow-lg w-full max-w-md border dark:border-stone-800">
+    <div class="flex items-center justify-center min-h-screen bg-stone-50 dark:bg-stone-950 py-12 px-4">
+        <div class="bg-white dark:bg-stone-900 p-8 rounded-2xl shadow-lg w-full max-w-md border border-stone-200 dark:border-stone-800">
             <h2 class="text-2xl font-bold text-center mb-6 text-amber-500">Welcome Back</h2>
 
             <!-- Login Form -->
@@ -45,16 +44,16 @@
                     @enderror
                 </div>
 
-                <!-- Submit -->
+                <!-- Submit (Solid Brand Color, No Gradients) -->
                 <button type="submit"
-                    class="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold py-3 rounded-xl hover:from-amber-600 hover:to-orange-700 transition-all duration-200">
+                    class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition-colors duration-200 shadow-sm active:scale-[0.99] cursor-pointer">
                     Sign In
                 </button>
             </form>
 
             <!-- Links -->
             <div class="mt-4 text-center">
-                <a href="{{ route('password.request') }}" class="text-sm text-stone-500 hover:text-amber-600">Forgot your
+                <a href="{{ route('password.request') }}" class="text-sm text-stone-500 hover:text-amber-600 transition-colors">Forgot your
                     password?</a>
             </div>
             <div class="mt-2 text-center">
@@ -70,7 +69,9 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            lucide.createIcons();
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
         });
     </script>
 @endpush

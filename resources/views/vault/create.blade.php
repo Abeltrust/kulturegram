@@ -126,7 +126,7 @@
                     Save Draft
                 </button>
                 <button type="submit"
-                    class="w-full sm:w-1/2 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl shadow hover:from-amber-600 hover:to-orange-700 text-sm sm:text-base transition-all">
+                    class="w-full sm:w-1/2 glass-orange text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl shadow text-sm sm:text-base transition-all">
                     Save to Vault
                 </button>
             </div>

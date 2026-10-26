@@ -7,10 +7,10 @@
         @guest
             <!-- Welcome Section for Guests -->
             <div
-                class="bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-stone-800 dark:via-stone-900 dark:to-stone-800 rounded-2xl p-6 sm:p-8 border border-amber-200 dark:border-stone-700 mb-8">
+                class="bg-stone-50 dark:bg-stone-850 rounded-2xl p-6 sm:p-8 border border-stone-200 dark:border-stone-700 mb-8">
                 <div class="text-center mb-8">
                     <div
-                        class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        class="w-14 h-14 sm:w-16 sm:h-16 glass-orange rounded-2xl flex items-center justify-center mx-auto mb-4">
                         <i data-lucide="book-open" class="w-7 h-7 sm:w-8 sm:h-8 text-white"></i>
                     </div>
                     <h2 class="text-2xl sm:text-3xl font-bold text-stone-800 dark:text-white mb-3">
@@ -61,7 +61,7 @@
                 <div class="text-center">
                     <p class="text-stone-600 mb-4">Ready to start your timeline?</p>
                     <a href="{{ route('register') }}"
-                        class="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 sm:px-8 py-3 rounded-xl font-semibold hover:from-amber-600 hover:to-orange-700 transition-all duration-200 shadow-md hover:shadow-lg">
+                        class="glass-orange text-white px-6 sm:px-8 py-3 rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg inline-block">
                         Join Kulturegram
                     </a>
                 </div>
@@ -79,15 +79,15 @@
                 </div>
                 <div class="flex space-x-2 overflow-x-auto scrollbar-hide pb-2">
                     <a href="{{ route('timeline.index', ['filter' => 'all']) }}"
-                        class="flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition {{ $filter === 'all' ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white' : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-700 hover:border-stone-300' }}">
+                        class="flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition {{ $filter === 'all' ? 'glass-orange text-white' : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-700 hover:border-stone-300' }}">
                         Stories
                     </a>
                     <a href="{{ route('timeline.index', ['filter' => 'lockedin']) }}"
-                        class="flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition {{ $filter === 'lockedin' ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white' : 'bg-white text-stone-600 border border-stone-200 hover:border-stone-300' }}">
+                        class="flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition {{ $filter === 'lockedin' ? 'glass-orange text-white' : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-700 hover:border-stone-300' }}">
                         Locked-In
                     </a>
                     <a href="{{ route('timeline.index', ['filter' => 'cultural']) }}"
-                        class="flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition {{ $filter === 'cultural' ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white' : 'bg-white text-stone-600 border border-stone-200 hover:border-stone-300' }}">
+                        class="flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition {{ $filter === 'cultural' ? 'glass-orange text-white' : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-700 hover:border-stone-300' }}">
                         Cultural
                     </a>
                 </div>
@@ -110,10 +110,10 @@
         <div class="space-y-6">
             @forelse($posts as $post)
                 <article id="post-{{ $post->id }}"
-                    class="bg-white dark:bg-stone-900/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-stone-100 dark:border-stone-800 hover:shadow-md transition-all duration-300">
-                    <div class="flex flex-col sm:flex-row items-start sm:space-x-4">
+                    class="bg-white dark:bg-stone-900/50 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-stone-100 dark:border-stone-800 hover:shadow-md transition-all duration-300 overflow-hidden">
+                    <div class="w-full">
                         <!-- Post Content -->
-                        <div class="flex-1 w-full">
+                        <div class="w-full">
                             <!-- Header -->
                             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
                                 <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-sm sm:text-base">
@@ -185,16 +185,17 @@
                                 @endif
 
                                 @if($post->image)
-                                    <div class="mt-4 rounded-xl overflow-hidden">
+                                    <div class="-mx-4 sm:-mx-6 mt-4 overflow-hidden bg-stone-100 dark:bg-stone-800/50 border-y border-stone-100 dark:border-stone-800">
                                         <img src="{{ Storage::url($post->image) }}"
-                                            class="w-full max-h-[600px] object-contain rounded-md w-full sm:max-h-[28rem]"
+                                            alt="Story image"
+                                            class="w-full h-auto max-h-[650px] object-cover transition-transform duration-500 hover:scale-[1.01]"
                                             loading="lazy">
                                     </div>
                                 @endif
 
                                 @if($post->video)
-                                    <div class="mt-4 rounded-xl overflow-hidden bg-black max-h-[600px]">
-                                        <video src="{{ Storage::url($post->video) }}" controls class="w-full max-h-[600px] object-contain rounded-md sm:max-h-[28rem]"></video>
+                                    <div class="-mx-4 sm:-mx-6 mt-4 overflow-hidden bg-black border-y border-stone-100 dark:border-stone-800">
+                                        <video src="{{ Storage::url($post->video) }}" controls class="w-full max-h-[600px] object-cover"></video>
                                     </div>
                                 @endif
 

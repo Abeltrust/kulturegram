@@ -11,16 +11,24 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('messages', function (Blueprint $table) {
-            $table->enum('status', ['sent', 'delivered', 'read'])->default('sent')->after('content');
-            $table->dropColumn('is_read');
+            if (!Schema::hasColumn('messages', 'status')) {
+                $table->string('status')->default('sent')->after('content');
+            }
+            if (Schema::hasColumn('messages', 'is_read') && \Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
+                $table->dropColumn('is_read');
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('messages', function (Blueprint $table) {
-            $table->boolean('is_read')->default(false)->after('attachment');
-            $table->dropColumn('status');
+            if (!Schema::hasColumn('messages', 'is_read')) {
+                $table->boolean('is_read')->default(false)->after('attachment');
+            }
+            if (Schema::hasColumn('messages', 'status')) {
+                $table->dropColumn('status');
+            }
         });
     }
 };

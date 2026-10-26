@@ -94,9 +94,17 @@ class MessageController extends Controller
             abort(403);
         }
 
+        $content = trim((string) $request->input('content'));
+        if ($content === '' && !$request->hasFile('attachment')) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['error' => 'Message cannot be empty'], 422);
+            }
+            return redirect()->back();
+        }
+
         $message = $conversation->messages()->create([
             'user_id' => Auth::id(),
-            'content' => $request->input('content'),
+            'content' => $content,
             'status' => 'sent',
         ]);
 
@@ -113,7 +121,60 @@ class MessageController extends Controller
 
         $conversation->touch();
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => [
+                    'id' => $message->id,
+                    'content' => $message->content,
+                    'user_id' => $message->user_id,
+                    'user_name' => Auth::user()->name,
+                    'is_me' => true,
+                    'time' => $message->created_at->format('H:i'),
+                    'full_time' => $message->created_at->format('M d, H:i'),
+                    'status' => $message->status,
+                ],
+            ]);
+        }
+
         return redirect()->back();
+    }
+
+    public function updates(Conversation $conversation, Request $request)
+    {
+        if (!$conversation->participants()->where('user_id', Auth::id())->exists()) {
+            abort(403);
+        }
+
+        $afterId = (int) $request->query('after_id', 0);
+
+        $newMessages = $conversation->messages()
+            ->where('id', '>', $afterId)
+            ->with('user')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        // Mark incoming messages as read
+        $conversation->messages()
+            ->where('id', '>', $afterId)
+            ->where('user_id', '!=', Auth::id())
+            ->where('status', '!=', 'read')
+            ->update(['status' => 'read']);
+
+        return response()->json([
+            'messages' => $newMessages->map(function ($msg) {
+                return [
+                    'id' => $msg->id,
+                    'content' => $msg->content,
+                    'user_id' => $msg->user_id,
+                    'user_name' => $msg->user->name,
+                    'is_me' => $msg->user_id === Auth::id(),
+                    'time' => $msg->created_at->format('H:i'),
+                    'full_time' => $msg->created_at->format('M d, H:i'),
+                    'status' => $msg->status,
+                ];
+            }),
+        ]);
     }
 
     public function startConversation(User $user)

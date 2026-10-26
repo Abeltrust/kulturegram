@@ -11,7 +11,7 @@
         </div>
 
         <a href="{{ route('vault.create') }}"
-           class="inline-block text-sm sm:text-base px-3 sm:px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg shadow hover:opacity-90 transition">
+           class="inline-block text-sm sm:text-base px-3 sm:px-4 py-2 glass-orange text-white rounded-lg shadow hover:opacity-90 transition">
             + Add Memory
         </a>
     </div>
@@ -22,7 +22,7 @@
             <a href="{{ route('vault.index', ['type' => $key]) }}"
                class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap
                       {{ $type === $key 
-                        ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow' 
+                        ? 'glass-orange text-white' 
                         : 'bg-gray-100 dark:bg-stone-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-stone-700' }}">
                 {{ $label }}
             </a>
@@ -84,7 +84,7 @@
                             View
                         </a>
                         <a href="{{ route('vault.download', $item) }}" 
-                           class="px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow hover:opacity-90 transition">
+                           class="px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-lg glass-orange text-white shadow hover:opacity-90 transition">
                             Download
                         </a>
                     </div>

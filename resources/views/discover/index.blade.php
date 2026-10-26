@@ -36,7 +36,7 @@
             @foreach ($tabs as $key => $label)
                 <a href="{{ route('discover.index', ['tab' => $key, 'search' => $search]) }}" class="px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200
                               {{ $tab === $key
-                ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white'
+                ? 'glass-orange text-white'
                 : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600' }}">
                     {{ $label }}
                 </a>
@@ -114,7 +114,7 @@
                                         class="flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm flex-1
                                                             {{ auth()->user()->hasLockedIn($item)
                                             ? 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600'
-                                            : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:shadow-md hover:scale-[1.02]' }}">
+                                            : 'glass-orange text-white hover:scale-[1.02]' }}">
                                         <i data-lucide="{{ auth()->user()->hasLockedIn($item) ? 'user-check' : 'user-plus' }}"
                                             id="user-lockin-icon-{{ $item->id }}" class="w-4 h-4"></i>
                                         <span id="user-lockin-text-{{ $item->id }}">
@@ -239,7 +239,7 @@
                             icon.setAttribute('data-lucide', 'user-check');
                             text.textContent = 'Locked In';
                         } else {
-                            btn.className = "flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:shadow-md hover:scale-[1.02]";
+                            btn.className = "flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm flex-1 glass-orange text-white hover:scale-[1.02]";
                             icon.setAttribute('data-lucide', 'user-plus');
                             text.textContent = 'Lock In';
                         }

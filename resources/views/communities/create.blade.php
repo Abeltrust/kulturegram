@@ -161,7 +161,7 @@
       <!-- Submit -->
       <div class="flex justify-end">
         <button type="submit"
-          class=" w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl shadow hover:from-amber-600 hover:to-orange-700 transition-all duration-200">
+          class="w-full glass-orange text-white font-bold px-6 py-3 rounded-xl shadow transition-all duration-200">
           Create Community
         </button>
       </div>

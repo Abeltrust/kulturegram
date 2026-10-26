@@ -19,6 +19,9 @@ class User extends Authenticatable
         'password',
         'bio',
         'location',
+        'country_id',
+        'state_id',
+        'local_government_id',
         'website',
         'avatar',
         'cover_photo',
@@ -115,6 +118,29 @@ class User extends Authenticatable
     public function transactionsReceived()
     {
         return $this->hasMany(Transaction::class, 'host_id');
+    }
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
+
+    public function state()
+    {
+        return $this->belongsTo(State::class);
+    }
+
+    public function localGovernment()
+    {
+        return $this->belongsTo(LocalGovernment::class);
+    }
+
+    /**
+     * Named "spokenLanguages" to avoid clashing with the legacy `languages` JSON column.
+     */
+    public function spokenLanguages()
+    {
+        return $this->belongsToMany(Language::class);
     }
 
     public function userRelationships()

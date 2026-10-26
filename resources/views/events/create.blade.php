@@ -6,6 +6,17 @@
       {{ isset($community_id) ? 'Schedule Community Meeting' : 'Create Event' }}
     </h2>
 
+    @if ($errors->any())
+        <div class="mb-6 p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 text-sm">
+            <p class="font-bold mb-1">Please fix the following issues:</p>
+            <ul class="list-disc list-inside space-y-1">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <form action="{{ route('events.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
       @csrf
 
@@ -35,7 +46,7 @@
           <!-- Date -->
           <div>
             <label for="event_date" class="block text-gray-700 dark:text-stone-300 font-semibold mb-2">Date</label>
-            <input type="date" name="event_date" id="event_date" value="{{ old('event_date') }}"
+            <input type="date" name="event_date" id="event_date" value="{{ old('event_date') }}" min="{{ date('Y-m-d') }}"
               class="w-full border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:outline-none" required>
             @error('event_date')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
           </div>
@@ -195,11 +206,15 @@
             if (isOnline) {
                 locField.classList.add('hidden');
                 linkField.classList.remove('hidden');
-                locInput.value = 'Online';
+                if (!locInput.value || locInput.value === '') {
+                    locInput.value = 'Online';
+                }
             } else {
                 locField.classList.remove('hidden');
                 linkField.classList.add('hidden');
-                if(locInput.value === 'Online') locInput.value = '';
+                if (locInput.value === 'Online') {
+                    locInput.value = '';
+                }
             }
         }
         
@@ -254,7 +269,7 @@
       <!-- Submit -->
       <div class="pt-4 border-t border-stone-100 dark:border-stone-800">
         <button type="submit"
-          class="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg px-6 py-4 rounded-xl shadow-md hover:from-amber-600 hover:to-orange-700 transition-all duration-200">
+          class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold text-lg px-6 py-4 rounded-xl shadow-md transition-all duration-200 cursor-pointer active:scale-[0.99]">
           {{ isset($community_id) ? 'Schedule Meeting' : 'Create Event' }}
         </button>
       </div>

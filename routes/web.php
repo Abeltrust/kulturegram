@@ -37,10 +37,15 @@ Route::get('/login', function () {
     return view('auth.login');   // looks for resources/views/login.blade.php
 })->name('login');
 
-// Register page (from Blade view)
-Route::get('/register', function () {
-    return view('auth.register');   // looks for resources/views/register.blade.php
-})->name('register');
+// Register page — handled by the controller so the origin dropdown data is provided
+Route::get('/register', [\App\Http\Controllers\Auth\RegisteredUserController::class, 'create'])
+    ->middleware('guest')
+    ->name('register');
+
+// Suggestions for user-added local areas (countries without official LGA data)
+Route::get('/locations/countries/{country}/areas', [\App\Http\Controllers\LocationController::class, 'areas'])
+    ->middleware('throttle:60,1')
+    ->name('locations.areas');
 
 
 Route::get('/dashboard', function () {
@@ -122,6 +127,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
     Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
     Route::post('/messages/{conversation}', [MessageController::class, 'store'])->name('messages.store');
+    Route::get('/messages/{conversation}/updates', [MessageController::class, 'updates'])->name('messages.updates');
     Route::get('/messages/start/{user}', [MessageController::class, 'startConversation'])->name('messages.start');
 
     // Analytics

@@ -41,7 +41,7 @@
 
         /* Standardized Input Styling */
         .stnd-input {
-            @apply rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 focus:outline-none placeholder-stone-400 dark:placeholder-stone-500;
+            @apply rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:outline-none placeholder-stone-400 dark:placeholder-stone-500 transition-colors;
         }
 
         /* Modal Animations */
@@ -131,16 +131,32 @@
             left: 0;
             height: 3px;
             width: 0%;
-            background: linear-gradient(to right, #f59e0b, #ea580c);
+            background: #f97316;
             z-index: 9999;
             transition: width 0.4s ease, opacity 0.4s ease;
             opacity: 0;
             pointer-events: none;
             border-radius: 0 2px 2px 0;
-            box-shadow: 0 0 8px rgba(245,158,11,0.6);
+            box-shadow: 0 0 10px rgba(249, 115, 22, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.5);
         }
         #nav-progress.active {
             opacity: 1;
+        }
+
+        /* Glassy & Shiny Single Orange Styling */
+        .glass-orange {
+            background-color: #f97316 !important;
+            background-image: none !important;
+            box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.4), 0 4px 14px 0 rgba(249, 115, 22, 0.28) !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.35) !important;
+            transition: all 0.2s ease !important;
+        }
+        .glass-orange:hover {
+            background-color: #ea580c !important;
+            box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.5), 0 6px 18px 0 rgba(234, 88, 12, 0.38) !important;
+        }
+        .glass-orange:active {
+            transform: scale(0.98);
         }
         /* ────────────────────────────────────────────────── */
     </style>
@@ -227,10 +243,10 @@
         <div class="w-full flex items-center h-full px-4 md:px-6 gap-4">
             <!-- Left: Logo -->
             <div class="flex items-center space-x-3 flex-shrink-0">
-               <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center">
+               <div class="w-6 h-6 sm:w-8 sm:h-8 bg-orange-500 shadow-md shadow-orange-500/25 border-t border-white/30 rounded-lg flex items-center justify-center">
                     <i data-lucide="book-open" class="w-4 h-4 sm:w-5 sm:h-5 text-white"></i>
                 </div>
-                <a href="{{ route('timeline.index') }}" class="text-base sm:text-xl font-bold bg-gradient-to-r from-stone-800 to-stone-600 bg-clip-text text-transparent hover:from-amber-600 hover:to-orange-600 transition-all duration-200">
+                <a href="{{ route('timeline.index') }}" class="text-base sm:text-xl font-black text-stone-900 dark:text-white hover:text-orange-500 transition-colors duration-200">
                     Kulturegram
                 </a>
             </div>
@@ -257,7 +273,7 @@
                     @auth
                         <!-- Create Post Button (Desktop Header) -->
                         <button onclick="document.getElementById('createPostModal').classList.remove('hidden'); document.getElementById('createPostModal').classList.add('flex');"
-                            class="hidden md:flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-sm hover:shadow hover:scale-105 transition-all duration-200"
+                            class="hidden md:flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-orange-500 hover:bg-orange-600 text-white shadow-md shadow-orange-500/25 border-t border-white/30 hover:scale-105 transition-all duration-200 cursor-pointer"
                             title="Create Post">
                             <i data-lucide="plus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                         </button>
@@ -279,7 +295,7 @@
                             @endif
                         </a>
 
-                        <!-- Direct Profile Link (No Dropdown) -->
+                        <!-- Direct Profile Link -->
                         <a href="{{ route('profile.show') }}" 
                             class="flex items-center space-x-1 sm:space-x-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg p-1 transition-colors"
                             title="My Profile & Story">
@@ -322,7 +338,7 @@
                                x-data
                                @mouseenter="$dispatch('show-tooltip', { text: '{{ $item['tooltip'] }}', x: $el.getBoundingClientRect().right + 12, y: $el.getBoundingClientRect().top + ($el.offsetHeight / 2) })"
                                @mouseleave="$dispatch('hide-tooltip')"
-                            class="w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 {{ request()->routeIs($item['route']) ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md' : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-800 dark:hover:text-amber-500' }}">
+                            class="w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 {{ request()->routeIs($item['route']) ? 'bg-orange-500 text-white shadow-md shadow-orange-500/25 border-t border-white/30' : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-800 dark:hover:text-amber-500' }}">
                                 <i data-lucide="{{ $item['icon'] }}" class="w-5 h-5"></i>
                             </a>
                         </div>
@@ -348,11 +364,13 @@
                                x-data
                                @mouseenter="$dispatch('show-tooltip', { text: '{{ $item['tooltip'] }}', x: $el.getBoundingClientRect().right + 12, y: $el.getBoundingClientRect().top + ($el.offsetHeight / 2) })"
                                @mouseleave="$dispatch('hide-tooltip')"
-                            class="w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 {{ request()->routeIs($item['route']) ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md' : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-800 dark:hover:text-amber-500' }}">
+                            class="w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 {{ request()->routeIs($item['route']) ? 'bg-orange-500 text-white shadow-md shadow-orange-500/25 border-t border-white/30' : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-800 dark:hover:text-amber-500' }}">
                                 <i data-lucide="{{ $item['icon'] }}" class="w-5 h-5"></i>
                             </a>
                         </div>
                         @endforeach
+
+
                     </nav>
                 </div>
                 @endauth
@@ -368,7 +386,7 @@
                          <i data-lucide="activity" class="w-5 h-5"></i>
                     </div>
                     @guest
-                    <a href="{{ route('register') }}" class="mt-3 w-12 h-8 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs rounded-lg hover:from-amber-600 hover:to-orange-700 transition-all duration-200 flex items-center justify-center font-medium">
+                    <a href="{{ route('register') }}" class="mt-3 w-12 h-8 glass-orange text-white text-xs rounded-lg transition-all duration-200 flex items-center justify-center font-medium">
                         Start
                     </a>
                     @endguest
@@ -423,65 +441,256 @@
         <div class="absolute left-[-4px] top-1/2 transform -translate-y-1/2 w-2 h-2 bg-stone-900/90 dark:bg-stone-800/90 border-l border-b border-white/10 dark:border-stone-700/50 rotate-45"></div>
     </div>
 
-    <!-- Dynamic Reel Mobile Navigation (Double Gap Illusion) -->
+    <!-- Fixed Mobile Bottom Navigation & Pop-up Drawer -->
     @if(!request()->routeIs('messages.show') && !request()->routeIs('live-stream.show'))
-    <div class="fixed bottom-0 left-0 right-0 h-20 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border-t border-stone-200 dark:border-stone-800 md:hidden z-50 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] transition-colors duration-200">
-        
-        <!-- Fixed Center Post Button Anchor -->
-        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div class="w-[20vw] flex items-center justify-center">
-                @auth
-                    @if(request()->routeIs('cultural-hub.index'))
-                        <a href="{{ route('cultural-hub.create') }}" 
-                           class="pointer-events-auto flex flex-col items-center justify-center -mt-10 bg-gradient-to-tr from-amber-500 to-orange-600 w-16 h-16 rounded-full shadow-lg border-4 border-white dark:border-stone-900 text-white transform active:scale-95 transition-all z-[60]">
-                            <i data-lucide="plus" class="w-8 h-8"></i>
-                        </a>
+    <div x-data="{ openMoreNav: false }">
+
+        <!-- Fixed 5-Slot Bottom Bar -->
+        <nav class="fixed bottom-0 left-0 right-0 h-16 sm:h-18 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border-t border-stone-200 dark:border-stone-800 md:hidden z-40 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] transition-colors duration-200">
+            <div class="grid grid-cols-5 h-full items-center px-1">
+                
+                <!-- 1. Home / Timeline -->
+                <a href="{{ route('timeline.index') }}" 
+                   class="flex flex-col items-center justify-center h-full transition-all {{ request()->routeIs('timeline.*') ? 'text-amber-600 dark:text-amber-500' : 'text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200' }}">
+                    <i data-lucide="home" class="w-5 h-5 {{ request()->routeIs('timeline.*') ? 'scale-110 drop-shadow-[0_0_8px_rgba(217,119,6,0.3)]' : '' }}"></i>
+                    <span class="text-[10px] mt-1 font-bold tracking-tight">Home</span>
+                </a>
+
+                <!-- 2. Search / Discover -->
+                <a href="{{ route('discover.index') }}" 
+                   class="flex flex-col items-center justify-center h-full transition-all {{ request()->routeIs('discover.*') ? 'text-amber-600 dark:text-amber-500' : 'text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200' }}">
+                    <i data-lucide="compass" class="w-5 h-5 {{ request()->routeIs('discover.*') ? 'scale-110 drop-shadow-[0_0_8px_rgba(217,119,6,0.3)]' : '' }}"></i>
+                    <span class="text-[10px] mt-1 font-bold tracking-tight">Search</span>
+                </a>
+
+                <!-- 3. Fixed Center Post (+) Button Anchor -->
+                <div class="flex items-center justify-center h-full relative">
+                    @auth
+                        @if(request()->routeIs('cultural-hub.index'))
+                            <a href="{{ route('cultural-hub.create') }}" 
+                               class="flex flex-col items-center justify-center -mt-7 bg-orange-500 hover:bg-orange-600 w-14 h-14 rounded-full shadow-lg shadow-orange-500/30 border-4 border-white dark:border-stone-900 border-t-white/40 text-white transform active:scale-95 hover:scale-105 transition-all z-50 cursor-pointer"
+                               title="Contribute Culture">
+                                <i data-lucide="plus" class="w-7 h-7"></i>
+                            </a>
+                        @else
+                            <button type="button" onclick="openCreatePostModal()" 
+                                class="flex flex-col items-center justify-center -mt-7 bg-orange-500 hover:bg-orange-600 w-14 h-14 rounded-full shadow-lg shadow-orange-500/30 border-4 border-white dark:border-stone-900 border-t-white/40 text-white transform active:scale-95 hover:scale-105 transition-all z-50 cursor-pointer"
+                                title="Share Your Story">
+                                <i data-lucide="plus" class="w-7 h-7"></i>
+                            </button>
+                        @endif
                     @else
-                        <button onclick="openCreatePostModal()" 
-                            class="pointer-events-auto flex flex-col items-center justify-center -mt-10 bg-gradient-to-tr from-amber-500 to-orange-600 w-16 h-16 rounded-full shadow-lg border-4 border-white dark:border-stone-900 text-white transform active:scale-95 transition-all z-[60]">
-                            <i data-lucide="plus" class="w-8 h-8"></i>
-                        </button>
-                    @endif
-                @else
-                    <a href="{{ route('login') }}" class="pointer-events-auto flex flex-col items-center justify-center text-stone-600 dark:text-stone-400">
-                        <i data-lucide="log-in" class="w-7 h-7"></i>
-                        <span class="text-[11px] mt-1 font-bold uppercase tracking-tighter">Login</span>
-                    </a>
-                @endauth
+                        <a href="{{ route('login') }}" class="flex flex-col items-center justify-center text-stone-600 dark:text-stone-400">
+                            <i data-lucide="log-in" class="w-5 h-5"></i>
+                            <span class="text-[10px] mt-1 font-bold uppercase tracking-tight">Login</span>
+                        </a>
+                    @endauth
+                </div>
+
+                <!-- 4. Chat / Messages -->
+                <a href="{{ route('messages.index') }}" 
+                   class="flex flex-col items-center justify-center h-full transition-all {{ request()->routeIs('messages.*') ? 'text-amber-600 dark:text-amber-500' : 'text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200' }}">
+                    <div class="relative">
+                        <i data-lucide="message-circle" class="w-5 h-5 {{ request()->routeIs('messages.*') ? 'scale-110 drop-shadow-[0_0_8px_rgba(217,119,6,0.3)]' : '' }}"></i>
+                    </div>
+                    <span class="text-[10px] mt-1 font-bold tracking-tight">Chat</span>
+                </a>
+
+                <!-- 5. More Nav Pop-up Button -->
+                @php
+                    $isMoreActive = request()->routeIs('cultural-hub.*', 'education.*', 'communities.*', 'events.*', 'vault.*', 'notifications.*', 'profile.*', 'live-stream.*');
+                @endphp
+                <button type="button" 
+                    @click="openMoreNav = true; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); })" 
+                    class="flex flex-col items-center justify-center h-full transition-all cursor-pointer {{ $isMoreActive ? 'text-amber-600 dark:text-amber-500 font-black' : 'text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200' }}"
+                    title="More Portals">
+                    <div class="relative">
+                        <i data-lucide="layout-grid" class="w-5 h-5 {{ $isMoreActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(217,119,6,0.3)]' : '' }}"></i>
+                        @auth
+                            @if(auth()->user()->notifications()->unread()->count() > 0)
+                                <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                            @endif
+                        @endauth
+                    </div>
+                    <span class="text-[10px] mt-1 font-bold tracking-tight">More</span>
+                </button>
+
+            </div>
+        </nav>
+
+        <!-- Slide-up Bottom Sheet Modal for More Nav -->
+        <div x-show="openMoreNav" 
+             x-cloak
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 md:hidden flex flex-col justify-end"
+             @click.self="openMoreNav = false"
+             @keydown.escape.window="openMoreNav = false">
+
+            <div x-show="openMoreNav"
+                 x-transition:enter="transition ease-out duration-300 transform"
+                 x-transition:enter-start="translate-y-full"
+                 x-transition:enter-end="translate-y-0"
+                 x-transition:leave="transition ease-in duration-200 transform"
+                 x-transition:leave-start="translate-y-0"
+                 x-transition:leave-end="translate-y-full"
+                 class="bg-white dark:bg-stone-900 rounded-t-3xl border-t border-stone-200 dark:border-stone-800 shadow-2xl p-5 pb-8 max-h-[85vh] overflow-y-auto modern-scrollbar space-y-4">
+                 
+                 <!-- Grab Handle -->
+                 <div class="w-12 h-1.5 bg-stone-300 dark:bg-stone-700 rounded-full mx-auto -mt-1 mb-1"></div>
+
+                 <!-- Sheet Header -->
+                 <div class="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-stone-800">
+                     <div class="flex items-center gap-2.5">
+                         <div class="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow-md shadow-orange-500/20 border-t border-white/30">
+                             <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                         </div>
+                         <div>
+                             <h3 class="text-base font-black text-stone-900 dark:text-white leading-tight">Explore Portals</h3>
+                             <p class="text-[11px] text-stone-500 dark:text-stone-400">Navigate all sections and cultural archives</p>
+                         </div>
+                     </div>
+                     <button type="button" @click="openMoreNav = false" 
+                         class="p-2 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition">
+                         <i data-lucide="x" class="w-5 h-5"></i>
+                     </button>
+                 </div>
+
+                 <!-- Grid of Additional Portals -->
+                 <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
+                     
+                     <!-- Cultural Hub -->
+                     <a href="{{ route('cultural-hub.index') }}" 
+                        class="p-3 sm:p-3.5 rounded-2xl border transition-all flex items-start gap-3 {{ request()->routeIs('cultural-hub.*') ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-stone-50 dark:bg-stone-800/60 border-stone-200/70 dark:border-stone-700/60 hover:border-amber-400' }}">
+                         <div class="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                             <i data-lucide="globe" class="w-5 h-5"></i>
+                         </div>
+                         <div class="min-w-0">
+                             <h4 class="font-bold text-xs sm:text-sm text-stone-900 dark:text-white truncate">Cultural Hub</h4>
+                             <p class="text-[10px] text-stone-500 dark:text-stone-400 truncate">Global heritage</p>
+                         </div>
+                     </a>
+
+                     <!-- Edu Hub -->
+                     <a href="{{ route('education.index') }}" 
+                        class="p-3 sm:p-3.5 rounded-2xl border transition-all flex items-start gap-3 {{ request()->routeIs('education.*') ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400' : 'bg-stone-50 dark:bg-stone-800/60 border-stone-200/70 dark:border-stone-700/60 hover:border-emerald-400' }}">
+                         <div class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                             <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+                         </div>
+                         <div class="min-w-0">
+                             <h4 class="font-bold text-xs sm:text-sm text-stone-900 dark:text-white truncate">Edu Hub</h4>
+                             <p class="text-[10px] text-stone-500 dark:text-stone-400 truncate">Courses & rituals</p>
+                         </div>
+                     </a>
+
+                     <!-- Communities -->
+                     <a href="{{ route('communities.index') }}" 
+                        class="p-3 sm:p-3.5 rounded-2xl border transition-all flex items-start gap-3 {{ request()->routeIs('communities.*') ? 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400' : 'bg-stone-50 dark:bg-stone-800/60 border-stone-200/70 dark:border-stone-700/60 hover:border-blue-400' }}">
+                         <div class="w-9 h-9 rounded-xl bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                             <i data-lucide="users" class="w-5 h-5"></i>
+                         </div>
+                         <div class="min-w-0">
+                             <h4 class="font-bold text-xs sm:text-sm text-stone-900 dark:text-white truncate">Communities</h4>
+                             <p class="text-[10px] text-stone-500 dark:text-stone-400 truncate">Cultural groups</p>
+                         </div>
+                     </a>
+
+                     <!-- Events -->
+                     <a href="{{ route('events.index') }}" 
+                        class="p-3 sm:p-3.5 rounded-2xl border transition-all flex items-start gap-3 {{ request()->routeIs('events.*') ? 'bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400' : 'bg-stone-50 dark:bg-stone-800/60 border-stone-200/70 dark:border-stone-700/60 hover:border-purple-400' }}">
+                         <div class="w-9 h-9 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                             <i data-lucide="calendar" class="w-5 h-5"></i>
+                         </div>
+                         <div class="min-w-0">
+                             <h4 class="font-bold text-xs sm:text-sm text-stone-900 dark:text-white truncate">Events</h4>
+                             <p class="text-[10px] text-stone-500 dark:text-stone-400 truncate">Festivals & meets</p>
+                         </div>
+                     </a>
+
+                     <!-- Notifications / Alerts -->
+                     <a href="{{ route('notifications.index') }}" 
+                        class="p-3 sm:p-3.5 rounded-2xl border transition-all flex items-start gap-3 {{ request()->routeIs('notifications.*') ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400' : 'bg-stone-50 dark:bg-stone-800/60 border-stone-200/70 dark:border-stone-700/60 hover:border-rose-400' }}">
+                         <div class="w-9 h-9 rounded-xl bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 relative">
+                             <i data-lucide="bell" class="w-5 h-5"></i>
+                             @auth
+                                 @if(auth()->user()->notifications()->unread()->count() > 0)
+                                     <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+                                 @endif
+                             @endauth
+                         </div>
+                         <div class="min-w-0">
+                             <div class="flex items-center gap-1.5">
+                                 <h4 class="font-bold text-xs sm:text-sm text-stone-900 dark:text-white truncate">Alerts</h4>
+                                 @auth
+                                     @if(auth()->user()->notifications()->unread()->count() > 0)
+                                         <span class="px-1.5 py-0.2 bg-red-500 text-white text-[9px] font-black rounded-full">{{ auth()->user()->notifications()->unread()->count() }}</span>
+                                     @endif
+                                 @endauth
+                             </div>
+                             <p class="text-[10px] text-stone-500 dark:text-stone-400 truncate">Updates & mentions</p>
+                         </div>
+                     </a>
+
+                     <!-- Private Vault -->
+                     <a href="{{ route('vault.index') }}" 
+                        class="p-3 sm:p-3.5 rounded-2xl border transition-all flex items-start gap-3 {{ request()->routeIs('vault.*') ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-600 dark:text-indigo-400' : 'bg-stone-50 dark:bg-stone-800/60 border-stone-200/70 dark:border-stone-700/60 hover:border-indigo-400' }}">
+                         <div class="w-9 h-9 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                             <i data-lucide="archive" class="w-5 h-5"></i>
+                         </div>
+                         <div class="min-w-0">
+                             <h4 class="font-bold text-xs sm:text-sm text-stone-900 dark:text-white truncate">Vault</h4>
+                             <p class="text-[10px] text-stone-500 dark:text-stone-400 truncate">Private archives</p>
+                         </div>
+                     </a>
+
+                     <!-- My Profile & Story -->
+                     <a href="{{ route('profile.show') }}" 
+                        class="p-3 sm:p-3.5 rounded-2xl border transition-all flex items-start gap-3 {{ request()->routeIs('profile.*') ? 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-stone-50 dark:bg-stone-800/60 border-stone-200/70 dark:border-stone-700/60 hover:border-amber-400' }}">
+                         <div class="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                             <i data-lucide="user" class="w-5 h-5"></i>
+                         </div>
+                         <div class="min-w-0">
+                             <h4 class="font-bold text-xs sm:text-sm text-stone-900 dark:text-white truncate">My Story</h4>
+                             <p class="text-[10px] text-stone-500 dark:text-stone-400 truncate">Heritage timeline</p>
+                         </div>
+                     </a>
+
+                     <!-- Live Streams -->
+                     <a href="{{ route('live-stream.index') }}" 
+                        class="p-3 sm:p-3.5 rounded-2xl border transition-all flex items-start gap-3 {{ request()->routeIs('live-stream.*') ? 'bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400' : 'bg-stone-50 dark:bg-stone-800/60 border-stone-200/70 dark:border-stone-700/60 hover:border-red-400' }}">
+                         <div class="w-9 h-9 rounded-xl bg-red-500/15 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+                             <i data-lucide="video" class="w-5 h-5"></i>
+                         </div>
+                         <div class="min-w-0">
+                             <h4 class="font-bold text-xs sm:text-sm text-stone-900 dark:text-white truncate">Live Streams</h4>
+                             <p class="text-[10px] text-stone-500 dark:text-stone-400 truncate">Broadcasts</p>
+                         </div>
+                     </a>
+
+                 </div>
+
+                 @auth
+                     @if(auth()->user()->is_admin)
+                         <div class="pt-1">
+                             <a href="{{ route('admin.cultures.index') }}" 
+                                class="w-full p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-between">
+                                 <div class="flex items-center gap-2.5">
+                                     <i data-lucide="shield-alert" class="w-5 h-5 text-amber-500"></i>
+                                     <span class="font-bold text-xs sm:text-sm">Admin Moderation Center</span>
+                                 </div>
+                                 <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                             </a>
+                         </div>
+                     @endif
+                 @endauth
+
             </div>
         </div>
 
-        <!-- Scrollable Icon Reel -->
-        <div class="h-full overflow-x-auto scrollbar-hide snap-x snap-mandatory flex items-center">
-            @php
-                $reelItems = [
-                    ['route' => 'timeline.index', 'icon' => 'home', 'label' => 'Home'],
-                    ['route' => 'discover.index', 'icon' => 'compass', 'label' => 'Search'],
-                    ['type' => 'gap'], // Alignment for Slide 1
-                    ['route' => 'cultural-hub.index', 'icon' => 'globe', 'label' => 'Hub'],
-                    ['route' => 'education.index', 'icon' => 'graduation-cap', 'label' => 'Edu'],
-                    ['route' => 'messages.index', 'icon' => 'message-circle', 'label' => 'Chat'],
-                    ['type' => 'gap'], // Alignment for Slide 2
-                     ['route' => 'communities.index', 'icon' => 'users', 'label' => 'Communities'],
-                    ['route' => 'notifications.index', 'icon' => 'bell', 'label' => 'Alerts'],
-                    ['type' => 'gap'], // Alignment for Slide 3
-                    ['route' => 'events.index', 'icon' => 'calendar', 'label' => 'Events'],
-                    ['route' => 'profile.show', 'icon' => 'user', 'label' => 'Profile'],
-                    ];
-            @endphp
-
-            @foreach($reelItems as $item)
-                @if(isset($item['type']) && $item['type'] === 'gap')
-                    <div class="min-w-[20vw] h-full flex items-center justify-center snap-center"></div>
-                @else
-                    <a href="{{ route($item['route']) }}" 
-                       class="min-w-[20vw] h-full flex flex-col items-center justify-center snap-center transition-all {{ request()->routeIs($item['route']) ? 'text-amber-600' : 'text-stone-500 dark:text-stone-400' }}">
-                        <i data-lucide="{{ $item['icon'] }}" class="w-6 h-6 {{ request()->routeIs($item['route']) ? 'drop-shadow-[0_0_8px_rgba(217,119,6,0.3)] scale-110' : '' }}"></i>
-                        <span class="text-[11px] mt-1 font-bold uppercase tracking-tighter">{{ $item['label'] }}</span>
-                    </a>
-                @endif
-            @endforeach
-        </div>
     </div>
     @endif
 
@@ -630,7 +839,7 @@
                     </button>
                     <button 
                         type="submit" 
-                        class="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 md:px-6 py-2 rounded-lg hover:from-amber-600 hover:to-orange-700 transition-all duration-200 font-medium text-sm md:text-base">
+                        class="bg-orange-500 hover:bg-orange-600 text-white px-4 md:px-6 py-2 rounded-xl shadow-md shadow-orange-500/25 border-t border-white/30 transition-all duration-200 font-bold text-sm md:text-base cursor-pointer">
                         Share Story
                     </button>
                 </div>
@@ -755,6 +964,8 @@
         })();
         // ────────────────────────────────────────────────────────────────────────
     </script>
+
+    @include('partials.welcome-flyer')
 
     @stack('scripts')
 </body>

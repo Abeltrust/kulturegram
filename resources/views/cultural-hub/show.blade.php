@@ -48,7 +48,7 @@
                                 class="w-full h-48 sm:h-64 lg:h-[340px] object-cover group-hover:scale-105 transition duration-700">
                         @else
                             <div
-                                class="h-48 sm:h-64 bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                                class="h-48 sm:h-64 glass-orange flex items-center justify-center">
                                 <i data-lucide="globe" class="w-12 h-12 text-white"></i>
                             </div>
                         @endif
@@ -160,7 +160,7 @@
                 <div class="lg:col-span-5 space-y-6 order-first lg:order-none">
 
                     <!-- STATS -->
-                    <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-6 shadow-xl text-black">
+                    <div class="glass-orange rounded-2xl p-6 shadow-xl text-white">
                         <div class="grid grid-cols-2 gap-4 text-center">
                             <div>
                                 <div class="text-3xl font-bold">

@@ -244,7 +244,7 @@
         <div class="bg-white dark:bg-stone-900 rounded-2xl sm:rounded-3xl shadow-sm border border-stone-200/80 dark:border-stone-800 overflow-hidden relative">
             
             {{-- Cover Banner --}}
-            <div class="w-full h-36 sm:h-56 md:h-64 relative bg-gradient-to-r from-amber-500 via-orange-600 to-rose-600 overflow-hidden group">
+            <div class="w-full h-36 sm:h-56 md:h-64 relative bg-orange-500 overflow-hidden group shadow-inner">
                 @if($user->cover_photo_url)
                     <img id="profile-cover-display" src="{{ $user->cover_photo_url }}" class="w-full h-full object-cover">
                 @else
@@ -331,68 +331,12 @@
                                     <span>Privacy</span>
                                 </a>
 
-                                {{-- Hidden Profile Dropdown Menu --}}
-                                <div x-data="{ openProfileMenu: false }" class="relative">
-                                    <button type="button" 
-                                        @click="openProfileMenu = !openProfileMenu; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); })" 
-                                        class="inline-flex items-center justify-center p-2.5 bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-300 rounded-xl transition-all shadow-sm active:scale-95"
-                                        title="Profile Options">
-                                        <i data-lucide="more-horizontal" class="w-4 h-4"></i>
-                                    </button>
-
-                                    <div x-show="openProfileMenu" 
-                                        @click.away="openProfileMenu = false" 
-                                        x-cloak
-                                        x-transition:enter="transition ease-out duration-150"
-                                        x-transition:enter-start="opacity-0 scale-95"
-                                        x-transition:enter-end="opacity-100 scale-100"
-                                        x-transition:leave="transition ease-in duration-100"
-                                        x-transition:leave-start="opacity-100 scale-100"
-                                        x-transition:leave-end="opacity-0 scale-95"
-                                        class="absolute right-0 mt-2 w-52 bg-white dark:bg-stone-900 rounded-2xl shadow-xl border border-stone-200 dark:border-stone-800 py-2 z-50">
-                                        
-                                        <a href="{{ route('settings.index', $user->id) }}" class="flex items-center gap-2 px-4 py-2 text-xs sm:text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 font-medium">
-                                            <i data-lucide="settings" class="w-3.5 h-3.5 text-stone-500"></i>
-                                            <span>Account Settings</span>
-                                        </a>
-
-                                        <a href="{{ route('privacy') }}" class="flex items-center gap-2 px-4 py-2 text-xs sm:text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 font-medium">
-                                            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-amber-500"></i>
-                                            <span>Privacy Policy</span>
-                                        </a>
-
-                                        @if(auth()->user()->is_admin)
-                                            <a href="{{ route('admin.cultures.index') }}" class="flex items-center gap-2 px-4 py-2 text-xs sm:text-sm text-amber-600 font-bold hover:bg-amber-50 dark:hover:bg-amber-950/40">
-                                                <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
-                                                <span>Admin Center</span>
-                                            </a>
-                                        @endif
-                                        
-                                        <hr class="my-2 border-stone-100 dark:border-stone-800">
-                                        
-                                        {{-- Subtly hidden Session fold --}}
-                                        <div class="px-4 py-1">
-                                            <details class="group">
-                                                <summary class="text-[10px] uppercase font-bold tracking-wider text-stone-400 dark:text-stone-500 cursor-pointer hover:text-stone-600 dark:hover:text-stone-300 flex items-center justify-between list-none">
-                                                    <span class="flex items-center gap-1.5">
-                                                        <i data-lucide="lock" class="w-3 h-3"></i>
-                                                        Session
-                                                    </span>
-                                                    <i data-lucide="chevron-down" class="w-3 h-3 group-open:rotate-180 transition-transform"></i>
-                                                </summary>
-                                                <div class="mt-2 pt-1">
-                                                    <form method="POST" action="{{ route('logout') }}">
-                                                        @csrf
-                                                        <button type="submit" class="w-full text-left flex items-center gap-1.5 text-xs text-red-600/80 hover:text-red-600 font-medium py-1 transition">
-                                                            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
-                                                            <span>Sign Out</span>
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </details>
-                                        </div>
-                                    </div>
-                                </div>
+                                @if(auth()->user()->is_admin)
+                                    <a href="{{ route('admin.cultures.index') }}" class="inline-flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl text-xs sm:text-sm font-semibold transition-all">
+                                        <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                                        <span>Admin</span>
+                                    </a>
+                                @endif
                             @else
                                 {{-- Vibe Button --}}
                                 <button onclick="toggleUserTap({{ $user->id }})" id="profile-vibe-btn"
@@ -405,7 +349,7 @@
                                 {{-- Lock-In Button --}}
                                 <button onclick="toggleUserLockIn({{ $user->id }})" id="profile-lockin-btn"
                                     class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-md active:scale-95
-                                    {{ isset($isLockedIn) && $isLockedIn ? 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 border border-stone-200 dark:border-stone-700' : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-95' }}">
+                                    {{ isset($isLockedIn) && $isLockedIn ? 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 border border-stone-200 dark:border-stone-700' : 'glass-orange text-white' }}">
                                     <i data-lucide="{{ isset($isLockedIn) && $isLockedIn ? 'user-check' : 'user-plus' }}" class="w-4 h-4"></i>
                                     <span id="profile-lockin-text">{{ isset($isLockedIn) && $isLockedIn ? 'Locked In' : 'Lock In' }}</span>
                                 </button>
@@ -792,17 +736,24 @@
                                 </div>
                             @endif
 
-                            {{-- Media Attachment --}}
+                            {{-- Media Attachment (Full viewable, not sliced) --}}
                             @if($post->image)
-                                <div class="rounded-xl sm:rounded-2xl overflow-hidden max-h-80 sm:max-h-96 bg-stone-100 dark:bg-stone-800">
-                                    <img src="{{ asset('storage/' . $post->image) }}" class="w-full h-full object-cover">
+                                <div class="rounded-xl sm:rounded-2xl overflow-hidden bg-stone-100 dark:bg-stone-800/60 border border-stone-100 dark:border-stone-800 group relative">
+                                    <a href="{{ route('timeline.index') }}#post-{{ $post->id }}" 
+                                       title="View story on Timeline"
+                                       class="block cursor-pointer">
+                                        <img src="{{ asset('storage/' . $post->image) }}" 
+                                             alt="Story photo"
+                                             class="w-full h-auto max-h-[650px] object-contain rounded-xl sm:rounded-2xl mx-auto transition-transform duration-300 group-hover:scale-[1.01]" 
+                                             loading="lazy">
+                                    </a>
                                 </div>
                             @endif
 
                             {{-- Video Attachment --}}
                             @if($post->video)
-                                <div class="rounded-xl sm:rounded-2xl overflow-hidden max-h-80 sm:max-h-96 bg-black">
-                                    <video src="{{ asset('storage/' . $post->video) }}" controls class="w-full max-h-80 sm:max-h-96"></video>
+                                <div class="rounded-xl sm:rounded-2xl overflow-hidden bg-black border border-stone-100 dark:border-stone-800">
+                                    <video src="{{ asset('storage/' . $post->video) }}" controls class="w-full max-h-[600px]"></video>
                                 </div>
                             @endif
 
@@ -826,7 +777,10 @@
                                         <span data-resonance-count="{{ $post->id }}">{{ $post->resonance_count ?? $post->resonances->count() }} Resonance</span>
                                     </button>
                                 </div>
-                                <a href="{{ route('timeline.index') }}" class="hover:text-amber-500 font-bold text-[11px] sm:text-xs">View on Timeline</a>
+                                <a href="{{ route('timeline.index') }}#post-{{ $post->id }}" class="hover:text-amber-500 font-bold text-[11px] sm:text-xs flex items-center gap-1 transition-colors">
+                                    <span>View on Timeline</span>
+                                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                                </a>
                             </div>
 
                             {{-- Resonance (Comments) Box --}}
@@ -850,7 +804,7 @@
                                         <input type="text" id="resonance-input-{{ $post->id }}" placeholder="Write a resonance..."
                                             class="flex-1 border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/80 dark:text-stone-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
                                         <button type="button" onclick="submitProfileResonance({{ $post->id }})"
-                                            class="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:opacity-95 text-white rounded-xl text-xs font-bold transition flex items-center justify-center shrink-0">
+                                            class="px-3.5 py-2 glass-orange text-white rounded-xl text-xs font-bold transition flex items-center justify-center shrink-0 active:scale-95">
                                             <i data-lucide="send" class="w-3.5 h-3.5"></i>
                                         </button>
                                     </div>

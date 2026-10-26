@@ -389,7 +389,7 @@
 
                         {{-- Cover Banner --}}
                         <div class="flex items-center gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200/60 dark:border-stone-700/60">
-                            <div class="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 shrink-0 border-2 border-white dark:border-stone-800 shadow">
+                            <div class="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden bg-orange-500 shrink-0 border-2 border-white dark:border-stone-800 shadow">
                                 @if($user->cover_photo_url)
                                     <img id="settings-cover-img" 
                                          src="{{ $user->cover_photo_url }}" 

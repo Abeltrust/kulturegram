@@ -48,7 +48,7 @@
                 <!-- Mobile Dropdown Toolbar (Premium Glassmorphism) -->
                 <div class="lg:hidden flex items-center justify-between backdrop-blur-xl bg-white/80 dark:bg-stone-900/80 p-5 rounded-[2rem] border border-white/20 dark:border-stone-800/50 shadow-2xl relative z-40 mb-8">
                     <div class="flex items-center space-x-4">
-                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-600/10 flex items-center justify-center border border-amber-500/20">
+                        <div class="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
                             <i data-lucide="users" class="w-6 h-6 text-amber-600 animate-spin-slow"></i>
                         </div>
                         <div>
@@ -151,7 +151,7 @@
                                         @else
                                             <form action="{{ route('communities.join', $community) }}" method="POST" class="flex-1">
                                                 @csrf
-                                                <button type="submit" class="w-full px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 transition shadow-sm active:scale-95">
+                                                <button type="submit" class="w-full px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest glass-orange text-white transition active:scale-95">
                                                     Join
                                                 </button>
                                             </form>
@@ -170,7 +170,7 @@
                             <i data-lucide="users" class="w-24 h-24 text-amber-500/10 mx-auto mb-8"></i>
                             <h3 class="text-2xl font-black text-stone-800 dark:text-white uppercase tracking-tighter mb-4">No Communities Found</h3>
                             <p class="text-stone-500 text-base max-w-sm mx-auto mb-10 font-bold">Try adjusting your search or filters to find what you're looking for.</p>
-                            <a href="{{ route('communities.create') }}" class="inline-flex items-center space-x-3 px-10 py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-[2rem] font-black uppercase tracking-widest text-xs hover:scale-110 transition-transform shadow-2xl shadow-amber-500/40">
+                            <a href="{{ route('communities.create') }}" class="inline-flex items-center space-x-3 px-10 py-5 glass-orange text-white rounded-[2rem] font-black uppercase tracking-widest text-xs hover:scale-105 transition-transform shadow-xl">
                                 <i data-lucide="plus" class="w-5 h-5"></i>
                                 <span>CREATE COMMUNITY</span>
                             </a>
@@ -183,7 +183,7 @@
                     <div class="space-y-8">
                         <div class="flex items-center space-x-4">
                             <h2 class="text-xl sm:text-2xl font-bold text-stone-800 dark:text-white uppercase tracking-tighter">Recommended For You</h2>
-                            <div class="h-1 flex-1 bg-gradient-to-r from-amber-500/20 to-transparent rounded-full"></div>
+                            <div class="h-1 flex-1 bg-orange-500/20 rounded-full"></div>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach ($trending as $i => $item)
@@ -220,7 +220,7 @@
                         <div class="sm:hidden flex justify-center">
                             @if($communities->hasMorePages())
                                 <a href="{{ $communities->nextPageUrl() }}" 
-                                   class="inline-flex items-center space-x-3 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-full font-black uppercase tracking-widest text-[10px] shadow-xl shadow-amber-500/20 hover:scale-105 active:scale-95 transition-all animate-pulse-subtle">
+                                   class="inline-flex items-center space-x-3 px-8 py-4 glass-orange text-white rounded-full font-black uppercase tracking-widest text-[10px] shadow-lg hover:scale-105 active:scale-95 transition-all">
                                     <span>Load More Communities</span>
                                     <i data-lucide="chevron-down" class="w-4 h-4"></i>
                                 </a>
@@ -265,7 +265,7 @@
                 </div>
 
                 <!-- Create Community CTA -->
-                <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-[3rem] p-10 text-white shadow-2xl shadow-amber-500/30 group overflow-hidden relative">
+                <div class="glass-orange rounded-[3rem] p-10 text-white shadow-xl group overflow-hidden relative">
                     <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
                     <div class="relative z-10">
                         <i data-lucide="plus-circle" class="w-12 h-12 mb-6 text-amber-200 opacity-60 group-hover:rotate-90 transition-transform duration-500"></i>

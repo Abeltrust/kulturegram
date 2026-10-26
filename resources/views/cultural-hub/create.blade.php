@@ -297,7 +297,7 @@
             <!-- Submit Button -->
             <div class="pt-10">
                 <button type="submit"
-                    class="w-full flex items-center justify-center space-x-3 bg-gradient-to-br from-amber-500 to-orange-600 text-white px-8 py-5 rounded-[1.5rem] font-black text-lg hover:from-amber-600 hover:to-orange-700 transition-all duration-300 shadow-xl shadow-amber-500/20 hover:scale-[1.01] transform uppercase tracking-widest">
+                    class="w-full flex items-center justify-center space-x-3 glass-orange text-white px-8 py-5 rounded-[1.5rem] font-black text-lg transition-all duration-300 shadow-xl hover:scale-[1.01] transform uppercase tracking-widest">
                     <i data-lucide="send" class="w-6 h-6"></i>
                     <span>Preserve Culture</span>
                 </button>

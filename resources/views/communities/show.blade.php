@@ -48,7 +48,7 @@
                             </div>
 
                             <button type="submit"
-                                class="px-5 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl text-sm sm:text-base shadow-sm hover:from-amber-600 hover:to-orange-700 transition">
+                                class="px-5 py-2 glass-orange text-white rounded-xl text-sm sm:text-base font-semibold transition">
                                 Post
                             </button>
                         </div>
@@ -173,7 +173,7 @@
                                             <form id="reply-form-{{ $comment->id }}" class="hidden flex gap-2" onsubmit="submitReply(event, {{ $post->id }}, {{ $comment->id }})">
                                                 @csrf
                                                 <input type="text" id="reply-input-{{ $comment->id }}" placeholder="Write a reply..." class="flex-1 px-3 py-2 text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:ring-2 focus:ring-amber-300 transition-all outline-none">
-                                                <button type="submit" class="px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl text-sm"><i data-lucide="send" class="w-4 h-4"></i></button>
+                                                <button type="submit" class="px-3 py-2 glass-orange text-white rounded-xl text-sm"><i data-lucide="send" class="w-4 h-4"></i></button>
                                             </form>
                                         @endauth
 
@@ -205,7 +205,7 @@
                                         placeholder="Write a comment..."
                                         class="flex-1 px-4 py-3 rounded-full border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 placeholder-stone-400 align-middle focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all text-sm md:text-base">
                                     <button type="submit"
-                                        class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-full text-sm sm:text-base">
+                                        class="inline-flex items-center gap-2 px-4 py-2 glass-orange text-white rounded-full text-sm sm:text-base font-semibold">
                                         <i data-lucide="send" class="w-5 h-5"></i>
                                     </button>
                                 </form>
@@ -239,7 +239,7 @@
                         <p class="text-sm text-stone-500 dark:text-stone-400">Host and join live lectures or gatherings.</p>
                     </div>
                     @auth
-                        <a href="{{ route('events.create', ['community_id' => $community->id]) }}" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl text-sm sm:text-base font-semibold shadow-sm hover:from-amber-600 hover:to-orange-700 transition">
+                        <a href="{{ route('events.create', ['community_id' => $community->id]) }}" class="px-4 py-2 glass-orange text-white rounded-xl text-sm sm:text-base font-semibold transition">
                             Create Meeting
                         </a>
                     @endauth
@@ -326,7 +326,7 @@
                                 <form action="{{ route('communities.join', $community) }}" method="POST">
                                     @csrf
                                     <button type="submit"
-                                        class="w-full px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm sm:text-base hover:from-amber-600 hover:to-orange-700 transition">
+                                        class="w-full px-4 py-2 rounded-lg glass-orange text-white text-sm sm:text-base font-semibold transition">
                                         Join Community
                                     </button>
                                 </form>

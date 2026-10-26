@@ -1,0 +1,25 @@
+{
+    "popular": ["English", "Hausa", "Yoruba", "Igbo", "Nigerian Pidgin", "French", "Arabic"],
+    "nigerian": [
+        "Hausa", "Yoruba", "Igbo", "Nigerian Pidgin", "Fulfulde", "Kanuri", "Ibibio", "Tiv", "Ijaw", "Edo (Bini)",
+        "Efik", "Nupe", "Urhobo", "Igala", "Idoma", "Isoko", "Itsekiri", "Ebira", "Gwari (Gbagyi)", "Berom",
+        "Anaang", "Ogoni (Khana)", "Ikwerre", "Esan", "Etsako", "Jukun", "Mumuye", "Bachama", "Bura", "Chamba",
+        "Margi", "Ngas (Angas)", "Tarok", "Mwaghavul", "Goemai", "Afizere", "Anaguta", "Eggon", "Mada", "Alago",
+        "Bassa", "Kambari", "Dukawa", "Bokkos (Ron)", "Kataf (Tyap)", "Jaba (Hyam)", "Kagoro", "Bajju",
+        "Bolewa", "Karekare", "Ngizim", "Shuwa Arabic", "Babur", "Kilba", "Higgi", "Mbembe", "Ejagham", "Bekwarra",
+        "Yala", "Okpe", "Ukwuani", "Epie", "Ogbia", "Kalabari", "Okrika", "Nembe", "Obolo", "Oron",
+        "Owan", "Akoko", "Ekpeye", "Egbema", "Igede", "Etulo", "Gade", "Koro", "Ham"
+    ],
+    "african": [
+        "Swahili", "Amharic", "Zulu", "Xhosa", "Afrikaans", "Akan (Twi)", "Ewe", "Ga", "Wolof", "Somali",
+        "Oromo", "Tigrinya", "Lingala", "Kinyarwanda", "Shona", "Sesotho", "Setswana", "Luganda", "Malagasy", "Berber (Tamazight)",
+        "Fon", "Mandinka", "Bambara", "Kikuyu", "Luo", "Chichewa"
+    ],
+    "world": [
+        "English", "French", "Arabic", "Spanish", "Portuguese", "German", "Italian", "Dutch", "Russian", "Ukrainian",
+        "Polish", "Turkish", "Greek", "Hebrew", "Persian (Farsi)", "Urdu", "Hindi", "Bengali", "Punjabi", "Tamil",
+        "Telugu", "Gujarati", "Marathi", "Mandarin Chinese", "Cantonese", "Japanese", "Korean", "Vietnamese", "Thai", "Indonesian",
+        "Malay", "Filipino (Tagalog)", "Swedish", "Norwegian", "Danish", "Finnish", "Czech", "Hungarian", "Romanian", "Serbian",
+        "Croatian", "Bulgarian", "Irish", "Welsh", "Scottish Gaelic", "Haitian Creole", "Jamaican Patois", "Sign Language"
+    ]
+}

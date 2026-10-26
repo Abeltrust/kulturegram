@@ -177,7 +177,7 @@
 
                                 <div class="mt-auto flex items-center justify-between gap-4">
                                     <a href="{{ route('events.show', $event) }}"
-                                        class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl text-center shadow-lg shadow-amber-500/20 active:scale-95 transition-all">Attend</a>
+                                        class="flex-1 py-3 glass-orange text-white font-black text-xs uppercase tracking-widest rounded-2xl text-center active:scale-95 transition-all">Attend</a>
                                     <div @click="/* share functionality */"
                                         class="w-12 h-12 rounded-2xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-700 cursor-pointer trans-all">
                                         <i data-lucide="share-2" class="w-4 h-4"></i>

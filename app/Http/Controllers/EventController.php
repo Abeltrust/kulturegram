@@ -89,17 +89,21 @@ class EventController extends Controller
 
     public function store(Request $request)
     {
+        if ($request->boolean('is_online') && (!$request->filled('location') || $request->location === '')) {
+            $request->merge(['location' => 'Online']);
+        }
+
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'event_date' => 'required|date|after:today',
+            'event_date' => 'required|date|after_or_equal:today',
             'event_time' => 'required',
             'location' => 'required|string|max:255',
             'type' => 'required|string|max:50', // More flexible types for Educational Hub
             'max_attendees' => 'nullable|integer|min:1',
             'price' => 'nullable|numeric|min:0',
             'is_online' => 'boolean',
-            'meeting_link' => 'nullable|url',
+            'meeting_link' => 'nullable|string|max:500',
             'is_hosted' => 'boolean',
             'hosted_content' => 'nullable|string',
             'requirements' => 'nullable|array',
@@ -108,11 +112,12 @@ class EventController extends Controller
             'accepts_contributions' => 'boolean',
         ]);
 
-        $event = new Event($request->except(['image', 'is_hosted', 'accepts_contributions', 'virtual_room_id']));
+        $event = new Event($request->except(['image', 'is_hosted', 'accepts_contributions', 'virtual_room_id', 'meeting_link']));
         $event->organizer_id = Auth::id();
         $event->price = $request->input('price', 0) ?: 0;
         $event->is_hosted = $request->boolean('is_hosted');
-        $event->virtual_room_id = $request->input('virtual_room_id');
+        $event->virtual_room_id = $request->filled('virtual_room_id') ? $request->input('virtual_room_id') : null;
+        $event->meeting_link = $request->filled('meeting_link') ? $request->input('meeting_link') : null;
         $event->accepts_contributions = $request->boolean('accepts_contributions');
 
         if ($request->hasFile('image')) {
@@ -270,7 +275,7 @@ class EventController extends Controller
             'max_attendees' => 'nullable|integer|min:1',
             'price' => 'nullable|numeric|min:0',
             'is_online' => 'boolean',
-            'meeting_link' => 'nullable|url',
+            'meeting_link' => 'nullable|string|max:500',
             'is_hosted' => 'boolean',
             'hosted_content' => 'nullable|string',
             'requirements' => 'nullable|array',
