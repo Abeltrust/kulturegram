@@ -45,6 +45,38 @@
             @endif
         </div>
 
+        <!-- Meta Global AI Hackathon Living Heritage Banner -->
+        <div class="mb-10 bg-white dark:bg-stone-900 border border-amber-200/80 dark:border-amber-900/50 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+            <div class="space-y-2 max-w-2xl">
+                <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest">
+                    <i data-lucide="sparkles" class="w-3 h-3"></i>
+                    <span>Meta Global AI Developer Hackathon</span>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-extrabold text-stone-900 dark:text-stone-100 tracking-tight">
+                    Living Heritage Capture
+                </h3>
+                <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
+                    Preserve oral histories, sacred folktales, and endangered knowledge. Assist your memory with <strong>Muse Voice Transcribe</strong>, <strong>Muse Spark</strong>, <strong>Muse Wonder</strong>, and <strong>SAM 3.1</strong>.
+                </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3 flex-shrink-0">
+                <a href="{{ route('cultural-hub.living-heritage.create') }}"
+                   class="inline-flex items-center space-x-2 px-5 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors shadow-sm">
+                    <i data-lucide="mic" class="w-4 h-4"></i>
+                    <span>Start Capture</span>
+                </a>
+                <a href="{{ route('cultural-hub.living-heritage.compare') }}"
+                   class="inline-flex items-center space-x-2 px-5 py-3 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors border border-stone-200 dark:border-stone-700">
+                    <i data-lucide="git-compare" class="w-4 h-4"></i>
+                    <span>AI Model Lab</span>
+                </a>
+                <a href="{{ route('cultural-hub.create') }}"
+                   class="inline-flex items-center space-x-2 px-4 py-3 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors">
+                    <span>Manual Entry</span>
+                </a>
+            </div>
+        </div>
+
         <!-- Main Discovery Container -->
         <div class="lg:grid lg:grid-cols-12 lg:gap-12 items-start" x-data="{ mobileFiltersOpen: false }">
             

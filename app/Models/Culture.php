@@ -40,12 +40,24 @@ class Culture extends Model
         'media_files',
         'status',
         'submitted_by',
+        'raw_story',
+        'audio_transcript',
+        'is_ai_assisted',
+        'ai_illustration',
+        'ai_illustration_prompt',
+        'artifact_segmentation',
+        'wonder_preservation_plan',
+        'ai_metadata',
     ];
 
     protected $casts = [
         'contributors' => 'array',
         'tags' => 'array',
         'media_files' => 'array',
+        'is_ai_assisted' => 'boolean',
+        'artifact_segmentation' => 'array',
+        'wonder_preservation_plan' => 'array',
+        'ai_metadata' => 'array',
     ];
 
     // Relationships
@@ -73,6 +85,16 @@ class Culture extends Model
     public function scopeApproved($query)
     {
         return $query->where('status', 'approved');
+    }
+
+    public function scopePendingReview($query)
+    {
+        return $query->where('status', 'pending_review');
+    }
+
+    public function scopeDraft($query)
+    {
+        return $query->where('status', 'draft');
     }
 
     public function scopeFeatured($query)

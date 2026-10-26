@@ -22,6 +22,24 @@
                 stories.</p>
         </div>
 
+        <!-- Living Heritage AI Workflow Banner -->
+        <div class="mb-8 p-5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-1">
+                <div class="flex items-center space-x-2 text-xs font-bold text-amber-800 dark:text-amber-300">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-amber-600"></i>
+                    <span>Preserving an Oral Story or Recording?</span>
+                </div>
+                <p class="text-xs text-stone-600 dark:text-stone-400">
+                    Use our AI-assisted <strong>Living Heritage Capture</strong> workflow with Muse Voice Transcribe, Muse Spark structuring, Muse Wonder, and SAM 3.1 artifact segmentation.
+                </p>
+            </div>
+            <a href="{{ route('cultural-hub.living-heritage.create') }}"
+               class="inline-flex items-center space-x-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider flex-shrink-0 transition-colors">
+                <span>Try Living Heritage</span>
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </a>
+        </div>
+
         @include('partials.image-compression')
 
         <form action="{{ route('cultural-hub.store') }}" method="POST" enctype="multipart/form-data"

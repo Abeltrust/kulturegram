@@ -14,6 +14,7 @@ use App\Http\Controllers\DiscoverController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\LiveStreamController;
 use App\Http\Controllers\EducationalHubController;
+use App\Http\Controllers\LivingHeritageController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -69,6 +70,18 @@ Route::middleware('auth')->group(function () {
     Route::delete('/cultural-hub/{culture}', [CulturalHubController::class, 'destroy'])->name('cultural-hub.destroy');
     Route::post('/cultural-hub/{culture}/lock-in', [CulturalHubController::class, 'lockin'])->name('cultural-hub.lock-in');
     Route::post('/cultural-hub/{culture}/resonance', [CulturalHubController::class, 'resonance'])->name('cultural-hub.resonance');
+
+    // Living Heritage Capture (Meta Global AI Hackathon)
+    Route::get('/cultural-hub/living-heritage', [LivingHeritageController::class, 'index'])->name('cultural-hub.living-heritage.index');
+    Route::get('/cultural-hub/living-heritage/capture', [LivingHeritageController::class, 'create'])->name('cultural-hub.living-heritage.create');
+    Route::post('/cultural-hub/living-heritage/transcribe', [LivingHeritageController::class, 'transcribeAudio'])->middleware('throttle:20,1')->name('cultural-hub.living-heritage.transcribe');
+    Route::post('/cultural-hub/living-heritage/prepare', [LivingHeritageController::class, 'prepareStory'])->middleware('throttle:20,1')->name('cultural-hub.living-heritage.prepare');
+    Route::post('/cultural-hub/living-heritage/wonder-plan', [LivingHeritageController::class, 'preservationPlan'])->middleware('throttle:20,1')->name('cultural-hub.living-heritage.wonder-plan');
+    Route::post('/cultural-hub/living-heritage/generate-illustration', [LivingHeritageController::class, 'generateIllustration'])->middleware('throttle:15,1')->name('cultural-hub.living-heritage.illustration');
+    Route::post('/cultural-hub/living-heritage/segment-artifact', [LivingHeritageController::class, 'segmentArtifact'])->middleware('throttle:15,1')->name('cultural-hub.living-heritage.segment');
+    Route::post('/cultural-hub/living-heritage/store', [LivingHeritageController::class, 'store'])->name('cultural-hub.living-heritage.store');
+    Route::get('/cultural-hub/living-heritage/compare', [LivingHeritageController::class, 'compare'])->name('cultural-hub.living-heritage.compare');
+    Route::post('/cultural-hub/living-heritage/compare', [LivingHeritageController::class, 'runComparison'])->middleware('throttle:15,1')->name('cultural-hub.living-heritage.compare.run');
 
 
     // User Interactions

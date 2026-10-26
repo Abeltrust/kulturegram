@@ -136,8 +136,9 @@
                     @if($culture->audio_path || $culture->audio_url)
                         <div
                             class="bg-white dark:bg-[#141419] border border-stone-200 dark:border-white/5 p-6 rounded-2xl shadow-xl">
-                            <h2 class="text-lg font-semibold text-amber-500 mb-4">
-                                Audio Archive
+                            <h2 class="text-lg font-semibold text-amber-500 mb-4 flex items-center space-x-2">
+                                <i data-lucide="mic" class="w-5 h-5"></i>
+                                <span>Authentic Oral Audio Archive</span>
                             </h2>
 
                             @if($culture->audio_path)
@@ -149,6 +150,86 @@
                                     class="inline-block bg-amber-500 text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-amber-400 transition">
                                     Listen to External Audio
                                 </a>
+                            @endif
+                        </div>
+                    @endif
+
+                    <!-- LIVING HERITAGE: ORAL TRANSCRIPT -->
+                    @if($culture->audio_transcript || $culture->raw_story)
+                        <div class="bg-white dark:bg-[#141419] border border-stone-200 dark:border-white/5 p-6 rounded-2xl shadow-xl space-y-3">
+                            <h2 class="text-lg font-semibold text-amber-500 flex items-center space-x-2">
+                                <i data-lucide="file-text" class="w-5 h-5"></i>
+                                <span>Oral Folktale & Spoken Transcript</span>
+                            </h2>
+                            <p class="text-xs text-stone-400">Transcribed via Muse Voice Transcribe & verified by cultural custodian.</p>
+                            <div class="p-4 bg-stone-50 dark:bg-stone-900/80 rounded-xl text-stone-700 dark:text-stone-300 text-sm leading-relaxed border border-stone-200 dark:border-stone-800">
+                                {{ $culture->audio_transcript ?? $culture->raw_story }}
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- LIVING HERITAGE: SAM 3.1 ARTIFACT SEGMENTATION -->
+                    @if($culture->artifact_segmentation && !empty($culture->artifact_segmentation['segmented_path']))
+                        <div class="bg-white dark:bg-[#141419] border border-stone-200 dark:border-white/5 p-6 rounded-2xl shadow-xl space-y-3">
+                            <h2 class="text-lg font-semibold text-amber-500 flex items-center space-x-2">
+                                <i data-lucide="scissors" class="w-5 h-5"></i>
+                                <span>Artifact Visual Segmentation (SAM 3.1)</span>
+                            </h2>
+                            <div class="rounded-xl overflow-hidden bg-stone-100 dark:bg-stone-950 p-4 border border-stone-200 dark:border-stone-800 flex items-center justify-center">
+                                <img src="{{ Storage::url($culture->artifact_segmentation['segmented_path']) }}"
+                                     alt="Segmented Artifact Cutout"
+                                     class="max-h-80 object-contain">
+                            </div>
+                            <p class="text-[11px] text-stone-400 italic">
+                                Isolated {{ $culture->artifact_segmentation['label'] ?? 'Artifact' }} using Meta SAM 3.1 boundary isolation. Note: visual segmentation does not constitute proof of historical antiquity.
+                            </p>
+                        </div>
+                    @endif
+
+                    <!-- LIVING HERITAGE: MUSE IMAGE ILLUSTRATION -->
+                    @if($culture->ai_illustration)
+                        <div class="bg-white dark:bg-[#141419] border border-stone-200 dark:border-white/5 p-6 rounded-2xl shadow-xl space-y-3">
+                            <h2 class="text-lg font-semibold text-amber-500 flex items-center space-x-2">
+                                <i data-lucide="image" class="w-5 h-5"></i>
+                                <span>Cultural Artwork (Muse Image)</span>
+                            </h2>
+                            <div class="relative rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800">
+                                <img src="{{ Storage::url($culture->ai_illustration) }}"
+                                     alt="AI-Generated Cultural Illustration"
+                                     class="w-full h-72 object-cover">
+                                <div class="absolute bottom-2 left-2 right-2 px-3 py-1.5 bg-black/80 backdrop-blur-md rounded-lg text-[10px] text-white flex items-center space-x-2">
+                                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+                                    <span>AI-Generated Cultural Illustration • Artistic Interpretation (Meta Muse Image)</span>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- LIVING HERITAGE: MUSE WONDER PRESERVATION PLAN -->
+                    @if($culture->wonder_preservation_plan && is_array($culture->wonder_preservation_plan))
+                        <div class="bg-white dark:bg-[#141419] border border-stone-200 dark:border-white/5 p-6 rounded-2xl shadow-xl space-y-3">
+                            <h2 class="text-lg font-semibold text-amber-500 flex items-center space-x-2">
+                                <i data-lucide="compass" class="w-5 h-5"></i>
+                                <span>Muse Wonder Preservation Plan</span>
+                            </h2>
+                            @if(!empty($culture->wonder_preservation_plan['preservation_summary']))
+                                <p class="text-xs text-stone-300 italic border-l-2 border-amber-500 pl-3">
+                                    "{{ $culture->wonder_preservation_plan['preservation_summary'] }}"
+                                </p>
+                            @endif
+
+                            @if(!empty($culture->wonder_preservation_plan['preservation_checklist']))
+                                <div class="space-y-1.5 pt-2">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-stone-400">Preservation Tasks:</span>
+                                    <div class="space-y-1">
+                                        @foreach($culture->wonder_preservation_plan['preservation_checklist'] as $task)
+                                            <div class="flex items-center space-x-2 text-xs text-stone-300">
+                                                <i data-lucide="check-square" class="w-3.5 h-3.5 text-amber-500"></i>
+                                                <span>{{ is_array($task) ? ($task['task'] ?? '') : $task }}</span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
                             @endif
                         </div>
                     @endif
