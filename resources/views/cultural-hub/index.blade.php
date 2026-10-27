@@ -131,76 +131,84 @@
                 <!-- Cultures Grid (Refined Tile Style) -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
                     @forelse($cultures as $culture)
-                        <div class="border border-stone-100 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col h-full group">
+                        <div class="border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:border-amber-500/40 transition-all duration-300 flex flex-col h-full group">
                             
-                            <!-- Image Section -->
-                            <div class="h-40 relative overflow-hidden bg-stone-100 dark:bg-stone-800/50">
+                            <!-- Image Section with Gradient & Badges -->
+                            <div class="h-48 relative overflow-hidden bg-stone-100 dark:bg-stone-800/50">
                                 @if($culture->image)
                                     <img src="{{ Storage::url($culture->image) }}" 
+                                         alt="{{ $culture->name }}"
                                          class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                          loading="lazy">
                                 @else
-                                    <div class="w-full h-full flex items-center justify-center">
-                                        <i data-lucide="globe" class="w-10 h-10 text-stone-300 dark:text-stone-700"></i>
+                                    <div class="w-full h-full flex items-center justify-center bg-stone-100 dark:bg-stone-900">
+                                        <i data-lucide="landmark" class="w-12 h-12 text-stone-300 dark:text-stone-700"></i>
                                     </div>
                                 @endif
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                                 
-                                <!-- Category Badge -->
-                                <div class="absolute top-3 right-3 px-2 py-1 bg-black/50 backdrop-blur-md rounded-lg border border-white/10">
-                                    <span class="text-[9px] font-black text-white uppercase tracking-widest">{{ $culture->category }}</span>
+                                <!-- Category & Audio Badges -->
+                                <div class="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
+                                    <span class="px-2.5 py-1 bg-amber-500 text-black text-[9px] font-black uppercase tracking-widest rounded-lg shadow-sm">
+                                        {{ $culture->category }}
+                                    </span>
+
+                                    @if($culture->audio_path || $culture->audio_url)
+                                        <span class="px-2 py-0.5 bg-black/60 backdrop-blur-md border border-white/20 rounded-md text-[9px] font-bold text-amber-300 flex items-center gap-1 shadow-sm">
+                                            <i data-lucide="headphones" class="w-3 h-3"></i>
+                                            <span>Oral Audio</span>
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <!-- Region on Image Bottom -->
+                                <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white">
+                                    <span class="flex items-center gap-1 font-bold text-amber-300 text-[11px] uppercase tracking-wider truncate">
+                                        <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                                        {{ $culture->region }}
+                                    </span>
+                                    @if($culture->language)
+                                        <span class="text-[10px] text-stone-300 font-mono truncate max-w-[100px]">
+                                            {{ $culture->language }}
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
 
                             <!-- Content Info Body -->
-                            <div class="p-5 flex-1 flex flex-col justify-between">
-                                <div class="space-y-1">
-                                    <h3 class="font-bold text-stone-900 dark:text-stone-100 text-lg leading-tight truncate">
+                            <div class="p-5 sm:p-6 flex-1 flex flex-col justify-between space-y-4">
+                                <div class="space-y-2">
+                                    <h3 class="font-bold text-stone-900 dark:text-stone-100 text-lg leading-snug group-hover:text-amber-600 dark:group-hover:text-amber-400 transition line-clamp-1">
                                         {{ $culture->name }}
                                     </h3>
-                                    <p class="text-stone-600 dark:text-stone-400 text-sm truncate uppercase tracking-wider font-medium">
-                                        {{ $culture->region }}
+                                    
+                                    <p class="text-stone-600 dark:text-stone-400 text-xs sm:text-sm line-clamp-2 leading-relaxed">
+                                        {{ $culture->significance ?? $culture->description }}
                                     </p>
                                 </div>
 
-                                <!-- Stats -->
-                                <div class="mt-4 flex items-center justify-between text-[11px] font-bold text-stone-500 dark:text-stone-500 uppercase tracking-tight">
-                                    <span class="flex items-center gap-1.5" title="Resonance">
-                                        <i data-lucide="zap" 
-                                           id="culture-vibe-icon-{{ $culture->id }}"
-                                           class="w-3.5 h-3.5 {{ auth()->check() && auth()->user()->hasResonated($culture) ? 'text-orange-500 fill-orange-500' : '' }}"></i>
-                                        <span id="culture-vibe-count-{{ $culture->id }}">{{ $culture->resonance_count }}</span>
+                                <!-- Educational Metrics Strip -->
+                                <div class="pt-3 border-t border-stone-100 dark:border-stone-800/80 flex items-center justify-between text-[11px] font-semibold text-stone-500 dark:text-stone-400">
+                                    <span class="flex items-center gap-1" title="Community Lock-ins">
+                                        <i data-lucide="lock" class="w-3.5 h-3.5 text-amber-500"></i>
+                                        <span>{{ $culture->locked_in_count }}</span>
                                     </span>
-                                    <span class="flex items-center gap-1.5" title="Lock-ins">
-                                        <i data-lucide="lock" 
-                                           id="culture-lock-icon-{{ $culture->id }}"
-                                           class="w-3.5 h-3.5 {{ auth()->check() && auth()->user()->hasLockedIn($culture) ? 'text-amber-500' : '' }}"></i>
-                                        <span id="culture-lock-count-{{ $culture->id }}">{{ $culture->locked_in_count }}</span>
+                                    <span class="flex items-center gap-1" title="Resonance Pulses">
+                                        <i data-lucide="zap" class="w-3.5 h-3.5 text-orange-500"></i>
+                                        <span>{{ $culture->resonance_count }}</span>
                                     </span>
-                                    <span class="flex items-center gap-1.5">
-                                        <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                                        {{ $culture->created_at->diffForHumans(null, true) }}
+                                    <span class="flex items-center gap-1 text-[10px] text-stone-400">
+                                        <i data-lucide="calendar" class="w-3 h-3"></i>
+                                        {{ $culture->created_at->format('M Y') }}
                                     </span>
                                 </div>
 
-                                <!-- Action Buttons -->
-                                <div class="mt-4 flex gap-2">
-                                    @auth
-                                        <button onclick="toggleCultureLockin({{ $culture->id }})" 
-                                                id="culture-lock-btn-{{ $culture->id }}"
-                                                class="flex-1 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest glass-orange text-white transition active:scale-95">
-                                            {{ auth()->user()->hasLockedIn($culture) ? 'Locked-in' : 'Lock-in' }}
-                                        </button>
-                                    @else
-                                        <a href="{{ route('login') }}" class="flex-1 px-4 py-2.5 text-center rounded-xl text-xs font-black uppercase tracking-widest glass-orange text-white transition">
-                                            Lock-in
-                                        </a>
-                                    @endauth
-
-                                    <a href="{{ route('cultural-hub.show', $culture->id) }}" 
-                                       class="flex-1 px-4 py-2.5 text-center rounded-xl text-xs font-black uppercase tracking-widest border border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition active:scale-95">
-                                        Explore
-                                    </a>
-                                </div>
+                                <!-- Primary Read Action -->
+                                <a href="{{ route('cultural-hub.show', $culture->id) }}" 
+                                   class="w-full py-2.5 px-4 rounded-xl bg-stone-100 dark:bg-stone-800/90 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 dark:hover:text-white text-stone-800 dark:text-stone-200 text-xs font-bold uppercase tracking-wider text-center transition-all flex items-center justify-center gap-2 group/btn shadow-sm">
+                                    <span>Explore Cultural Dossier</span>
+                                    <i data-lucide="arrow-right" class="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-1"></i>
+                                </a>
                             </div>
                         </div>
                     @empty

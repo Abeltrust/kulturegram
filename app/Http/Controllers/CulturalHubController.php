@@ -95,7 +95,20 @@ class CulturalHubController extends Controller
 
         $culture->load(['submitter', 'lockIns', 'resonances']);
 
-        return view('cultural-hub.show', compact('culture'));
+        $relatedCultures = Culture::where('id', '!=', $culture->id)
+            ->where(function ($q) use ($culture) {
+                if (!empty($culture->category)) {
+                    $q->where('category', $culture->category);
+                }
+                if (!empty($culture->region)) {
+                    $q->orWhere('region', $culture->region);
+                }
+            })
+            ->whereIn('status', ['approved', 'featured'])
+            ->take(3)
+            ->get();
+
+        return view('cultural-hub.show', compact('culture', 'relatedCultures'));
     }
 
     public function create()
