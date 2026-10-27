@@ -13,7 +13,7 @@
 
         {{-- Start/Schedule Live Stream --}}
         <div class="bg-white dark:bg-stone-900 rounded-2xl shadow-md p-6 sm:p-8 space-y-6 border border-stone-100 dark:border-stone-800"
-            x-data="{ mode: 'now' }">
+            x-data="liveStreamAssistant()">
 
             <!-- Toggle Tabs -->
             <div class="flex items-center gap-4 border-b border-stone-200 dark:border-stone-700 pb-4">
@@ -32,35 +32,113 @@
                 @submit.prevent="if(await handleFormImageCompression($el)) $el.submit()">
                 @csrf
 
+                <input type="hidden" name="ai_thumbnail_path" :value="aiThumbnailPath">
+
                 <div class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1">Event
-                                    Title</label>
-                                <input type="text" name="title" placeholder="E.g., Traditional Pottery Workshop"
+                                <label class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1">Event Title</label>
+                                <input type="text" name="title" x-model="streamTitle" placeholder="E.g., Traditional Pottery Workshop"
                                     class="w-full border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 rounded-xl p-3 text-sm focus:ring-2 focus:ring-amber-500 outline-none"
                                     required>
                             </div>
 
-                            <div>
-                                <label class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1">Description
-                                    (Optional)</label>
-                                <textarea name="description" rows="3" placeholder="Tell viewers what to expect..."
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <label class="block text-sm font-semibold text-stone-700 dark:text-stone-300">Description / Topic Notes</label>
+                                    <button type="button" @click="suggestCaption()" :disabled="generatingCaption || (!streamDesc && !streamTitle)"
+                                        class="text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-500 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 transition disabled:opacity-50">
+                                        <i data-lucide="sparkles" class="w-3.5 h-3.5" :class="generatingCaption ? 'animate-spin' : ''"></i>
+                                        <span x-text="generatingCaption ? 'Generating...' : 'AI Captivating Caption'"></span>
+                                    </button>
+                                </div>
+
+                                {{-- AI Caption Preview Card --}}
+                                <template x-if="suggestedCaptionData">
+                                    <div class="p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-500/20 space-y-2 text-xs animate-in fade-in duration-200">
+                                        <div class="flex items-center justify-between border-b border-amber-200/50 dark:border-amber-900/50 pb-2">
+                                            <span class="font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+                                                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i> AI Captivating Caption & Title
+                                            </span>
+                                            <div class="flex items-center gap-1.5">
+                                                <button type="button" @click="applyAllCaptions()" class="px-2 py-0.5 rounded bg-amber-500 text-stone-950 font-bold text-[10px] hover:bg-amber-400 transition">
+                                                    Apply All
+                                                </button>
+                                                <button type="button" @click="suggestedCaptionData = null" class="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 text-xs px-1">
+                                                    &times;
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <template x-if="suggestedCaptionData.suggested_title">
+                                            <div class="flex items-start justify-between gap-2">
+                                                <div class="flex-1">
+                                                    <span class="text-[10px] uppercase font-bold text-stone-400 block">Suggested Catchy Title:</span>
+                                                    <span class="font-semibold text-stone-800 dark:text-stone-200" x-text="suggestedCaptionData.suggested_title"></span>
+                                                </div>
+                                                <button type="button" @click="applyTitle()" class="shrink-0 px-2 py-0.5 rounded bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-bold text-[10px] hover:bg-amber-500 hover:text-white transition">
+                                                    Use Title
+                                                </button>
+                                            </div>
+                                        </template>
+
+                                        <template x-if="suggestedCaptionData.caption">
+                                            <div class="flex items-start justify-between gap-2 pt-1 border-t border-amber-200/40 dark:border-amber-900/40">
+                                                <div class="flex-1">
+                                                    <span class="text-[10px] uppercase font-bold text-stone-400 block">Captivating Caption:</span>
+                                                    <p class="text-stone-700 dark:text-stone-300 leading-relaxed line-clamp-3" x-text="suggestedCaptionData.caption"></p>
+                                                </div>
+                                                <button type="button" @click="applyCaption()" class="shrink-0 px-2 py-0.5 rounded bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-bold text-[10px] hover:bg-amber-500 hover:text-white transition">
+                                                    Use Caption
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <textarea name="description" rows="3" x-model="streamDesc" placeholder="Tell viewers what to expect, or list key points and let AI craft a captivating caption..."
                                     class="w-full border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 rounded-xl p-3 text-sm focus:ring-2 focus:ring-amber-500 outline-none"></textarea>
                             </div>
                         </div>
 
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1">Cover Image (Optional)</label>
-                                <div class="relative group cursor-pointer" onclick="document.getElementById('thumbnail-input').click()">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-sm font-semibold text-stone-700 dark:text-stone-300">Cover Thumbnail (Optional)</label>
+                                    <button type="button" @click="generateThumbnail()" :disabled="generatingThumbnail || !streamTitle"
+                                        class="text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-500 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 transition disabled:opacity-50">
+                                        <i data-lucide="palette" class="w-3.5 h-3.5" :class="generatingThumbnail ? 'animate-spin' : ''"></i>
+                                        <span x-text="generatingThumbnail ? 'Designing...' : 'Generate AI Thumbnail'"></span>
+                                    </button>
+                                </div>
+
+                                {{-- AI Generated Thumbnail Active Preview --}}
+                                <div x-show="aiThumbnailUrl" class="relative rounded-xl overflow-hidden border-2 border-amber-500/40 h-32 group bg-stone-900">
+                                    <img :src="aiThumbnailUrl" class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                        <button type="button" @click="generateThumbnail()" :disabled="generatingThumbnail"
+                                            class="px-2.5 py-1 rounded-lg bg-amber-500 text-stone-950 font-bold text-xs hover:bg-amber-400 transition flex items-center gap-1">
+                                            <i data-lucide="refresh-cw" class="w-3 h-3"></i> Regenerate
+                                        </button>
+                                        <button type="button" @click="clearThumbnail()"
+                                            class="px-2.5 py-1 rounded-lg bg-red-600 text-white font-bold text-xs hover:bg-red-500 transition flex items-center gap-1">
+                                            <i data-lucide="trash-2" class="w-3 h-3"></i> Remove
+                                        </button>
+                                    </div>
+                                    <span class="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-black/70 backdrop-blur text-[10px] font-bold text-amber-400 flex items-center gap-1">
+                                        <i data-lucide="sparkles" class="w-3 h-3"></i> AI Cultural Thumbnail
+                                    </span>
+                                </div>
+
+                                {{-- Manual Upload Box --}}
+                                <div x-show="!aiThumbnailUrl" class="relative group cursor-pointer" onclick="document.getElementById('thumbnail-input').click()">
                                     <div class="w-full h-32 border-2 border-dashed border-stone-300 dark:border-stone-700 rounded-xl flex flex-col items-center justify-center bg-stone-50 dark:bg-stone-800/50 group-hover:border-amber-500 transition-colors overflow-hidden">
                                         <div id="thumbnail-preview" class="hidden absolute inset-0">
                                             <img src="" class="w-full h-full object-cover">
                                         </div>
                                         <i data-lucide="image" class="w-8 h-8 text-stone-400 mb-1"></i>
-                                        <span class="text-xs text-stone-500">Tap to upload thumbnail</span>
+                                        <span class="text-xs text-stone-500">Tap to upload thumbnail or generate with AI</span>
                                     </div>
                                     <input type="file" name="thumbnail" id="thumbnail-input" class="hidden" accept="image/*" 
                                            onchange="const preview = document.getElementById('thumbnail-preview'); const img = preview.querySelector('img'); const reader = new FileReader(); reader.onload = (e) => { img.src = e.target.result; preview.classList.remove('hidden'); }; reader.readAsDataURL(this.files[0]);">
@@ -70,7 +148,7 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1">Category</label>
-                                    <input type="text" name="category" placeholder="E.g., Heritage"
+                                    <input type="text" name="category" x-model="streamCategory" placeholder="E.g., Heritage"
                                         class="w-full border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-xl p-3 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
                                 </div>
 
@@ -258,6 +336,116 @@
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", () => { lucide.createIcons() });
+        document.addEventListener("DOMContentLoaded", () => { lucide.createIcons(); });
+
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('liveStreamAssistant', () => ({
+                mode: 'now',
+                streamTitle: '',
+                streamDesc: '',
+                streamCategory: 'Heritage',
+                generatingCaption: false,
+                suggestedCaptionData: null,
+                generatingThumbnail: false,
+                aiThumbnailPath: '',
+                aiThumbnailUrl: '',
+
+                async suggestCaption() {
+                    if (!this.streamDesc && !this.streamTitle) {
+                        alert('Please enter a stream title or some description notes first.');
+                        return;
+                    }
+
+                    this.generatingCaption = true;
+                    try {
+                        const res = await fetch("{{ route('live-stream.ai-suggest-caption') }}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                            },
+                            body: JSON.stringify({
+                                title: this.streamTitle,
+                                description: this.streamDesc,
+                                category: this.streamCategory
+                            })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            this.suggestedCaptionData = data;
+                        } else {
+                            alert(data.error || 'Could not generate caption.');
+                        }
+                    } catch (e) {
+                        console.error('Caption error:', e);
+                    } finally {
+                        this.generatingCaption = false;
+                        setTimeout(() => lucide.createIcons(), 50);
+                    }
+                },
+
+                applyTitle() {
+                    if (this.suggestedCaptionData?.suggested_title) {
+                        this.streamTitle = this.suggestedCaptionData.suggested_title;
+                    }
+                },
+
+                applyCaption() {
+                    if (this.suggestedCaptionData?.caption) {
+                        this.streamDesc = this.suggestedCaptionData.caption;
+                    }
+                },
+
+                applyAllCaptions() {
+                    this.applyTitle();
+                    this.applyCaption();
+                },
+
+                async generateThumbnail() {
+                    if (!this.streamTitle) {
+                        alert('Please enter a Stream Title first before generating an AI thumbnail.');
+                        return;
+                    }
+
+                    this.generatingThumbnail = true;
+                    try {
+                        const res = await fetch("{{ route('live-stream.ai-generate-thumbnail') }}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                            },
+                            body: JSON.stringify({
+                                title: this.streamTitle,
+                                category: this.streamCategory,
+                                notes: this.streamDesc
+                            })
+                        });
+                        const data = await res.json();
+                        if (data.success && data.image_path) {
+                            this.aiThumbnailPath = data.image_path;
+                            this.aiThumbnailUrl = data.image_url;
+                            // Reset manual preview if any
+                            const manualPreview = document.getElementById('thumbnail-preview');
+                            if (manualPreview) manualPreview.classList.add('hidden');
+                            const fileInput = document.getElementById('thumbnail-input');
+                            if (fileInput) fileInput.value = '';
+                        } else {
+                            alert(data.error || 'Failed to generate stream thumbnail.');
+                        }
+                    } catch (e) {
+                        console.error('Thumbnail error:', e);
+                    } finally {
+                        this.generatingThumbnail = false;
+                        setTimeout(() => lucide.createIcons(), 50);
+                    }
+                },
+
+                clearThumbnail() {
+                    this.aiThumbnailPath = '';
+                    this.aiThumbnailUrl = '';
+                }
+            }));
+        });
     </script>
 @endsection

@@ -10,69 +10,122 @@
             <div class="absolute bottom-[10%] right-[5%] w-[30rem] h-[30rem] bg-orange-600/10 rounded-full blur-[150px]"></div>
         </div>
 
-        <div
-            class="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 text-center sm:text-left">
-            <div>
-                <h2 class="text-2xl sm:text-3xl font-bold text-stone-800 dark:text-white mb-2 sm:mb-3">
-                    Cultural Hub
-                </h2>
-                <p class="text-sm sm:text-base text-stone-600 dark:text-stone-400 leading-relaxed max-w-2xl">
-                    Discover, preserve, and celebrate the rich tapestry of global cultures.
-                    Every tradition has a story, every heritage deserves preservation.
-                </p>
-            </div>
-            <div class="flex-shrink-0 w-full sm:w-80">
-                <form action="{{ route('cultural-hub.index') }}" method="GET" class="relative group">
-                    @if($category !== 'all')
-                        <input type="hidden" name="category" value="{{ $category }}">
-                    @endif
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <i data-lucide="search" class="w-4 h-4 text-stone-400 group-focus-within:text-amber-500 transition-colors"></i>
-                    </div>
-                    <input type="text" 
-                           name="search" 
-                           value="{{ request('search') }}" 
-                           placeholder="Search stories..." 
-                           class="w-full pl-11 pr-4 py-3 bg-white/50 dark:bg-stone-900/50 backdrop-blur-md border border-stone-200 dark:border-stone-800 rounded-2xl text-sm font-bold placeholder:text-stone-400 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all">
-                    <button type="submit" class="hidden"></button>
-                </form>
-            </div>
-            @if(session('success'))
-                <div class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded-xl flex items-center space-x-3">
-                    <i data-lucide="check-circle" class="w-5 h-5 transition-colors"></i>
-                    <p class="text-sm font-medium">{{ session('success') }}</p>
+        <!-- Header & Real Statistics -->
+        <div class="mb-6 sm:mb-8 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-center sm:text-left">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-stone-900 dark:text-stone-100 tracking-tight">
+                        Living Cultural Archive
+                    </h1>
+                    <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-400 leading-relaxed max-w-2xl mt-1">
+                        Preserve oral testimonies, traditions, languages, and indigenous crafts. Evidence-traceable and community-reviewed.
+                    </p>
                 </div>
-            @endif
+
+                {{-- Real Archive Statistics (No fabricated counts) --}}
+                <div class="flex items-center justify-center sm:justify-end gap-3 text-xs">
+                    <div class="px-3 py-2 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-center">
+                        <span class="font-bold text-stone-900 dark:text-stone-100 block">{{ $totalRecordsCount }}</span>
+                        <span class="text-[10px] text-stone-500 uppercase tracking-wider">Archived Records</span>
+                    </div>
+                    <div class="px-3 py-2 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-center">
+                        <span class="font-bold text-stone-900 dark:text-stone-100 block">{{ $distinctLanguagesCount }}</span>
+                        <span class="text-[10px] text-stone-500 uppercase tracking-wider">Languages</span>
+                    </div>
+                    <div class="px-3 py-2 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-center">
+                        <span class="font-bold text-stone-900 dark:text-stone-100 block">{{ $distinctRegionsCount }}</span>
+                        <span class="text-[10px] text-stone-500 uppercase tracking-wider">Regions</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Multi-Faceted Archival Search Bar --}}
+            <form action="{{ route('cultural-hub.index') }}" method="GET" 
+                  class="p-3 sm:p-4 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/90 dark:border-stone-800 shadow-sm space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                    {{-- Search Text --}}
+                    <div class="relative">
+                        <i data-lucide="search" class="w-4 h-4 text-stone-400 absolute left-3 top-3"></i>
+                        <input type="text" name="search" value="{{ request('search') }}" 
+                               placeholder="Search title, context, locality..."
+                               class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-800/50 text-stone-900 dark:text-stone-100">
+                    </div>
+
+                    {{-- Community / Group --}}
+                    <div class="relative">
+                        <i data-lucide="users" class="w-4 h-4 text-stone-400 absolute left-3 top-3"></i>
+                        <input type="text" name="cultural_group" value="{{ request('cultural_group') }}" 
+                               placeholder="Filter by community/group..."
+                               class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-800/50 text-stone-900 dark:text-stone-100">
+                    </div>
+
+                    {{-- Language --}}
+                    <div class="relative">
+                        <i data-lucide="languages" class="w-4 h-4 text-stone-400 absolute left-3 top-3"></i>
+                        <input type="text" name="language" value="{{ request('language') }}" 
+                               placeholder="Filter by language..."
+                               class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-800/50 text-stone-900 dark:text-stone-100">
+                    </div>
+
+                    {{-- Review Status --}}
+                    <div>
+                        <select name="review_status" class="w-full py-2 px-3 text-xs rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-800/50 text-stone-900 dark:text-stone-100">
+                            <option value="all">All Verification Statuses</option>
+                            <option value="published" {{ request('review_status') === 'published' ? 'selected' : '' }}>Published Archive</option>
+                            <option value="under_review" {{ request('review_status') === 'under_review' ? 'selected' : '' }}>Under Community Review</option>
+                            <option value="awaiting_contributions" {{ request('review_status') === 'awaiting_contributions' ? 'selected' : '' }}>Awaiting Evidence</option>
+                            <option value="disputed" {{ request('review_status') === 'disputed' ? 'selected' : '' }}>Disputed Accounts</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-1 flex-wrap gap-2">
+                    <div class="flex items-center gap-2">
+                        @if(request('search') || request('cultural_group') || request('language') || (request('review_status') && request('review_status') !== 'all') || ($category !== 'all'))
+                            <a href="{{ route('cultural-hub.index') }}" class="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline">
+                                Reset Filters
+                            </a>
+                        @endif
+                    </div>
+                    <button type="submit" class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-sm">
+                        <i data-lucide="filter" class="w-3.5 h-3.5"></i>
+                        <span>Apply Archival Search</span>
+                    </button>
+                </div>
+            </form>
         </div>
+
+        @if(session('success'))
+            <div class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded-xl flex items-center space-x-3">
+                <i data-lucide="check-circle" class="w-5 h-5 transition-colors"></i>
+                <p class="text-sm font-medium">{{ session('success') }}</p>
+            </div>
+        @endif
 
         <!-- Living Heritage Preservation Banner -->
         <div class="mb-10 bg-white dark:bg-stone-900 border border-amber-200/80 dark:border-amber-900/50 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
             <div class="space-y-2 max-w-2xl">
                 <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest">
                     <i data-lucide="sparkles" class="w-3 h-3"></i>
-                    <span>Cultural Preservation Intelligence</span>
+                    <span>Living Heritage Archive</span>
                 </div>
-                <h3 class="text-xl sm:text-2xl font-extrabold text-stone-900 dark:text-stone-100 tracking-tight">
-                    Living Heritage Capture
-                </h3>
+                <h2 class="text-xl sm:text-2xl font-extrabold text-stone-900 dark:text-stone-100 tracking-tight">
+                    Preserve Oral Traditions & Living Practices
+                </h2>
                 <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
-                    Preserve oral histories, sacred folktales, and endangered knowledge. Assist your memory with <strong>Muse Voice Transcribe</strong>, <strong>Muse Spark</strong>, <strong>Muse Wonder</strong>, and <strong>SAM 3.1</strong>.
+                    Capture audio recordings, transcripts, and oral accounts. Support community guardians with AI transcription, structuring, and artifact segmentation.
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full sm:w-auto flex-shrink-0">
-                <a href="{{ route('cultural-hub.living-heritage.create') }}"
-                   class="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-5 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors shadow-sm">
-                    <i data-lucide="mic" class="w-4 h-4"></i>
-                    <span>Start Capture</span>
-                </a>
-                <a href="{{ route('cultural-hub.living-heritage.compare') }}"
-                   class="flex-1 sm:flex-initial inline-flex items-center justify-center space-x-2 px-4 sm:px-5 py-3 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors border border-stone-200 dark:border-stone-700 text-center">
-                    <i data-lucide="git-compare" class="w-4 h-4"></i>
-                    <span>Model Lab</span>
-                </a>
                 <a href="{{ route('cultural-hub.create') }}"
-                   class="flex-1 sm:flex-initial inline-flex items-center justify-center space-x-2 px-4 py-3 bg-white dark:bg-stone-900 hover:bg-stone-50 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors border border-stone-200 dark:border-stone-800 text-center">
-                    <span>Manual Entry</span>
+                   class="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-5 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors shadow-sm">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Document Heritage</span>
+                </a>
+                <a href="{{ route('cultural-hub.living-heritage.create') }}"
+                   class="flex-1 sm:flex-initial inline-flex items-center justify-center space-x-2 px-4 sm:px-5 py-3 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors border border-stone-200 dark:border-stone-700 text-center">
+                    <i data-lucide="mic" class="w-4 h-4"></i>
+                    <span>Audio Capture</span>
                 </a>
             </div>
         </div>
@@ -80,65 +133,20 @@
         <!-- Main Discovery Container -->
         <div class="lg:grid lg:grid-cols-12 lg:gap-12 items-start" x-data="{ mobileFiltersOpen: false }">
             
-            <!-- Main Content Area (Column 1-9 on LARGE) -->
-            <div class="lg:col-span-9 space-y-12 order-last lg:order-first">
+            <!-- Main Content Area -->
+            <div class="lg:col-span-9 space-y-8 order-last lg:order-first">
                 
-                <!-- Mobile Dropdown Toolbar (Premium Glassmorphism) -->
-                <div class="lg:hidden flex items-center justify-between backdrop-blur-xl bg-white/80 dark:bg-stone-900/80 p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] border border-stone-200/80 dark:border-stone-800/80 shadow-md relative z-40 mb-6">
-                    <div class="flex items-center space-x-3 sm:space-x-4 min-w-0">
-                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20 flex-shrink-0">
-                            <i data-lucide="compass" class="w-5 h-5 sm:w-6 sm:h-6 text-amber-600 animate-spin-slow"></i>
-                        </div>
-                        <div class="min-w-0">
-                            <p class="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] mb-0.5">Exploring</p>
-                            <p class="text-sm sm:text-base font-black text-stone-900 dark:text-white uppercase tracking-tight truncate">{{ $categories[(string)$category] ?? 'Global Heritage' }}</p>
-                        </div>
-                    </div>
-
-                    <!-- Three-Dot Trigger -->
-                    <div class="relative flex-shrink-0">
-                        <button @click="mobileFiltersOpen = !mobileFiltersOpen" 
-                                class="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-xl sm:rounded-[1.25rem] bg-stone-50 dark:bg-stone-800 hover:bg-amber-500 hover:text-white transition-all duration-300 shadow-inner">
-                            <i data-lucide="more-vertical" class="w-5 h-5 sm:w-6 sm:h-6"></i>
-                        </button>
-
-                        <!-- Mobile Menu Dropdown (Cinematic Transition) -->
-                        <div x-show="mobileFiltersOpen" 
-                             @click.away="mobileFiltersOpen = false"
-                             x-transition:enter="transition ease-out duration-300"
-                             x-transition:enter-start="opacity-0 scale-90 -translate-y-4"
-                             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                             class="absolute right-0 mt-3 w-64 max-w-[calc(100vw-2.5rem)] backdrop-blur-2xl bg-white/95 dark:bg-stone-900/95 rounded-2xl sm:rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-stone-200 dark:border-stone-800 overflow-hidden py-2 z-50"
-                             x-cloak>
-                            @foreach($categories as $key => $label)
-                                <a href="{{ route('cultural-hub.index', ['category' => $key]) }}"
-                                   class="flex items-center justify-between px-5 py-3 hover:bg-amber-500/10 transition-colors group">
-                                    <div class="flex items-center space-x-3">
-                                        <div class="w-2 h-2 rounded-full {{ $category === $key ? 'bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.8)]' : 'bg-stone-200 dark:bg-stone-700' }}"></div>
-                                        <span class="text-xs font-black uppercase tracking-wider {{ $category === $key ? 'text-amber-600' : 'text-stone-600 dark:text-stone-400' }}">
-                                            {{ $label }}
-                                        </span>
-                                    </div>
-                                    @if($category === $key)
-                                        <i data-lucide="check" class="w-4 h-4 text-amber-500"></i>
-                                    @endif
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Cultures Grid (Refined Tile Style) -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
+                <!-- Cultures Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                     @forelse($cultures as $culture)
-                        <div class="border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:border-amber-500/40 transition-all duration-300 flex flex-col h-full group">
+                        <div class="border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:border-amber-500/40 transition-all flex flex-col h-full group">
                             
-                            <!-- Image Section with Gradient & Badges -->
-                            <div class="h-48 relative overflow-hidden bg-stone-100 dark:bg-stone-800/50">
+                            <!-- Image Section with Record ID & Status -->
+                            <div class="h-44 relative overflow-hidden bg-stone-100 dark:bg-stone-800/50">
                                 @if($culture->image)
                                     <img src="{{ Storage::url($culture->image) }}" 
                                          alt="{{ $culture->name }}"
-                                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                          loading="lazy">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center bg-stone-100 dark:bg-stone-900">
@@ -147,28 +155,27 @@
                                 @endif
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                                 
-                                <!-- Category & Audio Badges -->
-                                <div class="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
-                                    <span class="px-2.5 py-1 bg-amber-500 text-black text-[9px] font-black uppercase tracking-widest rounded-lg shadow-sm">
-                                        {{ $culture->category }}
+                                <!-- Top Bar: ID and Status -->
+                                <div class="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5">
+                                    <span class="px-2 py-0.5 bg-black/70 backdrop-blur-md text-amber-300 text-[10px] font-mono font-bold rounded">
+                                        #CR-{{ str_pad($culture->id, 5, '0', STR_PAD_LEFT) }}
                                     </span>
 
-                                    @if($culture->audio_path || $culture->audio_url)
-                                        <span class="px-2 py-0.5 bg-black/60 backdrop-blur-md border border-white/20 rounded-md text-[9px] font-bold text-amber-300 flex items-center gap-1 shadow-sm">
-                                            <i data-lucide="headphones" class="w-3 h-3"></i>
-                                            <span>Oral Audio</span>
-                                        </span>
-                                    @endif
+                                    @php
+                                        $cBadge = $culture->review_badge;
+                                    @endphp
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-bold border backdrop-blur-md {{ $cBadge['class'] }}">
+                                        {{ $cBadge['label'] }}
+                                    </span>
                                 </div>
 
-                                <!-- Region on Image Bottom -->
-                                <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white">
-                                    <span class="flex items-center gap-1 font-bold text-amber-300 text-[11px] uppercase tracking-wider truncate">
-                                        <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
-                                        {{ $culture->region }}
+                                <!-- Bottom Bar on Image: Region & Group -->
+                                <div class="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between text-[11px] text-white">
+                                    <span class="font-bold text-amber-300 truncate">
+                                        {{ $culture->locality ? $culture->locality . ', ' : '' }}{{ $culture->region }}
                                     </span>
                                     @if($culture->language)
-                                        <span class="text-[10px] text-stone-300 font-mono truncate max-w-[100px]">
+                                        <span class="text-[10px] text-stone-300 font-mono truncate max-w-[90px]">
                                             {{ $culture->language }}
                                         </span>
                                     @endif
@@ -176,54 +183,48 @@
                             </div>
 
                             <!-- Content Info Body -->
-                            <div class="p-5 sm:p-6 flex-1 flex flex-col justify-between space-y-4">
-                                <div class="space-y-2">
-                                    <h3 class="font-bold text-stone-900 dark:text-stone-100 text-lg leading-snug group-hover:text-amber-600 dark:group-hover:text-amber-400 transition line-clamp-1">
+                            <div class="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
+                                <div class="space-y-1.5">
+                                    <div class="flex items-center justify-between text-[10px] text-stone-500">
+                                        <span class="font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">{{ $culture->category }}</span>
+                                        @if($culture->cultural_group)
+                                            <span class="truncate max-w-[120px]">{{ $culture->cultural_group }}</span>
+                                        @endif
+                                    </div>
+
+                                    <h3 class="font-bold text-stone-900 dark:text-stone-100 text-base leading-snug group-hover:text-amber-600 dark:group-hover:text-amber-400 transition line-clamp-1">
                                         {{ $culture->name }}
                                     </h3>
                                     
-                                    <p class="text-stone-600 dark:text-stone-400 text-xs sm:text-sm line-clamp-2 leading-relaxed">
+                                    <p class="text-stone-600 dark:text-stone-400 text-xs line-clamp-2 leading-relaxed">
                                         {{ $culture->significance ?? $culture->description }}
                                     </p>
                                 </div>
 
-                                <!-- Educational Metrics Strip -->
-                                <div class="pt-3 border-t border-stone-100 dark:border-stone-800/80 flex items-center justify-between text-[11px] font-semibold text-stone-500 dark:text-stone-400">
-                                    <span class="flex items-center gap-1" title="Community Lock-ins">
-                                        <i data-lucide="lock" class="w-3.5 h-3.5 text-amber-500"></i>
-                                        <span>{{ $culture->locked_in_count }}</span>
-                                    </span>
-                                    <span class="flex items-center gap-1" title="Resonance Pulses">
-                                        <i data-lucide="zap" class="w-3.5 h-3.5 text-orange-500"></i>
-                                        <span>{{ $culture->resonance_count }}</span>
-                                    </span>
-                                    <span class="flex items-center gap-1 text-[10px] text-stone-400">
-                                        <i data-lucide="calendar" class="w-3 h-3"></i>
-                                        {{ $culture->created_at->format('M Y') }}
-                                    </span>
-                                </div>
-
-                                <!-- Primary Read Action -->
+                                <!-- Action Link -->
                                 <a href="{{ route('cultural-hub.show', $culture->id) }}" 
-                                   class="w-full py-2.5 px-4 rounded-xl bg-stone-100 dark:bg-stone-800/90 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 dark:hover:text-white text-stone-800 dark:text-stone-200 text-xs font-bold uppercase tracking-wider text-center transition-all flex items-center justify-center gap-2 group/btn shadow-sm">
-                                    <span>Explore Cultural Dossier</span>
-                                    <i data-lucide="arrow-right" class="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-1"></i>
+                                   class="w-full py-2 px-3 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 dark:hover:text-white text-stone-800 dark:text-stone-200 text-xs font-bold text-center transition flex items-center justify-center gap-1.5">
+                                    <span>View Archive Record</span>
+                                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
                                 </a>
                             </div>
                         </div>
                     @empty
-                        <!-- Empty state remains same -->
-                        <div class="col-span-full text-center py-24 backdrop-blur-md bg-stone-50/50 dark:bg-stone-900/10 rounded-[4rem] border-4 border-dashed border-stone-200 dark:border-stone-800">
-                            <i data-lucide="globe" class="w-24 h-24 text-amber-500/10 mx-auto mb-8"></i>
-                            <h3 class="text-2xl font-black text-stone-800 dark:text-white uppercase tracking-tighter mb-4">The Archive lies Silent</h3>
-                            <p class="text-stone-500 text-base max-w-sm mx-auto mb-10 font-bold">No cultural stories have been enshrined in this category yet. Be the first to share your legacy.</p>
-                            <a href="{{ route('cultural-hub.create') }}" class="inline-flex items-center space-x-3 px-10 py-5 glass-orange text-white rounded-[2rem] font-black uppercase tracking-widest text-xs hover:scale-105 transition-transform shadow-xl">
-                                <i data-lucide="plus" class="w-5 h-5"></i>
-                                <span>ENSHRINE STORY</span>
+                        <div class="col-span-full text-center py-16 bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 space-y-3">
+                            <i data-lucide="archive" class="w-12 h-12 text-stone-300 dark:text-stone-700 mx-auto"></i>
+                            <h3 class="text-base font-bold text-stone-900 dark:text-stone-100">No Matching Cultural Records Found</h3>
+                            <p class="text-xs text-stone-500 max-w-sm mx-auto">
+                                No records match the selected search or filter criteria. Be the first to contribute documentation for this tradition.
+                            </p>
+                            <a href="{{ route('cultural-hub.create') }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                <span>Document Heritage Record</span>
                             </a>
                         </div>
                     @endforelse
                 </div>
+                            
+
 
                 <!-- Pagination (Premium Aesthetic) -->
                 @if($cultures->hasPages())

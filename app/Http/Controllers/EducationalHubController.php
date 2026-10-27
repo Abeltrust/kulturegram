@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\CulturalClass;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -21,7 +22,14 @@ class EducationalHubController extends Controller
             $query->where('type', $request->type);
         }
 
-        $events = $query->paginate(12);
+        $events = $query->paginate(8);
+
+        // Featured cultural video classes (Language, Heritage, Masterclasses)
+        $featuredClasses = CulturalClass::with('instructor')
+            ->published()
+            ->latest()
+            ->take(6)
+            ->get();
 
         // Featured experts/hosts (those with most events or attendees)
         // Cache this for 60 minutes as it doesn't change frequently
@@ -31,6 +39,6 @@ class EducationalHubController extends Controller
             })->withCount('events')->orderBy('events_count', 'desc')->take(5)->get();
         });
 
-        return view('education.index', compact('events', 'experts'));
+        return view('education.index', compact('events', 'experts', 'featuredClasses'));
     }
 }

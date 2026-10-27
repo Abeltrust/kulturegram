@@ -63,12 +63,68 @@
            class="px-4 py-2 rounded-xl text-sm font-bold transition {{ $status === 'all' ? 'bg-amber-500 text-white shadow-sm' : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:text-stone-900' }}">
             All Submissions
         </a>
-        <a href="{{ route('admin.privacy-audit.index') }}"
+        <a href="{{ route('admin.ai-feedback.index') }}"
            class="px-4 py-2 rounded-xl text-sm font-bold transition text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 bg-stone-100 dark:bg-stone-800 flex items-center gap-1.5 ml-auto">
+            <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+            <span>AI Feedback & Metrics</span>
+        </a>
+        <a href="{{ route('admin.privacy-audit.index') }}"
+           class="px-4 py-2 rounded-xl text-sm font-bold transition text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 bg-stone-100 dark:bg-stone-800 flex items-center gap-1.5">
             <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
-            <span>Privacy & Policy Audit</span>
+            <span>Privacy Audit</span>
         </a>
     </div>
+
+    {{-- Submitted Cultural Record Drafts Queue --}}
+    @if(isset($submittedDrafts) && $submittedDrafts->count() > 0)
+        <div class="mb-8 p-5 rounded-2xl bg-gradient-to-r from-amber-950/40 via-stone-900 to-stone-900 border border-amber-500/30 space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    <h2 class="font-bold text-base text-stone-100">Living Heritage Drafts Pending Final Curatorial Approval ({{ $submittedDrafts->count() }})</h2>
+                </div>
+                <span class="text-xs text-amber-400 font-bold">Community Preserved</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @foreach($submittedDrafts as $draft)
+                    <div class="p-4 rounded-xl bg-stone-950/80 border border-stone-800 space-y-3">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <h3 class="font-bold text-sm text-stone-100">{{ $draft->title }}</h3>
+                                <p class="text-xs text-stone-400">{{ $draft->region ?? 'Regional' }} • {{ $draft->category ?? 'Tradition' }}</p>
+                            </div>
+                            <span class="text-[10px] font-mono text-stone-500">{{ $draft->created_at->diffForHumans() }}</span>
+                        </div>
+
+                        <p class="text-xs text-stone-300 line-clamp-2 bg-stone-900/60 p-2 rounded-lg font-mono text-[11px]">
+                            {{ $draft->ai_summary ?: \Illuminate\Support\Str::limit($draft->extracted_story, 120) }}
+                        </p>
+
+                        @if($draft->custodian_notes)
+                            <div class="text-[11px] text-amber-300/90 italic">
+                                <strong>Custodian note:</strong> {{ \Illuminate\Support\Str::limit($draft->custodian_notes, 100) }}
+                            </div>
+                        @endif
+
+                        <div class="flex items-center gap-2 pt-2 border-t border-stone-800/80">
+                            <a href="{{ route('cultural-hub.drafts.show', $draft->id) }}" 
+                               class="flex-1 py-1.5 text-center rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-semibold transition">
+                                Inspect Full Draft
+                            </a>
+                            <form action="{{ route('admin.drafts.approve', $draft->id) }}" method="POST" onsubmit="return confirm('Approve and publish this draft into the permanent public cultural archive?')">
+                                @csrf
+                                <button type="submit" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1">
+                                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                    <span>Approve & Publish</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
 
     {{-- Submissions List --}}
     @if($cultures->count() > 0)

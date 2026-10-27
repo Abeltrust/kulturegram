@@ -60,7 +60,8 @@ class EventController extends Controller
         // 4. AI-Curated Events based on user declared cultural profile
         $recommendedEvents = collect();
         if (Auth::check()) {
-            $recommendedEvents = $discoveryService->recommendEvents(Auth::user(), 4);
+            $result = $discoveryService->recommendEvents(Auth::user(), 4);
+            $recommendedEvents = collect($result['recommendations'] ?? []);
         }
 
         return view('events.index', compact('events', 'liveStreams', 'upcomingStreams', 'filter', 'recommendedEvents'));
@@ -140,6 +141,8 @@ class EventController extends Controller
 
         if ($request->hasFile('image')) {
             $event->image = $request->file('image')->store('events', 'public');
+        } elseif ($request->filled('ai_flyer_path')) {
+            $event->image = $request->input('ai_flyer_path');
         }
 
         $event->save();
@@ -151,6 +154,46 @@ class EventController extends Controller
 
         return redirect()->route('events.index')
             ->with('success', 'Event created successfully!');
+    }
+
+    /**
+     * AI Suggested Cultural Description & Concept Generator
+     */
+    public function aiSuggestDescription(Request $request, \App\Services\MetaAI\EventDiscoveryService $discoveryService)
+    {
+        $request->validate([
+            'title' => 'nullable|string|max:255',
+            'key_points' => 'nullable|string|max:2000',
+            'description' => 'nullable|string|max:2000',
+            'type' => 'nullable|string|max:100',
+            'cultural_focus' => 'nullable|string|max:255',
+        ]);
+
+        $res = $discoveryService->suggestDescription($request->all());
+
+        return response()->json($res);
+    }
+
+    /**
+     * AI Cultural Event Flyer Generator
+     */
+    public function aiGenerateFlyer(Request $request, \App\Services\MetaAI\MuseImageService $imageService)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'type' => 'nullable|string|max:100',
+            'cultural_context' => 'nullable|string|max:255',
+        ]);
+
+        $res = $imageService->generateFlyer(
+            $request->input('title'),
+            $request->input('description'),
+            $request->input('type', 'Cultural Gathering'),
+            $request->input('cultural_context')
+        );
+
+        return response()->json($res);
     }
 
     /**

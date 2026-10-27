@@ -176,6 +176,25 @@
                                     {!! $post->formatted_content !!}
                                 </div>
 
+                                @if($post->chapter === 'Cultural Class' || (!empty($post->tags) && in_array('cultural-class', (array)$post->tags)))
+                                    <div class="mt-3 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-transparent border border-amber-500/30 flex items-center justify-between gap-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-md">
+                                                <i data-lucide="graduation-cap" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                                            </div>
+                                            <div>
+                                                <span class="text-[10px] font-black uppercase tracking-wider text-amber-500 block">Educational Hub Class</span>
+                                                <div class="text-xs sm:text-sm font-bold text-stone-800 dark:text-stone-100">Interactive Subtitles & Bilingual Vocab</div>
+                                            </div>
+                                        </div>
+                                        <a href="{{ route('education.classes.index') }}" 
+                                           class="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition shadow-sm whitespace-nowrap flex items-center gap-1.5">
+                                            <span>Watch Class</span>
+                                            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                                        </a>
+                                    </div>
+                                @endif
+
                                 @if(!empty($post->tags))
                                     <div class="flex flex-wrap gap-1.5 mt-3">
                                         @foreach($post->tags as $tag)

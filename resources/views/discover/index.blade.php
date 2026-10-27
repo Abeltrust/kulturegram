@@ -5,140 +5,155 @@
 @section('content')
     <div class="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <!-- Header -->
-        <div class="mb-4 sm:mb-6 text-center md:text-left">
-            <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-stone-800 dark:text-white">Discover</h1>
-            <p class="text-stone-50 dark:text-stone-400 text-xs sm:text-sm md:text-base">
-                Explore stories, cultures, people, and places from around the world.
-            </p>
-        </div>
-
-        <!-- Search -->
-        <form method="GET" action="{{ route('discover.index') }}" class="mb-4 sm:mb-6">
-            <div class="relative">
-                <input type="hidden" name="tab" value="{{ $tab }}">
-                <input type="text" name="search" value="{{ $search }}"
-                    class="w-full rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 pl-10 sm:pl-12 pr-4 py-2 sm:py-3 placeholder-stone-400 dark:placeholder-stone-500 text-stone-700 dark:text-stone-200 focus:ring-amber-500 focus:border-amber-500 text-sm sm:text-base"
-                    placeholder="Search">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-stone-400">
-                    <i data-lucide="search" class="w-4 sm:w-5 h-4 sm:h-5"></i>
-                </span>
-                <button type="submit" class="absolute inset-y-0 right-0 px-3 sm:px-4 text-stone-500 hover:text-amber-600">
-                    <i data-lucide="filter" class="w-4 sm:w-5 h-4 sm:h-5"></i>
-                </button>
+        <div class="mb-4 sm:mb-6 text-center md:text-left flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-stone-800 dark:text-white">Discover</h1>
+                <p class="text-stone-50 dark:text-stone-400 text-xs sm:text-sm md:text-base">
+                    Explore stories, cultures, people, and places from around the world.
+                </p>
             </div>
-        </form>
-
-        <!-- Tabs -->
-        <div class="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3 mb-5 sm:mb-6 justify-center md:justify-start">
-            @php
-                $tabs = ['stories' => 'Stories', 'cultures' => 'Cultures', 'people' => 'People', 'places' => 'Places'];
-            @endphp
-            @foreach ($tabs as $key => $label)
-                <a href="{{ route('discover.index', ['tab' => $key, 'search' => $search]) }}" class="px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200
-                              {{ $tab === $key
-                ? 'glass-orange text-white'
-                : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600' }}">
-                    {{ $label }}
-                </a>
-            @endforeach
+            @auth
+            <a href="{{ route('cultural-discovery.recommendations') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold transition self-center md:self-auto">
+                <i data-lucide="compass" class="w-4 h-4"></i>
+                <span>Cultural Circles & Opportunities</span>
+            </a>
+            @endauth
         </div>
 
-        <!-- Data Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-            @forelse ($data as $item)
-                @if ($tab === 'stories')
-                    <div class="bg-white dark:bg-stone-900 rounded-xl sm:rounded-2xl shadow-sm overflow-hidden border border-stone-200 dark:border-stone-800">
-                        <img src="{{ Storage::url($item->image) }}" class="w-full h-36 sm:h-44 md:h-48 object-cover" loading="lazy">
-                        <div class="p-3 sm:p-4">
-                            <span
-                                class="inline-block text-[10px] sm:text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-500 px-2 py-0.5 sm:py-1 rounded-full mb-2">
-                                {{ $item->category ?? 'Story' }}
-                            </span>
-                            <h3 class="font-semibold text-stone-800 dark:text-stone-100 text-sm sm:text-base line-clamp-2">
-                                {{ $item->title ?? Str::limit($item->content, 60) }}</h3>
-                            <p class="text-xs sm:text-sm text-stone-500 dark:text-stone-400 line-clamp-2">{{ Str::limit($item->content, 80) }}</p>
-                            <div class="mt-3 flex items-center justify-between text-xs sm:text-sm text-stone-500 dark:text-stone-500">
-                                <div class="flex items-center space-x-2">
-                                    <span
-                                        class="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px] sm:text-xs">
-                                        {{ strtoupper(substr($item->user->name, 0, 1)) }}
-                                    </span>
-                                    <span class="truncate max-w-[80px] sm:max-w-[100px]">{{ $item->user->name }}</span>
-                                </div>
-                                <div class="flex items-center space-x-1">
-                                    <i data-lucide="heart" class="w-3.5 sm:w-4 h-3.5 sm:h-4 text-rose-500"></i>
-                                    <span>{{ $item->taps_count }}</span>
-                                </div>
-                            </div>
+        @auth
+            @include('components.cultural-connections-card')
+
+        @if(isset($opportunities) && !empty($opportunities['opportunities']))
+            <!-- AI Cultural Opportunity Engine -->
+            <div class="mb-6 sm:mb-8 bg-gradient-to-br from-stone-900/90 to-stone-950 border border-amber-500/30 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden"
+                 x-data="{ showPreferences: false, dismissed: [] }">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        </span>
+                        <div>
+                            <h2 class="text-sm sm:text-base font-black text-stone-100 flex items-center gap-2">
+                                Cultural Opportunity Engine
+                                <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">Personalized</span>
+                            </h2>
+                            <p class="text-[11px] text-stone-400">Based on your voluntarily declared cultural background & interests</p>
                         </div>
                     </div>
-                @elseif ($tab === 'cultures')
-                    <div class="bg-white dark:bg-stone-900 rounded-xl sm:rounded-2xl shadow-sm border border-stone-200 dark:border-stone-800 p-3 sm:p-4">
-                        <h3 class="font-semibold text-stone-800 dark:text-stone-100 text-sm sm:text-base">{{ $item->name }}</h3>
-                        <p class="text-xs sm:text-sm text-stone-500 dark:text-stone-400">{{ Str::limit($item->description, 80) }}</p>
+                    <div class="flex items-center gap-2">
+                        <button @click="showPreferences = !showPreferences" 
+                            class="text-xs text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1 px-2.5 py-1 rounded-lg bg-stone-800 border border-stone-700 transition">
+                            <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+                            <span>Preferences</span>
+                        </button>
                     </div>
-                @elseif ($tab === 'people')
-                    <div
-                        class="bg-white dark:bg-stone-900 rounded-xl sm:rounded-2xl shadow-sm border border-stone-200 dark:border-stone-800 p-3 sm:p-4 flex flex-col justify-between h-full">
-                        <!-- User Info Section -->
-                        <a href="{{ route('profile.user', $item->id) }}"
-                            class="flex items-center space-x-3 mb-3 hover:bg-stone-50 dark:hover:bg-stone-800 p-1 -m-1 rounded-lg transition">
-                            <img src="{{ $item->profile_photo_url }}"
-                                class="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border border-stone-200 dark:border-stone-800"
-                                loading="lazy">
-                            <div class="overflow-hidden flex-1">
-                                <h3 class="font-semibold text-stone-800 truncate text-sm sm:text-base">{{ $item->name }}</h3>
-                                <p class="text-xs sm:text-sm text-stone-500 truncate">{{ $item->bio ?? 'No bio available' }}</p>
-                            </div>
+                </div>
+
+                {{-- Preferences Inline Drawer --}}
+                <div x-show="showPreferences" x-cloak class="p-3.5 mb-4 rounded-xl bg-stone-950 border border-stone-800 text-xs text-stone-300 space-y-2">
+                    <div class="font-bold text-stone-200">Recommendation Transparency & Opt-Out Controls</div>
+                    <p class="text-[11px] text-stone-400">You control how Kulturegram matches opportunities. Private conversations are never analyzed for recommendations, and collaborators are only suggested if they explicitly opt in.</p>
+                    <div class="flex flex-wrap gap-2 pt-1">
+                        <form action="{{ route('cultural-discovery.toggle-opt-in') }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="px-3 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 text-[11px] font-semibold border border-stone-700 transition">
+                                Toggle Personalization
+                            </button>
+                        </form>
+                        <a href="{{ route('profile.edit') }}" class="px-3 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 text-[11px] font-semibold border border-stone-700 transition">
+                            Edit Cultural Interests
                         </a>
+                    </div>
+                </div>
 
-                        <!-- Interactions Section -->
-                        <div class="flex items-center justify-between pt-3 border-t border-stone-100">
-                            @auth
-                                <!-- Vibe (Tap) Button -->
-                                <button onclick="toggleUserTap({{ $item->id }})" id="user-vibe-btn-{{ $item->id }}"
-                                    class="flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm flex-1 mr-2
-                                                    {{ auth()->user()->hasTapped($item)
-                                        ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-500 hover:bg-amber-200'
-                                        : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200' }}">
-                                    <i data-lucide="{{ auth()->user()->hasTapped($item) ? 'thumbs-up' : 'thumbs-up' }}" id="user-tap-icon-{{ $item->id }}"
-                                        class="w-4 h-4 {{ auth()->user()->hasTapped($item) ? 'fill-current' : '' }}"></i>
-                                    <span id="user-tap-text-{{ $item->id }}">
-                                        {{ auth()->user()->hasTapped($item) ? 'Vibed' : 'Vibe' }}
+                <!-- Opportunities Horizontal Scroll Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                    @foreach($opportunities['opportunities'] as $opp)
+                        <div x-show="!dismissed.includes('{{ $opp['type'] }}_{{ $opp['target_id'] }}')" 
+                             class="bg-stone-900/90 border border-stone-800 hover:border-amber-500/40 rounded-xl p-3.5 flex flex-col justify-between transition group">
+                            <div>
+                                <div class="flex items-start justify-between gap-2 mb-2">
+                                    <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full
+                                        @if($opp['type'] === 'preservation_project') bg-amber-500/20 text-amber-400 border border-amber-500/30
+                                        @elseif($opp['type'] === 'community') bg-emerald-500/20 text-emerald-400 border border-emerald-500/30
+                                        @elseif($opp['type'] === 'event') bg-sky-500/20 text-sky-400 border border-sky-500/30
+                                        @else bg-purple-500/20 text-purple-400 border border-purple-500/30 @endif">
+                                        {{ str_replace('_', ' ', $opp['type']) }}
                                     </span>
-                                </button>
-
-                                <!-- Lock-in Button -->
-                                @if(auth()->id() !== $item->id)
-                                    <button onclick="toggleUserLockIn({{ $item->id }})" id="user-lockin-btn-{{ $item->id }}"
-                                        class="flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-sm flex-1
-                                                            {{ auth()->user()->hasLockedIn($item)
-                                            ? 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600'
-                                            : 'glass-orange text-white hover:scale-[1.02]' }}">
-                                        <i data-lucide="{{ auth()->user()->hasLockedIn($item) ? 'user-check' : 'user-plus' }}"
-                                            id="user-lockin-icon-{{ $item->id }}" class="w-4 h-4"></i>
-                                        <span id="user-lockin-text-{{ $item->id }}">
-                                            {{ auth()->user()->hasLockedIn($item) ? 'Locked In' : 'Lock In' }}
-                                        </span>
+                                    <button @click="fetch('{{ route('cultural-opportunities.dismiss') }}', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                                                body: JSON.stringify({ type: '{{ $opp['type'] }}', target_id: {{ $opp['target_id'] }} })
+                                            }); dismissed.push('{{ $opp['type'] }}_{{ $opp['target_id'] }}')" 
+                                            class="text-stone-500 hover:text-stone-300 transition" title="Dismiss this recommendation">
+                                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
                                     </button>
-                                @endif
-                            @else
-                                <div class="text-xs text-stone-400">Sign in to connect</div>
-                            @endauth
+                                </div>
+
+                                <a href="{{ $opp['url'] }}" class="block font-bold text-stone-100 group-hover:text-amber-400 text-sm mb-1 transition line-clamp-1">
+                                    {{ $opp['title'] }}
+                                </a>
+                                <p class="text-[11px] text-stone-400 mb-2">{{ $opp['subtitle'] }}</p>
+
+                                <div class="p-2 rounded-lg bg-stone-950/70 border border-stone-800/80 text-[10px] text-stone-300 mb-3 flex items-start gap-1.5">
+                                    <i data-lucide="info" class="w-3.5 h-3.5 shrink-0 text-amber-400/80 mt-0.5"></i>
+                                    <span>{{ $opp['explanation'] }}</span>
+                                </div>
+                            </div>
+
+                            <a href="{{ $opp['url'] }}" class="py-1.5 text-center rounded-lg bg-stone-800 hover:bg-amber-600 text-stone-200 hover:text-white text-xs font-bold transition flex items-center justify-center gap-1">
+                                <span>Explore Opportunity</span>
+                                <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                            </a>
                         </div>
-                    </div>
-                @elseif ($tab === 'places')
-                    <div class="bg-white dark:bg-stone-900 rounded-xl sm:rounded-2xl shadow-sm border border-stone-200 dark:border-stone-800 overflow-hidden">
-                        <div class="p-3 sm:p-4">
-                            <h3 class="font-semibold text-stone-800 dark:text-stone-100 text-sm sm:text-base">{{ $item->title }}</h3>
-                            <p class="text-xs sm:text-sm text-stone-500 dark:text-stone-400">{{ $item->location }}</p>
-                            <p class="text-[10px] sm:text-xs text-stone-400">By {{ $item->organizer->name }}</p>
-                        </div>
-                    </div>
-                @endif
-            @empty
-                <p class="col-span-full text-center text-stone-500 text-sm">No results found.</p>
-            @endforelse
+                    @endforeach
+                </div>
+            </div>
+        @endif
+        @endauth
+
+        <!-- Search & Dynamic Tabs Container -->
+        <div x-data="discoverTabs('{{ $tab }}', '{{ addslashes($search ?? '') }}')" x-init="init()" class="space-y-4 sm:space-y-6">
+            <!-- Search -->
+            <form method="GET" action="{{ route('discover.index') }}" @submit.prevent="handleSearch()" class="mb-4 sm:mb-6">
+                <div class="relative">
+                    <input type="hidden" name="tab" :value="currentTab">
+                    <input type="text" name="search" x-model="searchQuery"
+                        class="w-full rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 pl-10 sm:pl-12 pr-4 py-2 sm:py-3 placeholder-stone-400 dark:placeholder-stone-500 text-stone-700 dark:text-stone-200 focus:ring-amber-500 focus:border-amber-500 text-sm sm:text-base outline-none"
+                        placeholder="Search...">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-stone-400">
+                        <i data-lucide="search" class="w-4 sm:w-5 h-4 sm:h-5"></i>
+                    </span>
+                    <button type="submit" class="absolute inset-y-0 right-0 px-3 sm:px-4 text-stone-500 hover:text-amber-600 transition">
+                        <i data-lucide="filter" class="w-4 sm:w-5 h-4 sm:h-5"></i>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Tabs -->
+            <div class="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3 mb-5 sm:mb-6 justify-center md:justify-start">
+                @php
+                    $tabs = ['stories' => 'Stories', 'cultures' => 'Cultures', 'people' => 'People', 'places' => 'Places'];
+                @endphp
+                @foreach ($tabs as $key => $label)
+                    <a href="{{ route('discover.index', ['tab' => $key, 'search' => $search]) }}"
+                       @click.prevent="selectTab('{{ $key }}')"
+                       :class="currentTab === '{{ $key }}'
+                            ? 'glass-orange text-white shadow-sm'
+                            : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600'"
+                       class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer flex items-center gap-1.5 select-none">
+                        <span>{{ $label }}</span>
+                        <span x-show="loading && currentTab === '{{ $key }}'" class="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    </a>
+                @endforeach
+            </div>
+
+            <!-- Data Grid with Smooth Transition -->
+            <div id="discover-grid-container" class="relative min-h-[250px] transition-opacity duration-200" :class="loading ? 'opacity-40 pointer-events-none' : 'opacity-100'">
+                <div id="discover-grid-content">
+                    @include('discover.partials.grid', ['data' => $data, 'tab' => $tab])
+                </div>
+            </div>
         </div>
 
         <!-- Trending Stats -->
@@ -170,6 +185,92 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
+        });
+
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('discoverTabs', (initialTab, initialSearch) => ({
+                currentTab: initialTab || 'stories',
+                searchQuery: initialSearch || '',
+                loading: false,
+                cache: {},
+
+                init() {
+                    const initialGrid = document.getElementById('discover-grid-content');
+                    if (initialGrid) {
+                        this.cache[this.currentTab + ':' + this.searchQuery] = initialGrid.innerHTML;
+                    }
+
+                    window.addEventListener('popstate', (e) => {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const tab = urlParams.get('tab') || 'stories';
+                        const search = urlParams.get('search') || '';
+                        this.searchQuery = search;
+                        this.selectTab(tab, false);
+                    });
+                },
+
+                async selectTab(tabKey, pushHistory = true) {
+                    if (this.currentTab === tabKey && !this.loading && pushHistory) {
+                        return;
+                    }
+
+                    this.currentTab = tabKey;
+                    const cacheKey = tabKey + ':' + this.searchQuery;
+
+                    const url = new URL('{{ route("discover.index", [], false) }}', window.location.origin);
+                    url.searchParams.set('tab', tabKey);
+                    if (this.searchQuery) {
+                        url.searchParams.set('search', this.searchQuery);
+                    }
+
+                    if (pushHistory) {
+                        window.history.pushState({ tab: tabKey, search: this.searchQuery }, '', url.toString());
+                    }
+
+                    if (this.cache[cacheKey]) {
+                        const container = document.getElementById('discover-grid-container');
+                        if (container) {
+                            container.innerHTML = '<div id="discover-grid-content">' + this.cache[cacheKey] + '</div>';
+                            this.$nextTick(() => {
+                                if (window.lucide) window.lucide.createIcons();
+                            });
+                        }
+                        return;
+                    }
+
+                    this.loading = true;
+                    try {
+                        const res = await fetch(url.toString(), {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                                'X-Discover-Tab': tabKey
+                            }
+                        });
+                        const data = await res.json();
+                        if (data && data.html) {
+                            this.cache[cacheKey] = data.html;
+                            const container = document.getElementById('discover-grid-container');
+                            if (container) {
+                                container.innerHTML = '<div id="discover-grid-content">' + data.html + '</div>';
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Failed to load tab:', err);
+                        window.location.href = url.toString();
+                    } finally {
+                        this.loading = false;
+                        this.$nextTick(() => {
+                            if (window.lucide) window.lucide.createIcons();
+                        });
+                    }
+                },
+
+                async handleSearch() {
+                    this.cache = {};
+                    await this.selectTab(this.currentTab, true);
+                }
+            }));
         });
 
         @auth

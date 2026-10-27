@@ -53,6 +53,8 @@ class LiveStreamController extends Controller
         $thumbnailPath = null;
         if ($request->hasFile('thumbnail')) {
             $thumbnailPath = $request->file('thumbnail')->store('stream-thumbnails', 'public');
+        } elseif ($request->filled('ai_thumbnail_path')) {
+            $thumbnailPath = $request->input('ai_thumbnail_path');
         }
 
         $stream = LiveStream::create([
@@ -243,4 +245,96 @@ class LiveStreamController extends Controller
             'message' => $message->fresh(),
         ]);
     }
+
+    /**
+     * Get live catch-up dossier for late joiners and viewers
+     */
+    public function catchUp(
+        LiveStream $stream,
+        \App\Services\MetaAI\LiveStreamCommunityIntelligenceService $intelligenceService
+    ) {
+        $dossier = $intelligenceService->getCatchUpDossier($stream, Auth::user());
+
+        return response()->json($dossier);
+    }
+
+    /**
+     * Request an updated AI conversation summary
+     */
+    public function generateSummary(
+        LiveStream $stream,
+        Request $request,
+        \App\Services\MetaAI\LiveStreamCommunityIntelligenceService $intelligenceService
+    ) {
+        $force = (bool) $request->input('force', false);
+        $dossier = $intelligenceService->generateLiveSummary($stream, $force);
+
+        return response()->json($dossier);
+    }
+
+    /**
+     * Extract a draft cultural heritage record from stream for custodian review
+     */
+    public function extractDraftRecord(
+        LiveStream $stream,
+        Request $request,
+        \App\Services\MetaAI\LiveStreamCommunityIntelligenceService $intelligenceService
+    ) {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['error' => 'Authentication required'], 401);
+        }
+
+        // Only stream host, verified contributor, or admin can extract archival draft
+        if ($stream->user_id !== $user->id && !$user->is_admin) {
+            return response()->json(['error' => 'Only the stream host or platform curators can extract archive drafts.'], 403);
+        }
+
+        $draft = $intelligenceService->extractDraftRecord($stream, $user);
+
+        return response()->json([
+            'success' => true,
+            'draft' => $draft,
+            'message' => 'Cultural heritage draft extracted successfully. You can now review and enrich it.',
+            'redirect_url' => route('cultural-hub.drafts.show', $draft->id),
+        ]);
+    }
+
+    /**
+     * AI-Assisted Live Stream Caption & Title Generator
+     */
+    public function aiSuggestCaption(Request $request, \App\Services\MetaAI\EventDiscoveryService $discoveryService)
+    {
+        $request->validate([
+            'title' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:2000',
+            'topic' => 'nullable|string|max:2000',
+            'category' => 'nullable|string|max:100',
+        ]);
+
+        $res = $discoveryService->suggestLiveCaption($request->all());
+
+        return response()->json($res);
+    }
+
+    /**
+     * AI-Assisted Live Stream Cover Thumbnail Generator
+     */
+    public function aiGenerateThumbnail(Request $request, \App\Services\MetaAI\MuseImageService $imageService)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'category' => 'nullable|string|max:100',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $res = $imageService->generateStreamThumbnail(
+            $request->input('title'),
+            $request->input('category', 'Heritage'),
+            $request->input('notes')
+        );
+
+        return response()->json($res);
+    }
 }
+

@@ -123,7 +123,7 @@ class SystemPrivacyAuditService
      */
     protected function checkPrivateVaultIsolation(): array
     {
-        $privateVaultCount = VaultItem::where('privacy_level', 'private')->count();
+        $privateVaultCount = VaultItem::where('access_level', 'private')->count();
         $totalVaultCount = VaultItem::count();
 
         return [

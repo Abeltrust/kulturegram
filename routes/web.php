@@ -15,6 +15,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\LiveStreamController;
 use App\Http\Controllers\EducationalHubController;
 use App\Http\Controllers\LivingHeritageController;
+use App\Http\Controllers\CulturalClassController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -26,6 +27,18 @@ Route::get('/', [TimelineController::class, 'index'])->name('timeline.index');
 Route::get('/cultural-hub', [CulturalHubController::class, 'index'])->name('cultural-hub.index');
 Route::get('/discover', [DiscoverController::class, 'index'])->name('discover.index');
 Route::get('/education', [EducationalHubController::class, 'index'])->name('education.index');
+
+// Educational Hub - Cultural Classes & Language Studio
+Route::get('/education/classes', [CulturalClassController::class, 'index'])->name('education.classes.index');
+Route::get('/education/classes/create', [CulturalClassController::class, 'create'])->middleware('auth')->name('education.classes.create');
+Route::post('/education/classes', [CulturalClassController::class, 'store'])->middleware('auth')->name('education.classes.store');
+Route::post('/education/classes/ai-transcribe', [CulturalClassController::class, 'transcribeAi'])->middleware('auth')->name('education.classes.ai-transcribe');
+Route::post('/education/classes/ai-studio-background', [CulturalClassController::class, 'generateStudioBackground'])->middleware('auth')->name('education.classes.ai-studio-background');
+Route::get('/education/classes/{class}/subtitles.vtt', [CulturalClassController::class, 'subtitlesVtt'])->name('education.classes.subtitles');
+Route::get('/education/classes/{slug}', [CulturalClassController::class, 'show'])->name('education.classes.show');
+Route::post('/education/classes/{class}/enroll', [CulturalClassController::class, 'enroll'])->middleware('auth')->name('education.classes.enroll');
+Route::post('/education/classes/{class}/discussions', [CulturalClassController::class, 'addDiscussion'])->middleware('auth')->name('education.classes.discussion');
+
 Route::get('/privacy', function () { return view('pages.privacy'); })->name('privacy');
 Route::get('/terms', function () { return view('pages.terms'); })->name('terms');
 
@@ -70,6 +83,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/cultural-hub/{culture}', [CulturalHubController::class, 'destroy'])->name('cultural-hub.destroy');
     Route::post('/cultural-hub/{culture}/lock-in', [CulturalHubController::class, 'lockin'])->name('cultural-hub.lock-in');
     Route::post('/cultural-hub/{culture}/resonance', [CulturalHubController::class, 'resonance'])->name('cultural-hub.resonance');
+    Route::post('/cultural-hub/structure-narrative', [CulturalHubController::class, 'structureNarrative'])->name('cultural-hub.structure-narrative');
+    Route::post('/cultural-hub/{culture}/contribute', [CulturalHubController::class, 'submitContribution'])->name('cultural-hub.contribute');
+    Route::post('/cultural-hub/{culture}/review-status', [CulturalHubController::class, 'updateReviewStatus'])->name('cultural-hub.review-status');
 
     // Living Heritage Capture Pipeline
     Route::get('/cultural-hub/living-heritage', [LivingHeritageController::class, 'index'])->name('cultural-hub.living-heritage.index');
@@ -160,6 +176,30 @@ Route::middleware('auth')->group(function () {
     Route::post('/live-stream/{stream}/messages/{message}/dismiss', [LiveStreamController::class, 'dismissFlag'])->name('live-stream.messages.dismiss');
     Route::post('/live-stream/{stream}/messages/{message}/remove', [LiveStreamController::class, 'removeMessage'])->name('live-stream.messages.remove');
 
+    // AI Community Intelligence (Live summaries, catch-up assistant, and draft record extraction)
+    Route::get('/live-stream/{stream}/catch-up', [LiveStreamController::class, 'catchUp'])->name('live-stream.catch-up');
+    Route::post('/live-stream/{stream}/generate-summary', [LiveStreamController::class, 'generateSummary'])->name('live-stream.generate-summary');
+    Route::post('/live-stream/{stream}/extract-draft-record', [LiveStreamController::class, 'extractDraftRecord'])->name('live-stream.extract-draft-record');
+
+    // AI Cultural Opportunity Engine
+    Route::get('/cultural-opportunities', [\App\Http\Controllers\CulturalOpportunityController::class, 'index'])->name('cultural-opportunities.index');
+    Route::post('/cultural-opportunities/dismiss', [\App\Http\Controllers\CulturalOpportunityController::class, 'dismiss'])->name('cultural-opportunities.dismiss');
+    Route::post('/cultural-opportunities/preferences', [\App\Http\Controllers\CulturalOpportunityController::class, 'updatePreferences'])->name('cultural-opportunities.preferences');
+
+    // AI-Assisted Collective Cultural Preservation (Draft review & submission workflow)
+    Route::get('/cultural-hub/drafts', [\App\Http\Controllers\CulturalRecordDraftController::class, 'index'])->name('cultural-hub.drafts.index');
+    Route::get('/cultural-hub/drafts/{draft}', [\App\Http\Controllers\CulturalRecordDraftController::class, 'show'])->name('cultural-hub.drafts.show');
+    Route::put('/cultural-hub/drafts/{draft}', [\App\Http\Controllers\CulturalRecordDraftController::class, 'update'])->name('cultural-hub.drafts.update');
+    Route::post('/cultural-hub/drafts/{draft}/submit', [\App\Http\Controllers\CulturalRecordDraftController::class, 'submitToModeration'])->name('cultural-hub.drafts.submit');
+    Route::delete('/cultural-hub/drafts/{draft}', [\App\Http\Controllers\CulturalRecordDraftController::class, 'destroy'])->name('cultural-hub.drafts.destroy');
+
+    // AI Multilingual Cultural Access
+    Route::post('/cultural-hub/{culture}/translate', [CulturalHubController::class, 'translate'])->name('cultural-hub.translate');
+    Route::post('/cultural-hub/{culture}/adapt-reading', [CulturalHubController::class, 'adaptReading'])->name('cultural-hub.adapt-reading');
+
+    // AI Feedback and Continuous Improvement API
+    Route::post('/api/ai/feedback', [\App\Http\Controllers\AiFeedbackController::class, 'store'])->name('ai.feedback.store');
+
     // Cultural Discovery & Like-Minded Connections
     Route::get('/cultural-discovery/recommendations', [\App\Http\Controllers\CulturalDiscoveryController::class, 'recommendations'])->name('cultural-discovery.recommendations');
     Route::post('/cultural-discovery/dismiss', [\App\Http\Controllers\CulturalDiscoveryController::class, 'dismiss'])->name('cultural-discovery.dismiss');
@@ -168,8 +208,14 @@ Route::middleware('auth')->group(function () {
     // Content Privacy Pre-Scan API
     Route::post('/api/privacy/scan', [\App\Http\Controllers\Admin\PrivacyAuditController::class, 'scanContent'])->name('privacy.scan');
 
-    // AI-Assisted Event Reach Optimizer
+    // AI-Assisted Event Reach Optimizer, Concept Description & Flyer Generation
     Route::post('/events/ai-optimize', [EventController::class, 'aiOptimize'])->name('events.ai-optimize');
+    Route::post('/events/ai-suggest-description', [EventController::class, 'aiSuggestDescription'])->name('events.ai-suggest-description');
+    Route::post('/events/ai-generate-flyer', [EventController::class, 'aiGenerateFlyer'])->name('events.ai-generate-flyer');
+
+    // AI-Assisted Live Stream Caption & Thumbnail Generation
+    Route::post('/live-stream/ai-suggest-caption', [LiveStreamController::class, 'aiSuggestCaption'])->name('live-stream.ai-suggest-caption');
+    Route::post('/live-stream/ai-generate-thumbnail', [LiveStreamController::class, 'aiGenerateThumbnail'])->name('live-stream.ai-generate-thumbnail');
 
     // Kulturegram Meet - Virtual Classroom
     Route::get('/events/{event}/meet', [EventController::class, 'meet'])->name('events.meet');
@@ -180,6 +226,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/cultures/{culture}/approve', [\App\Http\Controllers\Admin\ModerationController::class, 'approve'])->name('cultures.approve');
         Route::post('/cultures/{culture}/feature', [\App\Http\Controllers\Admin\ModerationController::class, 'feature'])->name('cultures.feature');
         Route::delete('/cultures/{culture}', [\App\Http\Controllers\Admin\ModerationController::class, 'destroy'])->name('cultures.destroy');
+        Route::post('/cultural-hub/drafts/{draft}/approve', [\App\Http\Controllers\CulturalRecordDraftController::class, 'approve'])->name('drafts.approve');
+
+        // AI Feedback and Metrics Dashboard
+        Route::get('/ai-feedback', [\App\Http\Controllers\AiFeedbackController::class, 'adminIndex'])->name('ai-feedback.index');
+        Route::post('/ai-feedback/{log}/status', [\App\Http\Controllers\AiFeedbackController::class, 'updateStatus'])->name('ai-feedback.status');
 
         // AI System Privacy Policy Audit
         Route::get('/privacy-audit', [\App\Http\Controllers\Admin\PrivacyAuditController::class, 'index'])->name('privacy-audit.index');
@@ -188,3 +239,4 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('/cultural-hub/{culture}', [CulturalHubController::class, 'show'])->name('cultural-hub.show');
+Route::post('/cultural-hub/{culture}/companion', [CulturalHubController::class, 'askCompanion'])->name('cultural-hub.companion');

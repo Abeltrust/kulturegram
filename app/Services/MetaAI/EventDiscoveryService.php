@@ -6,6 +6,7 @@ use App\Models\CulturalRecommendationDismissal;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class EventDiscoveryService
 {
@@ -233,6 +234,236 @@ PROMPT;
                 'reach_tips' => strip_tags(trim((string) ($decoded['reach_tips'] ?? ''))),
                 'timing_suggestions' => strip_tags(trim((string) ($decoded['reach_tips'] ?? ''))),
             ],
+        ];
+    }
+
+    /**
+     * AI-Assisted Cultural Description & Concept Generator
+     * Takes raw key points or draft concept and generates a captivating, respectful cultural presentation.
+     */
+    public function suggestDescription(array $input): array
+    {
+        $rawPoints = trim((string) ($input['key_points'] ?? $input['description'] ?? ''));
+        $title = trim((string) ($input['title'] ?? 'Cultural Gathering'));
+        $type = trim((string) ($input['type'] ?? 'workshop'));
+        $culturalFocus = trim((string) ($input['cultural_focus'] ?? ''));
+
+        if (empty($rawPoints) && empty($title)) {
+            return [
+                'success' => false,
+                'error' => 'Please provide key points or an event title to suggest a cultural description.',
+            ];
+        }
+
+        if (!$this->client->isConfigured()) {
+            // Intelligent heuristic fallback
+            $concept = !empty($rawPoints) 
+                ? "An immersive gathering exploring " . Str::limit($rawPoints, 120) 
+                : "An authentic cultural gathering celebrating living heritage and community traditions.";
+            
+            $formatted = "Join us for {$title}, a dedicated {$type} centered around cultural heritage and community learning.\n\n"
+                       . (!empty($rawPoints) ? "Key Highlights:\n• " . str_replace(["\n", "\r"], "\n• ", $rawPoints) . "\n\n" : "")
+                       . "Attendees will gain firsthand insights into living traditions, engage directly with custodians, and participate in preserving ancestral knowledge for future generations. All community members, youth, and heritage enthusiasts are warmly welcome.";
+
+            return [
+                'success' => true,
+                'configured' => false,
+                'concept_summary' => $concept,
+                'suggested_description' => $formatted,
+                'tagline' => "Honoring our ancestors, empowering our community.",
+            ];
+        }
+
+        $systemPrompt = <<<PROMPT
+You are Kulturegram's Master Cultural Curator and Heritage Planner.
+The user will provide rough key points or an initial brief about a planned cultural event or gathering.
+Transform these key points into an engaging, culturally grounded, and captivating presentation.
+
+Return response EXCLUSIVELY in valid JSON matching this schema:
+{
+  "concept_summary": "1-2 sentence core concept and thematic focus of this gathering",
+  "suggested_description": "Full 2-3 paragraph presentation: introductory hook, specific cultural activities/knowledge shared, and an authentic welcoming call to the community.",
+  "tagline": "Short evocative cultural tagline"
+}
+PROMPT;
+
+        $userPrompt = "Event Title: {$title}\nType: {$type}\nCultural Focus: {$culturalFocus}\nKey Points / Draft Notes:\n{$rawPoints}";
+
+        $payload = [
+            'model' => $this->model,
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $userPrompt],
+            ],
+            'temperature' => 0.3,
+            'max_tokens' => 1200,
+        ];
+
+        $res = $this->client->postJson('chat/completions', $payload, $this->model);
+        if (!$res['success']) {
+            $formatted = "Join us for {$title}, an interactive {$type} focusing on authentic community traditions.\n\n"
+                       . "During this gathering, participants will explore: {$rawPoints}.\n\n"
+                       . "This session provides a space to connect with elders, custodians, and peers passionate about living cultural preservation. All are welcome to attend, listen, and share.";
+
+            return [
+                'success' => true,
+                'configured' => true,
+                'fallback' => true,
+                'concept_summary' => "Cultural gathering celebrating community heritage and ancestral practices.",
+                'suggested_description' => $formatted,
+                'tagline' => "Preserving traditions through community connection.",
+            ];
+        }
+
+        $raw = $this->extractContent($res['data']);
+        $clean = trim($raw);
+        if (preg_match('/```(?:json)?\s*([\s\S]*?)\s*```/i', $clean, $matches)) {
+            $clean = trim($matches[1]);
+        } elseif (preg_match('/(\{[\s\S]*\})/s', $clean, $matches)) {
+            $clean = trim($matches[1]);
+        }
+
+        $formattedFallback = "Join us for {$title}, an interactive {$type} focusing on authentic community traditions.\n\n"
+                           . (!empty($rawPoints) ? "During this gathering, participants will explore: {$rawPoints}.\n\n" : "")
+                           . "This session provides a space to connect with elders, custodians, and peers passionate about living cultural preservation. All are welcome to attend, listen, and share.";
+
+        $decoded = json_decode($clean, true);
+        if (!is_array($decoded) || empty($decoded['suggested_description'])) {
+            return [
+                'success' => true,
+                'configured' => true,
+                'concept_summary' => "Cultural gathering celebrating community heritage.",
+                'suggested_description' => !empty($clean) ? $clean : $formattedFallback,
+                'tagline' => "Living heritage, shared together.",
+            ];
+        }
+
+        return [
+            'success' => true,
+            'configured' => true,
+            'concept_summary' => strip_tags(trim((string) ($decoded['concept_summary'] ?? ''))),
+            'suggested_description' => strip_tags(trim((string) ($decoded['suggested_description'] ?? $formattedFallback))),
+            'tagline' => strip_tags(trim((string) ($decoded['tagline'] ?? ''))),
+        ];
+    }
+
+    /**
+     * AI-Assisted Live Stream Caption & Title Generator
+     */
+    public function suggestLiveCaption(array $input): array
+    {
+        $rawNotes = trim((string) ($input['description'] ?? $input['key_points'] ?? $input['topic'] ?? ''));
+        $title = trim((string) ($input['title'] ?? ''));
+        $category = trim((string) ($input['category'] ?? 'Heritage'));
+
+        if (empty($rawNotes) && empty($title)) {
+            return [
+                'success' => false,
+                'error' => 'Please provide stream notes, a topic, or an initial title.',
+            ];
+        }
+
+        if (!$this->client->isConfigured()) {
+            $suggestedTitle = !empty($title) ? $title : "Live Cultural Broadcast: " . Str::limit($rawNotes, 40);
+            $caption = (!empty($rawNotes) ? $rawNotes . "\n\n" : "") . "🔴 Streaming live on Kulturegram! Join the broadcast to ask questions in real time, connect with elders and community members, and learn about living African traditions.";
+
+            return [
+                'success' => true,
+                'configured' => false,
+                'suggested_title' => $suggestedTitle,
+                'caption' => $caption,
+                'suggested_category' => !empty($category) ? $category : 'Oral Traditions',
+            ];
+        }
+
+        $systemPrompt = <<<PROMPT
+You are Kulturegram's Live Broadcast Producer.
+Given an organizer's rough notes or topic about a live stream broadcast, generate:
+1. A captivating, broadcast-ready cultural stream title.
+2. An engaging live stream caption with a strong hook, viewer discussion prompt, and community call-to-action.
+3. Best category (e.g., Oral Traditions, Traditional Music, Living Crafts, Language Circle, Cultural Ritual).
+
+Return response EXCLUSIVELY in valid JSON matching this schema:
+{
+  "suggested_title": "Short, catchy, broadcast-ready title",
+  "caption": "Captivating 1-2 paragraph description with live viewer hook and discussion prompt",
+  "suggested_category": "Category name"
+}
+PROMPT;
+
+        $userPrompt = "Draft Title: {$title}\nCategory: {$category}\nStream Notes / Topic:\n{$rawNotes}";
+
+        $payload = [
+            'model' => $this->model,
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $userPrompt],
+            ],
+            'temperature' => 0.3,
+            'max_tokens' => 800,
+        ];
+
+        $res = $this->client->postJson('chat/completions', $payload, $this->model);
+        if (!$res['success']) {
+            return [
+                'success' => true,
+                'configured' => true,
+                'fallback' => true,
+                'suggested_title' => !empty($title) ? $title : 'Live Cultural Session',
+                'caption' => (!empty($rawNotes) ? $rawNotes . "\n\n" : '') . 'Join our live broadcast on Kulturegram to participate in real-time cultural dialogue and ask questions!',
+                'suggested_category' => $category,
+            ];
+        }
+
+        $raw = $this->extractContent($res['data']);
+        $clean = trim($raw);
+        if (preg_match('/```(?:json)?\s*([\s\S]*?)\s*```/i', $clean, $matches)) {
+            $clean = trim($matches[1]);
+        } elseif (preg_match('/(\{[\s\S]*\})/s', $clean, $matches)) {
+            $clean = trim($matches[1]);
+        }
+
+        $decoded = json_decode($clean, true);
+        if (!is_array($decoded)) {
+            $fallbackCaption = !empty($clean) ? $clean : ((!empty($rawNotes) ? $rawNotes . "\n\n" : '') . "🔴 Streaming live on Kulturegram! Join the broadcast to ask questions in real time, connect with elders and community members, and learn about living African traditions.");
+            return [
+                'success' => true,
+                'suggested_title' => $title ?: 'Live Cultural Gathering',
+                'caption' => $fallbackCaption,
+                'suggested_category' => $category,
+            ];
+        }
+
+        $captionText = !empty($decoded['caption']) 
+            ? $decoded['caption'] 
+            : (!empty($decoded['description']) 
+                ? $decoded['description'] 
+                : (!empty($decoded['captivating_caption']) 
+                    ? $decoded['captivating_caption'] 
+                    : $rawNotes));
+
+        if (empty(trim((string) $captionText))) {
+            $captionText = (!empty($rawNotes) ? $rawNotes . "\n\n" : '') . "🔴 Streaming live on Kulturegram! Join the broadcast to ask questions in real time, connect with elders and community members, and learn about living African traditions.";
+        }
+
+        $titleText = !empty($decoded['suggested_title'])
+            ? $decoded['suggested_title']
+            : (!empty($decoded['title'])
+                ? $decoded['title']
+                : ($title ?: 'Live Cultural Broadcast'));
+
+        $categoryText = !empty($decoded['suggested_category'])
+            ? $decoded['suggested_category']
+            : (!empty($decoded['category'])
+                ? $decoded['category']
+                : $category);
+
+        return [
+            'success' => true,
+            'configured' => true,
+            'suggested_title' => strip_tags(trim((string) $titleText)),
+            'caption' => strip_tags(trim((string) $captionText)),
+            'suggested_category' => strip_tags(trim((string) $categoryText)),
         ];
     }
 

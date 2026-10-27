@@ -321,6 +321,7 @@
                         ['route' => 'timeline.index', 'icon' => 'home', 'label' => 'Timeline', 'tooltip' => 'Your chronological feed'],
                         ['route' => 'discover.index', 'icon' => 'compass', 'label' => 'Discover', 'tooltip' => 'Find new stories & cultures', 'auth' => true],
                         ['route' => 'cultural-hub.index', 'icon' => 'globe', 'label' => 'Cultural Hub', 'tooltip' => 'Explore global heritage'],
+                        ['route' => 'cultural-hub.drafts.index', 'icon' => 'file-text', 'label' => 'Heritage Drafts', 'tooltip' => 'Living heritage drafts & reviews', 'auth' => true],
                         ['route' => 'communities.index', 'icon' => 'users', 'label' => 'Communities', 'tooltip' => 'Join cultural groups', 'auth' => true],
                         ['route' => 'events.index', 'icon' => 'calendar', 'label' => 'Events', 'tooltip' => 'Cultural events & meetups', 'auth' => true],
                         ['route' => 'education.index', 'icon' => 'graduation-cap', 'label' => 'Edu Hub', 'tooltip' => 'Classes, rituals & trainings'],

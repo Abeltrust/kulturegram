@@ -24,18 +24,144 @@
                 Host traditional rituals, join professional trainings, or attend cultural lectures. The hub for preservation and growth.
             </p>
             <div class="flex flex-wrap gap-4">
-                <a href="{{ route('events.create') }}" class="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-2xl font-black uppercase tracking-wider shadow-lg shadow-amber-500/20 hover:scale-105 transition-transform">
-                    Host a Class
+                <a href="{{ route('education.classes.create') }}" class="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-2xl font-black uppercase tracking-wider shadow-lg shadow-amber-500/20 hover:scale-105 transition-transform flex items-center gap-2">
+                    <i data-lucide="video" class="w-4 h-4"></i>
+                    <span>Teach a Class</span>
                 </a>
-                <a href="#browse" class="px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-2xl font-black uppercase tracking-wider hover:bg-white/20 transition-all">
-                    Browse All
+                <a href="{{ route('education.classes.index') }}" class="px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-2xl font-black uppercase tracking-wider hover:bg-white/20 transition-all flex items-center gap-2">
+                    <i data-lucide="languages" class="w-4 h-4"></i>
+                    <span>Language & Heritage Studio</span>
+                </a>
+                <a href="#browse-events" class="px-6 py-4 text-stone-400 hover:text-white font-bold text-sm flex items-center gap-1 transition">
+                    <span>Live Gatherings</span>
+                    <i data-lucide="arrow-down" class="w-3.5 h-3.5"></i>
                 </a>
             </div>
         </div>
     </div>
 
-    {{-- Category Filters --}}
-    <div id="browse" class="flex flex-wrap items-center gap-3 mb-10 overflow-x-auto pb-4 scrollbar-hide">
+    {{-- Cultural Classes & Language Studio Showcase Section --}}
+    <div class="mb-14 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold mb-2">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                    <span>AI Subtitles & Bilingual Vocab</span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-black text-stone-800 dark:text-stone-100 tracking-tight">
+                    Cultural Classes & Language Studio
+                </h2>
+                <p class="text-stone-500 dark:text-stone-400 text-xs sm:text-sm mt-0.5">
+                    Watch custodians and instructors teach Hausa, Yoruba, Igbo, and ancestral traditions with synchronized subtitles.
+                </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <a href="{{ route('education.classes.index') }}" 
+                   class="text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-500 hover:underline flex items-center gap-1">
+                    <span>View All Classes</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </a>
+            </div>
+        </div>
+
+        @if(isset($featuredClasses) && $featuredClasses->count() > 0)
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach($featuredClasses as $cls)
+                    <div class="group bg-white dark:bg-stone-900 rounded-3xl overflow-hidden border border-stone-200 dark:border-stone-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full hover:border-amber-500/40">
+                        {{-- Thumbnail Container --}}
+                        <div class="relative h-48 overflow-hidden bg-stone-950">
+                            @if($cls->thumbnail_url)
+                                <img src="{{ Str::startsWith($cls->thumbnail_url, ['http://', 'https://']) ? $cls->thumbnail_url : asset('storage/' . $cls->thumbnail_url) }}" 
+                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                     alt="{{ $cls->title }}"
+                                     loading="lazy">
+                            @else
+                                <div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-stone-800 to-stone-950 p-6 text-center">
+                                    <i data-lucide="languages" class="w-10 h-10 text-amber-500/60 mb-2"></i>
+                                    <span class="text-xs font-bold text-stone-400">{{ $cls->cultural_focus }}</span>
+                                </div>
+                            @endif
+
+                            <div class="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10">
+                                @if($cls->target_language)
+                                    <span class="bg-stone-900/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-amber-400 border border-amber-500/30">
+                                        {{ $cls->target_language }}
+                                    </span>
+                                @endif
+                            </div>
+
+                            <div class="absolute top-3 right-3 z-10">
+                                @if($cls->isFree())
+                                    <span class="bg-emerald-500/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black uppercase text-white shadow-sm">
+                                        Free
+                                    </span>
+                                @else
+                                    <span class="bg-amber-500/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black uppercase text-white shadow-sm">
+                                        ${{ number_format($cls->price, 2) }}
+                                    </span>
+                                @endif
+                            </div>
+
+                            <a href="{{ route('education.classes.show', $cls->slug) }}" 
+                               class="absolute inset-0 bg-stone-900/30 group-hover:bg-stone-900/50 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100">
+                                <div class="w-12 h-12 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform">
+                                    <i data-lucide="play" class="w-5 h-5 fill-current ml-0.5"></i>
+                                </div>
+                            </a>
+                        </div>
+
+                        {{-- Details --}}
+                        <div class="p-5 flex-1 flex flex-col">
+                            <div class="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-500 mb-1">
+                                {{ $cls->cultural_focus }}
+                            </div>
+                            <h3 class="text-base font-black text-stone-800 dark:text-stone-100 group-hover:text-amber-500 transition line-clamp-1 mb-2">
+                                <a href="{{ route('education.classes.show', $cls->slug) }}">
+                                    {{ $cls->title }}
+                                </a>
+                            </h3>
+                            <p class="text-xs text-stone-500 dark:text-stone-400 line-clamp-2 mb-4">
+                                {{ $cls->description ?: $cls->ai_summary }}
+                            </p>
+
+                            <div class="mt-auto pt-3 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between text-xs">
+                                <div class="flex items-center gap-2">
+                                    <img src="{{ $cls->instructor->profile_photo_url }}" class="w-6 h-6 rounded-full object-cover">
+                                    <span class="font-bold text-stone-700 dark:text-stone-300 truncate max-w-[120px]">{{ $cls->instructor->name }}</span>
+                                </div>
+                                <a href="{{ route('education.classes.show', $cls->slug) }}" class="text-amber-600 dark:text-amber-500 font-bold hover:underline flex items-center gap-1">
+                                    <span>Watch</span>
+                                    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="p-8 rounded-3xl bg-stone-50 dark:bg-stone-900/50 border border-dashed border-stone-200 dark:border-stone-800 flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+                        <i data-lucide="video" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-black text-stone-800 dark:text-stone-100">Ready to Teach a Heritage Language or Tradition?</h4>
+                        <p class="text-xs text-stone-500 dark:text-stone-400">Post a class with AI-synchronized subtitles, bilingual flashcards, and virtual backdrops.</p>
+                    </div>
+                </div>
+                <a href="{{ route('education.classes.create') }}" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs transition shadow-md whitespace-nowrap">
+                    Teach a Cultural Class
+                </a>
+            </div>
+        @endif
+    </div>
+
+    {{-- Category Filters for Live Events --}}
+    <div id="browse-events" class="flex flex-wrap items-center gap-3 mb-10 overflow-x-auto pb-4 scrollbar-hide">
+        <div class="w-full text-xs font-black uppercase tracking-wider text-stone-400 mb-1">
+            Live Gatherings & Rituals
+        </div>
         @php
             $currentType = request('type', 'all');
             $categories = [
@@ -50,7 +176,7 @@
         @endphp
 
         @foreach($categories as $key => $cat)
-            <a href="{{ route('education.index', ['type' => $key]) }}" 
+            <a href="{{ route('education.index', ['type' => $key]) }}#browse-events" 
                class="flex items-center gap-2 px-5 py-3 rounded-2xl border transition-all whitespace-nowrap font-bold text-sm
                {{ $currentType === $key 
                   ? 'bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-500/20' 

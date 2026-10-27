@@ -38,20 +38,28 @@ class CulturalConnectionRecommendationService
         $userLanguages = (array) ($user->languages ?? []);
         $userBackground = strtolower(trim((string) ($user->cultural_background ?? '')));
 
-        // Query active candidates
+        // Query active candidates matching background or interests
         $candidates = User::whereNotIn('id', $dismissedIds)
             ->where(function ($q) use ($userBackground, $userInterests) {
+                $hasFilter = false;
                 if (!empty($userBackground)) {
                     $q->where('cultural_background', 'like', "%{$userBackground}%");
+                    $hasFilter = true;
                 }
-                if ($userInterests) {
-                    $q->orWhereNotNull('cultural_interests');
+                if (!empty($userInterests)) {
+                    if ($hasFilter) {
+                        $q->orWhereNotNull('cultural_interests');
+                    } else {
+                        $q->whereNotNull('cultural_interests');
+                    }
                 }
             })
             ->take(30)
             ->get();
 
         $scored = [];
+        $scoredUserIds = [];
+
         foreach ($candidates as $candidate) {
             $candInterests = (array) ($candidate->cultural_interests ?? []);
             $candLanguages = (array) ($candidate->languages ?? []);
@@ -61,7 +69,7 @@ class CulturalConnectionRecommendationService
             $reasons = [];
 
             // 1. Shared cultural background
-            if (!empty($userBackground) && !empty($candBackground) && ($userBackground === $candBackground || str_contains($candBackground, $userBackground))) {
+            if (!empty($userBackground) && !empty($candBackground) && ($userBackground === $candBackground || str_contains($candBackground, $userBackground) || str_contains($userBackground, $candBackground))) {
                 $score += 35;
                 $reasons[] = 'shared cultural heritage (' . ucwords($candidate->cultural_background) . ')';
             }
@@ -94,19 +102,70 @@ class CulturalConnectionRecommendationService
 
             if ($score > 0) {
                 $explanation = 'Recommended because you share ' . implode(' and ', $reasons) . '.';
+                $scoredUserIds[] = $candidate->id;
                 $scored[] = [
                     'user' => [
                         'id' => $candidate->id,
                         'name' => $candidate->name,
                         'username' => $candidate->username ?? 'user',
-                        'avatar' => $candidate->profile_photo_url ?? null,
+                        'avatar' => $candidate->profile_photo_url,
+                        'profile_photo_url' => $candidate->profile_photo_url,
                         'cultural_background' => $candidate->cultural_background,
                         'location' => $candidate->location,
                         'bio' => $candidate->bio,
                     ],
                     'match_score' => $score,
                     'explanation' => $explanation,
+                    'matched_interests' => !empty($commonInterests) ? array_values($commonInterests) : (array) ($candidate->cultural_interests ?? []),
                 ];
+            }
+        }
+
+        // If scored results are fewer than $limit, suggest active cultural custodians/preservers
+        if (count($scored) < $limit) {
+            $needed = $limit - count($scored);
+            $excludeIds = array_merge($dismissedIds, $scoredUserIds);
+
+            $fallbackCandidates = User::whereNotIn('id', $excludeIds)
+                ->latest()
+                ->take($needed * 2)
+                ->get();
+
+            foreach ($fallbackCandidates as $candidate) {
+                if (count($scored) >= $limit) {
+                    break;
+                }
+
+                $candInterests = (array) ($candidate->cultural_interests ?? []);
+                $candBackground = $candidate->cultural_background ? ucwords($candidate->cultural_background) : null;
+
+                if (!empty($candBackground)) {
+                    $explanation = "Active cultural preserver sharing {$candBackground} traditions and history.";
+                    $tags = array_merge([$candBackground], array_slice($candInterests, 0, 2));
+                } elseif (!empty($candInterests)) {
+                    $explanation = "Fellow cultural custodian exploring " . implode(', ', array_slice($candInterests, 0, 2)) . ".";
+                    $tags = array_slice($candInterests, 0, 3);
+                } else {
+                    $explanation = "Active community member helping safeguard living traditions and stories.";
+                    $tags = ['Heritage', 'Preservation'];
+                }
+
+                $scored[] = [
+                    'user' => [
+                        'id' => $candidate->id,
+                        'name' => $candidate->name,
+                        'username' => $candidate->username ?? 'user',
+                        'avatar' => $candidate->profile_photo_url,
+                        'profile_photo_url' => $candidate->profile_photo_url,
+                        'cultural_background' => $candidate->cultural_background,
+                        'location' => $candidate->location,
+                        'bio' => $candidate->bio,
+                    ],
+                    'match_score' => 10,
+                    'explanation' => $explanation,
+                    'matched_interests' => $tags,
+                ];
+                $scoredUserIds[] = $candidate->id;
             }
         }
 
@@ -193,7 +252,7 @@ class CulturalConnectionRecommendationService
     /**
      * Record voluntary dismissal of a recommendation.
      */
-    public function dismiss(User $user, string $type, int $targetId): bool
+    public function dismiss(User $user, string $type, int $targetId, string $reason = 'dismissed_by_user'): bool
     {
         if (!in_array($type, ['user', 'community', 'event'], true)) {
             return false;

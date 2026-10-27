@@ -80,6 +80,21 @@ class DiscoverController extends Controller
             'cultures_featured' => Culture::where('status', 'featured')->count(),
         ];
 
-        return view('discover.index', compact('data', 'tab', 'search', 'trendingStats'));
+        $opportunities = null;
+        if (auth()->check()) {
+            $opportunityService = app(\App\Services\MetaAI\CulturalOpportunityService::class);
+            $opportunities = $opportunityService->getOpportunities(auth()->user());
+        }
+
+        if ($request->ajax() || $request->wantsJson() || $request->header('X-Discover-Tab')) {
+            return response()->json([
+                'success' => true,
+                'tab' => $tab,
+                'search' => $search,
+                'html' => view('discover.partials.grid', compact('data', 'tab'))->render(),
+            ]);
+        }
+
+        return view('discover.index', compact('data', 'tab', 'search', 'trendingStats', 'opportunities'));
     }
 }

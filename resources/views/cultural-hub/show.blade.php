@@ -1,25 +1,24 @@
 @extends('layouts.app')
 
-@section('title', $culture->name . ' - Living Heritage Archive - Kulturegram')
+@section('title', $culture->name . ' - Cultural Archive Record - Kulturegram')
 
 @push('styles')
-<!-- Educational & Archival Typography -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,600&display=swap" rel="stylesheet">
 
 <style>
-    .font-heritage {
+    .font-archive-title {
         font-family: 'Cinzel', serif;
     }
-    .font-editorial {
+    .font-archive-body {
         font-family: 'Newsreader', Georgia, serif;
     }
-    .drop-cap::first-letter {
+    .archive-drop-cap::first-letter {
         font-family: 'Cinzel', serif;
         float: left;
-        font-size: 3.8rem;
-        line-height: 0.8;
+        font-size: 3.4rem;
+        line-height: 0.85;
         padding-top: 4px;
         padding-right: 12px;
         padding-bottom: 2px;
@@ -27,10 +26,9 @@
         font-weight: 800;
     }
     @media (max-width: 640px) {
-        .drop-cap::first-letter {
-            font-size: 2.3rem;
-            line-height: 0.85;
-            padding-top: 2px;
+        .archive-drop-cap::first-letter {
+            font-size: 2.2rem;
+            line-height: 0.9;
             padding-right: 8px;
         }
     }
@@ -39,29 +37,31 @@
 
 @section('content')
 <div class="min-h-screen bg-[#faf8f5] dark:bg-[#0c0c10] text-stone-900 dark:text-stone-100 transition-colors duration-300"
-     x-data="culturalDossierComponent({
+     x-data="culturalArchiveDossier({
         cultureId: {{ $culture->id }},
         lockedIn: {{ auth()->check() && auth()->user()->hasLockedIn($culture) ? 'true' : 'false' }},
         lockCount: {{ $culture->locked_in_count }},
         resonated: {{ auth()->check() && auth()->user()->hasResonated($culture) ? 'true' : 'false' }},
         resonanceCount: {{ $culture->resonance_count }},
-        csrfToken: '{{ csrf_token() }}'
+        csrfToken: '{{ csrf_token() }}',
+        activeSection: 'overview'
      })">
 
-    {{-- Top Sticky Reading Toolbar (Relative on mobile to prevent stacked header overlap, Sticky on desktop) --}}
-    <div class="relative sm:sticky sm:top-16 z-30 backdrop-blur-md bg-white/95 dark:bg-[#121218]/95 border-b border-stone-200/80 dark:border-stone-800/80 transition-colors shadow-sm">
+    {{-- Top Archival Navigation & Utility Bar --}}
+    <header class="relative sm:sticky sm:top-16 z-30 backdrop-blur-md bg-white/95 dark:bg-[#121218]/95 border-b border-stone-200/80 dark:border-stone-800/80 transition-colors shadow-sm">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-2 sm:gap-4">
-            {{-- Breadcrumb & Title --}}
+            
+            {{-- Breadcrumb & Stable Record ID --}}
             <div class="flex items-center gap-1.5 overflow-hidden min-w-0 flex-1 sm:flex-initial">
                 <a href="{{ route('cultural-hub.index') }}" 
                    class="text-xs font-bold uppercase tracking-wider text-stone-500 hover:text-amber-600 dark:hover:text-amber-400 transition flex items-center gap-1 flex-shrink-0">
                     <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
-                    <span class="hidden sm:inline">Cultural Hub</span>
-                    <span class="sm:hidden">Hub</span>
+                    <span class="hidden sm:inline">Cultural Archive</span>
+                    <span class="sm:hidden">Archive</span>
                 </a>
                 <span class="text-stone-300 dark:text-stone-700">/</span>
-                <span class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider truncate max-w-[130px] sm:max-w-none">
-                    {{ $culture->category }}
+                <span class="text-xs font-mono font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 flex-shrink-0">
+                    #CR-{{ str_pad($culture->id, 5, '0', STR_PAD_LEFT) }}
                 </span>
                 <span class="text-stone-300 dark:text-stone-700 hidden md:inline">/</span>
                 <span class="text-xs font-semibold text-stone-700 dark:text-stone-300 truncate hidden md:inline">
@@ -69,49 +69,59 @@
                 </span>
             </div>
 
-            {{-- Interactive Action Controls --}}
+            {{-- Archival Actions & Presence --}}
             <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-                {{-- Font Size Adjuster (Desktop Only) --}}
+                {{-- Text Size Adjustment (Desktop) --}}
                 <div class="hidden md:flex items-center rounded-lg border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 p-0.5 text-xs font-bold">
-                    <button @click="fontSize = Math.max(14, fontSize - 1)" 
-                            class="px-2 py-1 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400" title="Decrease font size">A-</button>
+                    <button @click="fontSize = Math.max(15, fontSize - 1)" 
+                            class="px-2 py-1 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400" 
+                            title="Decrease reading text size">A-</button>
                     <span class="px-1 text-[10px] text-stone-400" x-text="fontSize + 'px'"></span>
                     <button @click="fontSize = Math.min(22, fontSize + 1)" 
-                            class="px-2 py-1 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400" title="Increase font size">A+</button>
+                            class="px-2 py-1 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400" 
+                            title="Increase reading text size">A+</button>
                 </div>
 
-                {{-- Citation Builder Trigger --}}
+                {{-- Academic Citation Modal Trigger --}}
                 <button @click="openCitationModal = true"
-                        class="px-2.5 sm:px-3 py-1.5 rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 text-xs font-semibold hover:border-amber-500 hover:text-amber-600 dark:hover:text-amber-400 transition flex items-center gap-1.5 shadow-sm"
-                        title="Cite Record">
+                        class="px-2.5 sm:px-3 py-1.5 rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 text-xs font-semibold hover:border-amber-500 hover:text-amber-600 dark:hover:text-amber-400 transition flex items-center gap-1.5 shadow-sm">
                     <i data-lucide="quote" class="w-3.5 h-3.5 text-amber-500"></i>
                     <span class="hidden md:inline">Cite Record</span>
                 </button>
 
-                {{-- Lock-In Presence (Bookmark / Connection) --}}
+                {{-- Guardian Edit Access --}}
+                @if(auth()->check() && (auth()->id() === $culture->submitted_by || auth()->user()->is_admin))
+                    <a href="{{ route('cultural-hub.edit', $culture->id) }}"
+                       class="px-2.5 sm:px-3 py-1.5 rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 text-xs font-semibold hover:border-amber-500 hover:text-amber-600 transition flex items-center gap-1 shadow-sm">
+                        <i data-lucide="edit-3" class="w-3.5 h-3.5 text-amber-500"></i>
+                        <span class="hidden sm:inline">Edit Record</span>
+                    </a>
+                @endif
+
+                {{-- Lock-In Presence --}}
                 @auth
                     <button @click="toggleLockIn()"
                             :disabled="isSubmittingLock"
-                            class="px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                            class="px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
                             :class="lockedIn 
                                 ? 'bg-amber-500 text-white shadow-amber-500/25 hover:bg-amber-600' 
                                 : 'bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:border-amber-500'">
-                        <i data-lucide="lock" class="w-3.5 h-3.5" :class="lockedIn ? 'text-white' : 'text-amber-500'"></i>
-                        <span class="hidden sm:inline" x-text="lockedIn ? 'Locked In' : 'Lock-In'"></span>
+                        <i data-lucide="bookmark" class="w-3.5 h-3.5" :class="lockedIn ? 'text-white' : 'text-amber-500'"></i>
+                        <span class="hidden sm:inline" x-text="lockedIn ? 'Preserved' : 'Preserve'"></span>
                         <span class="text-[10px] px-1.5 py-0.2 rounded-full font-mono"
                               :class="lockedIn ? 'bg-amber-600 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400'"
                               x-text="lockCount"></span>
                     </button>
                 @else
                     <a href="{{ route('login') }}"
-                       class="px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:border-amber-500 flex items-center gap-1.5">
-                        <i data-lucide="lock" class="w-3.5 h-3.5 text-amber-500"></i>
-                        <span class="hidden sm:inline">Lock-In</span>
+                       class="px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:border-amber-500 flex items-center gap-1.5">
+                        <i data-lucide="bookmark" class="w-3.5 h-3.5 text-amber-500"></i>
+                        <span class="hidden sm:inline">Preserve</span>
                         <span class="text-[10px] px-1.5 py-0.2 bg-stone-100 dark:bg-stone-800 rounded-full font-mono">{{ $culture->locked_in_count }}</span>
                     </a>
                 @endauth
 
-                {{-- Resonance / Pulse Appreciation --}}
+                {{-- Pulse Appreciation --}}
                 @auth
                     <button @click="toggleResonance()"
                             :disabled="isSubmittingPulse"
@@ -119,855 +129,935 @@
                             :class="resonated 
                                 ? 'bg-orange-500/10 border-orange-500 text-orange-600 dark:text-orange-400' 
                                 : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:border-orange-500'">
-                        <i data-lucide="zap" class="w-3.5 h-3.5" :class="resonated ? 'text-orange-500 fill-orange-500' : 'text-stone-400'"></i>
-                        <span class="hidden md:inline" x-text="resonated ? 'Resonated' : 'Pulse'"></span>
+                        <i data-lucide="heart" class="w-3.5 h-3.5" :class="resonated ? 'text-orange-500 fill-orange-500' : 'text-stone-400'"></i>
                         <span class="text-[10px] font-mono" x-text="resonanceCount"></span>
                     </button>
                 @endauth
 
-                {{-- Share Button --}}
+                {{-- Share --}}
                 <button @click="copyShareLink()"
                         class="p-1.5 rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:text-amber-600 transition flex-shrink-0"
-                        title="Copy Share Link">
+                        title="Copy Archival Link">
                     <i data-lucide="share-2" class="w-4 h-4"></i>
                 </button>
             </div>
         </div>
-    </div>
+    </header>
 
-    {{-- Main Container --}}
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 md:py-12 space-y-6 sm:space-y-10">
+    {{-- Main Archive Dossier Body --}}
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6 sm:space-y-8">
 
-        {{-- GRAND EDUCATIONAL ARCHIVAL DOSSIER HERO --}}
-        <div class="rounded-2xl sm:rounded-3xl overflow-hidden border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] shadow-lg">
+        {{-- 1. CULTURAL IDENTITY HEADER --}}
+        <section class="rounded-2xl sm:rounded-3xl border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] shadow-sm overflow-hidden" aria-label="Cultural Record Identification">
             
-            {{-- Editorial Header Section (Title, Badges, Significance) --}}
-            <div class="p-5 sm:p-8 lg:p-10 space-y-4">
-                {{-- Top Floating Badges --}}
+            <div class="p-5 sm:p-8 lg:p-10 space-y-4 sm:space-y-5">
+                
+                {{-- Status & Classification Bar --}}
                 <div class="flex flex-wrap items-center justify-between gap-2.5">
-                    <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                        <span class="px-3 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider bg-amber-500 text-black shadow-sm flex items-center gap-1.5">
-                            <i data-lucide="bookmark" class="w-3.5 h-3.5"></i>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        {{-- Category / Subtype --}}
+                        <span class="px-3 py-1 rounded-md text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-stone-200 border border-stone-200 dark:border-stone-700">
                             {{ $culture->category }}
+                            @if($culture->subtype)
+                                <span class="text-stone-400 dark:text-stone-500">/</span> {{ $culture->subtype }}
+                            @endif
                         </span>
-                        
+
+                        {{-- Review / Publication Status Badge --}}
+                        @php
+                            $badge = $culture->review_badge;
+                        @endphp
+                        <span class="px-3 py-1 rounded-md text-[11px] sm:text-xs font-bold tracking-wide border flex items-center gap-1.5 {{ $badge['class'] }}">
+                            <span class="w-2 h-2 rounded-full bg-current"></span>
+                            <span>{{ $badge['label'] }}</span>
+                        </span>
+
+                        {{-- AI Assistance Notice --}}
                         @if($culture->is_ai_assisted)
-                            <span class="px-2.5 py-1 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1">
-                                <i data-lucide="sparkles" class="w-3 h-3 text-amber-500"></i>
-                                <span>AI Preservation Assist</span>
+                            <span class="px-2.5 py-1 rounded-md text-[10px] sm:text-[11px] font-semibold bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20 flex items-center gap-1.5"
+                                  title="AI contributed to structuring or transcribing this record. It is subject to human community review.">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i>
+                                <span>AI-Assisted Processing</span>
+                            </span>
+                        @endif
+
+                        {{-- Sensitivity / Access Restriction --}}
+                        @if($culture->sensitivity_level && $culture->sensitivity_level !== 'public')
+                            <span class="px-2.5 py-1 rounded-md text-[10px] sm:text-[11px] font-semibold bg-purple-500/10 text-purple-800 dark:text-purple-300 border border-purple-500/20 flex items-center gap-1">
+                                <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-purple-500"></i>
+                                <span>{{ ucfirst(str_replace('_', ' ', $culture->sensitivity_level)) }} Knowledge</span>
                             </span>
                         @endif
                     </div>
 
-                    {{-- Endangerment / Safeguarding Level Gauge (Only shown if specifically recorded) --}}
-                    @if($culture->endangerment_level && strtolower($culture->endangerment_level) !== 'living tradition')
-                        @php
-                            $level = strtolower($culture->endangerment_level);
-                        @endphp
-                        <div class="px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider border flex items-center gap-1.5
-                            {{ str_contains($level, 'critical') ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800' : 
-                               (str_contains($level, 'endangered') ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800' : 
-                               'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800') }}">
-                            <span class="w-2 h-2 rounded-full animate-ping
-                                {{ str_contains($level, 'critical') ? 'bg-rose-500' : (str_contains($level, 'endangered') ? 'bg-amber-500' : 'bg-emerald-500') }}"></span>
-                            <span>{{ $culture->endangerment_level }}</span>
+                    {{-- Stable Record Identification --}}
+                    <div class="text-[11px] text-stone-500 dark:text-stone-400 font-mono">
+                        Archive ID: <strong>#CR-{{ str_pad($culture->id, 5, '0', STR_PAD_LEFT) }}</strong>
+                    </div>
+                </div>
+
+                {{-- Record Title and Optional Translated Title --}}
+                <div class="space-y-1">
+                    <h1 class="font-archive-title text-2xl sm:text-4xl lg:text-5xl font-extrabold text-stone-900 dark:text-stone-100 tracking-tight leading-tight">
+                        {{ $culture->name }}
+                    </h1>
+                    @if($culture->translated_title && $culture->translated_title !== $culture->name)
+                        <p class="text-sm sm:text-lg text-stone-500 dark:text-stone-400 font-archive-body italic">
+                            Translated Title: "{{ $culture->translated_title }}"
+                        </p>
+                    @endif
+                </div>
+
+                {{-- Documented Geographic & Community Context --}}
+                <div class="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-stone-600 dark:text-stone-300 pt-1">
+                    @if($culture->cultural_group)
+                        <div class="flex items-center gap-1.5 font-semibold text-stone-900 dark:text-stone-100">
+                            <i data-lucide="users" class="w-4 h-4 text-amber-600 dark:text-amber-400"></i>
+                            <span>Community: {{ $culture->cultural_group }}</span>
+                        </div>
+                    @endif
+
+                    @if($culture->language)
+                        <div class="flex items-center gap-1.5 font-medium">
+                            <i data-lucide="languages" class="w-4 h-4 text-amber-600 dark:text-amber-400"></i>
+                            <span>Language: {{ $culture->language }}</span>
+                        </div>
+                    @endif
+
+                    @if($culture->region || $culture->locality)
+                        <div class="flex items-center gap-1.5 font-medium">
+                            <i data-lucide="map-pin" class="w-4 h-4 text-amber-600 dark:text-amber-400"></i>
+                            <span>Location: {{ $culture->locality ? $culture->locality . ', ' : '' }}{{ $culture->region }}</span>
+                        </div>
+                    @endif
+
+                    @if($culture->historical_period)
+                        <div class="flex items-center gap-1.5 font-medium">
+                            <i data-lucide="history" class="w-4 h-4 text-amber-600 dark:text-amber-400"></i>
+                            <span>Historical Era: {{ $culture->historical_period }}</span>
                         </div>
                     @endif
                 </div>
 
-                {{-- Geographic and Cultural Coordinates --}}
-                <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-amber-600 dark:text-amber-400 text-xs sm:text-sm font-bold uppercase tracking-wider pt-1">
-                    <span class="flex items-center gap-1">
-                        <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
-                        {{ $culture->region }}
-                    </span>
-                    <span>•</span>
-                    <span class="flex items-center gap-1">
-                        <i data-lucide="languages" class="w-3.5 h-3.5"></i>
-                        {{ $culture->language ?? 'Indigenous Dialect' }}
-                    </span>
-                    @if($culture->historical_period)
-                        <span class="hidden sm:inline">•</span>
-                        <span class="hidden sm:flex items-center gap-1">
-                            <i data-lucide="history" class="w-3.5 h-3.5"></i>
-                            {{ $culture->historical_period }}
-                        </span>
-                    @endif
-                </div>
-
-                {{-- H1 Dossier Title --}}
-                <h1 class="font-heritage text-2xl sm:text-4xl lg:text-5xl font-black text-stone-900 dark:text-stone-100 tracking-tight leading-tight">
-                    {{ $culture->name }}
-                </h1>
-
-                {{-- Significance Quote Block --}}
+                {{-- Concise Archival Introduction --}}
                 @if($culture->significance)
-                    <p class="text-stone-600 dark:text-stone-300 text-xs sm:text-sm md:text-base leading-relaxed font-editorial italic max-w-4xl border-l-2 border-amber-500 pl-3 sm:pl-4">
+                    <blockquote class="text-stone-700 dark:text-stone-300 text-sm sm:text-base leading-relaxed font-archive-body italic border-l-2 border-amber-500 pl-3 sm:pl-4 py-1">
                         "{{ $culture->significance }}"
-                    </p>
+                    </blockquote>
                 @endif
             </div>
 
-            {{-- Cultural Artwork / Field Photograph Frame (Clean Showcase with zero text collision) --}}
+            {{-- Authorized Cover Artwork / Photographic Record --}}
             @if($culture->image)
-                <div class="relative bg-stone-100 dark:bg-stone-950 border-t border-b border-stone-200/80 dark:border-stone-800">
-                    <div class="w-full max-h-[460px] sm:max-h-[560px] flex items-center justify-center overflow-hidden">
+                <div class="relative bg-stone-100 dark:bg-stone-950 border-t border-stone-200/80 dark:border-stone-800">
+                    <div class="w-full max-h-[480px] flex items-center justify-center overflow-hidden">
                         <img src="{{ Storage::url($culture->image) }}" 
                              alt="{{ $culture->name }}"
-                             class="w-full h-full max-h-[460px] sm:max-h-[560px] object-cover sm:object-contain object-center">
+                             class="w-full h-full max-h-[480px] object-cover sm:object-contain object-center">
                     </div>
-                    <div class="px-4 py-2 bg-stone-50/90 dark:bg-stone-900/90 border-t border-stone-200/60 dark:border-stone-800 text-[11px] text-stone-500 dark:text-stone-400 flex items-center justify-between">
+                    <div class="px-4 py-2 bg-stone-50/90 dark:bg-stone-900/90 border-t border-stone-200/60 dark:border-stone-800 text-[11px] text-stone-600 dark:text-stone-400 flex flex-wrap items-center justify-between gap-2">
                         <span class="flex items-center gap-1.5 font-medium">
-                            <i data-lucide="camera" class="w-3.5 h-3.5 text-amber-500"></i>
+                            <i data-lucide="image" class="w-3.5 h-3.5 text-amber-500"></i>
                             <span>Archival Visual Record</span>
                         </span>
-                        <span class="font-mono text-[10px]">{{ $culture->license_type ?? 'Living Heritage Commons' }}</span>
+                        <span class="font-mono text-[10px]">
+                            License: {{ $culture->license_type ?? 'Community Heritage Archive Commons' }}
+                            @if($culture->license_credit)
+                                • Attributed to: {{ $culture->license_credit }}
+                            @endif
+                        </span>
                     </div>
                 </div>
             @endif
 
-            {{-- Curated Educational Metrics Ribbon --}}
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-0 sm:divide-x divide-stone-200 dark:divide-stone-800 bg-stone-50/80 dark:bg-stone-900/80 p-3 sm:p-4">
-                <div class="p-3 rounded-xl sm:rounded-none bg-white dark:bg-stone-800/50 sm:bg-transparent border sm:border-0 border-stone-200/50 dark:border-stone-700/50 text-left">
-                    <span class="text-[10px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-widest block">Geographic Cradle</span>
-                    <span class="font-bold text-stone-900 dark:text-stone-100 text-xs sm:text-base block mt-0.5 break-words">{{ $culture->region }}</span>
+            {{-- Verified Archival Metadata Ribbon --}}
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-0 sm:divide-x divide-stone-200 dark:divide-stone-800 bg-stone-50/80 dark:bg-stone-900/80 p-3 sm:p-4 text-left border-t border-stone-200/80 dark:border-stone-800">
+                <div class="p-2 sm:p-3">
+                    <span class="text-[10px] font-bold text-stone-500 uppercase tracking-widest block">Geographic Region</span>
+                    <span class="font-bold text-stone-900 dark:text-stone-100 text-xs sm:text-sm block mt-0.5">{{ $culture->region }}</span>
                 </div>
-                <div class="p-3 rounded-xl sm:rounded-none bg-white dark:bg-stone-800/50 sm:bg-transparent border sm:border-0 border-stone-200/50 dark:border-stone-700/50 text-left">
-                    <span class="text-[10px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-widest block">Primary Language</span>
-                    <span class="font-bold text-stone-900 dark:text-stone-100 text-xs sm:text-base block mt-0.5 break-words">{{ $culture->language ?? 'Unspecified' }}</span>
+                <div class="p-2 sm:p-3">
+                    <span class="text-[10px] font-bold text-stone-500 uppercase tracking-widest block">Documented Language</span>
+                    <span class="font-bold text-stone-900 dark:text-stone-100 text-xs sm:text-sm block mt-0.5">{{ $culture->language ?? 'Unspecified' }}</span>
                 </div>
-                <div class="p-3 rounded-xl sm:rounded-none bg-white dark:bg-stone-800/50 sm:bg-transparent border sm:border-0 border-stone-200/50 dark:border-stone-700/50 text-left">
-                    <span class="text-[10px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-widest block">Living Custodians</span>
-                    <span class="font-bold text-stone-900 dark:text-stone-100 text-xs sm:text-base block mt-0.5 break-words">{{ $culture->current_practitioners ?? 'Generational Elders' }}</span>
+                <div class="p-2 sm:p-3">
+                    <span class="text-[10px] font-bold text-stone-500 uppercase tracking-widest block">Verified Claims</span>
+                    <span class="font-bold text-stone-900 dark:text-stone-100 text-xs sm:text-sm block mt-0.5">
+                        {{ $culture->claims->where('review_status', 'source_verified')->count() }} of {{ $culture->claims->count() }} Claims Verified
+                    </span>
                 </div>
-                <div class="p-3 rounded-xl sm:rounded-none bg-white dark:bg-stone-800/50 sm:bg-transparent border sm:border-0 border-stone-200/50 dark:border-stone-700/50 text-left">
-                    <span class="text-[10px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-widest block">Transmission Mode</span>
-                    <span class="font-bold text-amber-600 dark:text-amber-400 text-xs sm:text-base block mt-0.5 break-words">{{ $culture->transmission_methods ?? 'Oral & Ceremonial' }}</span>
+                <div class="p-2 sm:p-3">
+                    <span class="text-[10px] font-bold text-stone-500 uppercase tracking-widest block">Primary Sources</span>
+                    <span class="font-bold text-amber-700 dark:text-amber-400 text-xs sm:text-sm block mt-0.5">
+                        {{ $culture->sources->count() > 0 ? $culture->sources->count() . ' Documented Sources' : 'Written Narrative' }}
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        {{-- 2. STRUCTURED ARCHIVE NAVIGATION TABS --}}
+        <nav class="border-b border-stone-200 dark:border-stone-800 -mx-3 sm:mx-0 px-3 sm:px-0 overflow-x-auto no-scrollbar" aria-label="Archive Record Sections">
+            <div class="flex items-center gap-1 sm:gap-2 min-w-max pb-1">
+                
+                {{-- 1. Overview --}}
+                <button @click="activeSection = 'overview'"
+                        class="px-3.5 py-2 rounded-t-lg text-xs font-bold transition flex items-center gap-1.5 border-b-2"
+                        :class="activeSection === 'overview' 
+                            ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-500/5' 
+                            : 'border-transparent text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'">
+                    <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+                    <span>Overview</span>
+                </button>
+
+                {{-- 2. Original Account --}}
+                <button @click="activeSection = 'original_account'"
+                        class="px-3.5 py-2 rounded-t-lg text-xs font-bold transition flex items-center gap-1.5 border-b-2"
+                        :class="activeSection === 'original_account' 
+                            ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-500/5' 
+                            : 'border-transparent text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'">
+                    <i data-lucide="mic" class="w-3.5 h-3.5"></i>
+                    <span>Original Account</span>
+                    @if($culture->sources->count() > 0)
+                        <span class="text-[10px] font-mono px-1 rounded bg-stone-200 dark:bg-stone-800">{{ $culture->sources->count() }}</span>
+                    @endif
+                </button>
+
+                {{-- 3. History & Context --}}
+                @if($culture->historical_period || $culture->significance || $culture->description)
+                    <button @click="activeSection = 'history'"
+                            class="px-3.5 py-2 rounded-t-lg text-xs font-bold transition flex items-center gap-1.5 border-b-2"
+                            :class="activeSection === 'history' 
+                                ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-500/5' 
+                                : 'border-transparent text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'">
+                        <i data-lucide="history" class="w-3.5 h-3.5"></i>
+                        <span>History & Context</span>
+                    </button>
+                @endif
+
+                {{-- 4. Practices & Transmission --}}
+                @if($culture->rituals || $culture->transmission_methods || $culture->community_role || $culture->current_practitioners)
+                    <button @click="activeSection = 'practices'"
+                            class="px-3.5 py-2 rounded-t-lg text-xs font-bold transition flex items-center gap-1.5 border-b-2"
+                            :class="activeSection === 'practices' 
+                                ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-500/5' 
+                                : 'border-transparent text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'">
+                        <i data-lucide="compass" class="w-3.5 h-3.5"></i>
+                        <span>Practices & Transmission</span>
+                    </button>
+                @endif
+
+                {{-- 5. People & Custodians --}}
+                <button @click="activeSection = 'people'"
+                        class="px-3.5 py-2 rounded-t-lg text-xs font-bold transition flex items-center gap-1.5 border-b-2"
+                        :class="activeSection === 'people' 
+                            ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-500/5' 
+                            : 'border-transparent text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'">
+                    <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                    <span>People & Custodians</span>
+                </button>
+
+                {{-- 6. Media & Artefacts --}}
+                @if($culture->image || $culture->media_files || $culture->audio_path || $culture->video_url || $culture->mediaAssets->count() > 0)
+                    <button @click="activeSection = 'media'"
+                            class="px-3.5 py-2 rounded-t-lg text-xs font-bold transition flex items-center gap-1.5 border-b-2"
+                            :class="activeSection === 'media' 
+                                ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-500/5' 
+                                : 'border-transparent text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'">
+                        <i data-lucide="film" class="w-3.5 h-3.5"></i>
+                        <span>Media & Artefacts</span>
+                    </button>
+                @endif
+
+                {{-- 7. Related Knowledge --}}
+                @if(!empty($relatedCultures) && count($relatedCultures) > 0)
+                    <button @click="activeSection = 'related'"
+                            class="px-3.5 py-2 rounded-t-lg text-xs font-bold transition flex items-center gap-1.5 border-b-2"
+                            :class="activeSection === 'related' 
+                                ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-500/5' 
+                                : 'border-transparent text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'">
+                        <i data-lucide="network" class="w-3.5 h-3.5"></i>
+                        <span>Related Knowledge</span>
+                    </button>
+                @endif
+
+                {{-- 8. Sources & Verification --}}
+                <button @click="activeSection = 'sources'"
+                        class="px-3.5 py-2 rounded-t-lg text-xs font-bold transition flex items-center gap-1.5 border-b-2"
+                        :class="activeSection === 'sources' 
+                            ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-500/5' 
+                            : 'border-transparent text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                    <span>Sources & Verification</span>
+                    @if($culture->claims->count() > 0)
+                        <span class="text-[10px] font-mono px-1 rounded bg-stone-200 dark:bg-stone-800">{{ $culture->claims->count() }}</span>
+                    @endif
+                </button>
+
+                {{-- 9. Contribute --}}
+                <button @click="activeSection = 'contribute'"
+                        class="px-3.5 py-2 rounded-t-lg text-xs font-bold transition flex items-center gap-1.5 border-b-2"
+                        :class="activeSection === 'contribute' 
+                            ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-500/5' 
+                            : 'border-transparent text-amber-700 dark:text-amber-400 hover:underline'">
+                    <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                    <span>Contribute</span>
+                </button>
+            </div>
+        </nav>
+
+        {{-- SECTION 1: OVERVIEW --}}
+        <div x-show="activeSection === 'overview'" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {{-- Main Narrative Overview --}}
+                <div class="lg:col-span-2 rounded-2xl border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] p-5 sm:p-8 space-y-4">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                        <i data-lucide="book-open" class="w-4 h-4"></i>
+                        <span>Archival Record Overview</span>
+                    </h2>
+
+                    <div class="font-archive-body leading-relaxed text-stone-800 dark:text-stone-200 archive-drop-cap space-y-4"
+                         :style="'font-size: ' + fontSize + 'px'">
+                        {!! nl2br(e($culture->description)) !!}
+                    </div>
+
+                    @if($culture->is_ai_assisted)
+                        <div class="p-3 bg-amber-500/5 border border-amber-500/20 rounded-xl text-xs text-amber-900 dark:text-amber-300 space-y-1">
+                            <span class="font-bold flex items-center gap-1.5">
+                                <i data-lucide="info" class="w-4 h-4 text-amber-600"></i>
+                                <span>AI Processing Disclosure</span>
+                            </span>
+                            <p class="leading-relaxed">
+                                AI assistance was employed to organize this account from submitted community sources. 
+                                Claims and specific details should be reviewed by elders and custodians.
+                            </p>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Sidebar: Essential Metadata & Knowledge Companion --}}
+                <div class="space-y-6">
+                    
+                    {{-- Key Archival Attributes Card --}}
+                    <div class="rounded-2xl border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] p-5 space-y-3">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                            Essential Record Data
+                        </h3>
+
+                        <dl class="text-xs space-y-2.5">
+                            <div class="flex justify-between py-1 border-b border-stone-100 dark:border-stone-800/60">
+                                <dt class="text-stone-500">Record ID</dt>
+                                <dd class="font-mono font-bold text-stone-900 dark:text-stone-100">#CR-{{ str_pad($culture->id, 5, '0', STR_PAD_LEFT) }}</dd>
+                            </div>
+                            <div class="flex justify-between py-1 border-b border-stone-100 dark:border-stone-800/60">
+                                <dt class="text-stone-500">Record Type</dt>
+                                <dd class="font-semibold text-stone-900 dark:text-stone-100">{{ $culture->category }}</dd>
+                            </div>
+                            @if($culture->cultural_group)
+                                <div class="flex justify-between py-1 border-b border-stone-100 dark:border-stone-800/60">
+                                    <dt class="text-stone-500">Community / Group</dt>
+                                    <dd class="font-semibold text-stone-900 dark:text-stone-100">{{ $culture->cultural_group }}</dd>
+                                </div>
+                            @endif
+                            @if($culture->language)
+                                <div class="flex justify-between py-1 border-b border-stone-100 dark:border-stone-800/60">
+                                    <dt class="text-stone-500">Language</dt>
+                                    <dd class="font-semibold text-stone-900 dark:text-stone-100">{{ $culture->language }}</dd>
+                                </div>
+                            @endif
+                            <div class="flex justify-between py-1 border-b border-stone-100 dark:border-stone-800/60">
+                                <dt class="text-stone-500">Region / Origin</dt>
+                                <dd class="font-semibold text-stone-900 dark:text-stone-100">{{ $culture->region }}</dd>
+                            </div>
+                            <div class="flex justify-between py-1 border-b border-stone-100 dark:border-stone-800/60">
+                                <dt class="text-stone-500">Review Status</dt>
+                                <dd class="font-bold text-amber-600 dark:text-amber-400">{{ $culture->review_badge['label'] }}</dd>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <dt class="text-stone-500">Submitted On</dt>
+                                <dd class="font-mono text-stone-700 dark:text-stone-300">{{ $culture->created_at->format('M d, Y') }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    {{-- CULTURAL KNOWLEDGE COMPANION INTERACTIVE CARD --}}
+                    <div class="rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-gradient-to-br from-amber-500/5 to-transparent p-5 space-y-3"
+                         x-data="{
+                            question: '',
+                            loading: false,
+                            response: null,
+                            async ask() {
+                                if (!this.question.trim() || this.loading) return;
+                                this.loading = true;
+                                try {
+                                    const res = await fetch('/cultural-hub/{{ $culture->id }}/companion', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                        },
+                                        body: JSON.stringify({ question: this.question })
+                                    });
+                                    this.response = await res.json();
+                                } catch(e) {
+                                    this.response = { answer: 'Error consulting cultural companion. Please try again.', grounded: false };
+                                } finally {
+                                    this.loading = false;
+                                }
+                            }
+                         }">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center">
+                                <i data-lucide="help-circle" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-stone-900 dark:text-stone-100">Knowledge Companion</h3>
+                                <p class="text-[11px] text-stone-500">Ask questions grounded strictly in this archive record</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <input type="text"
+                                   x-model="question"
+                                   @keydown.enter.prevent="ask()"
+                                   placeholder="e.g., What are the customary steps in this tradition?"
+                                   class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2 text-stone-800 dark:text-stone-200 focus:outline-none focus:border-amber-500">
+                            <button @click="ask()"
+                                    :disabled="loading || !question.trim()"
+                                    class="w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-xs font-bold transition flex items-center justify-center gap-1.5">
+                                <span x-show="!loading">Ask Grounded Question</span>
+                                <span x-show="loading" class="animate-pulse">Consulting Archive Record...</span>
+                            </button>
+                        </div>
+
+                        {{-- Companion Answer Display --}}
+                        <template x-if="response">
+                            <div class="p-3 rounded-xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-xs space-y-2">
+                                <div class="flex items-center justify-between text-[10px] text-stone-500 border-b pb-1">
+                                    <span class="font-bold text-amber-700 dark:text-amber-400" x-text="response.distinction || 'Archive Record'"></span>
+                                    <span x-text="response.grounded ? 'Grounded in Source' : 'General Inquiry'"></span>
+                                </div>
+                                <p class="text-stone-800 dark:text-stone-200 leading-relaxed font-archive-body" x-text="response.answer"></p>
+                                <template x-if="response.missing_context">
+                                    <p class="text-[11px] text-stone-500 italic border-t pt-1" x-text="'Missing archive context: ' + response.missing_context"></p>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
                 </div>
             </div>
         </div>
 
-        {{-- INTERACTIVE ORAL AUDIO HIGHLIGHT (If audio exists) --}}
-        @if($culture->audio_path || $culture->audio_url)
-            <div class="rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-4 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-5">
-                <div class="flex items-start sm:items-center gap-3 sm:gap-4">
-                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/30 flex-shrink-0">
-                        <i data-lucide="headphones" class="w-6 h-6 sm:w-7 sm:h-7"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-amber-200 text-amber-900 dark:bg-amber-950 dark:text-amber-300">
-                                Oral Narration Archive
-                            </span>
-                            <span class="text-xs text-stone-500 dark:text-stone-400 font-medium">Authentic Field Audio</span>
+        {{-- SECTION 2: ORIGINAL ACCOUNT & PRIMARY MEDIA --}}
+        <div x-show="activeSection === 'original_account'" class="space-y-6">
+            
+            {{-- Primary Audio/Video Narration Player --}}
+            @if($culture->audio_path || $culture->audio_url || $culture->video_path || $culture->video_url)
+                <div class="rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-white dark:bg-[#131218] p-5 sm:p-7 space-y-4">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div class="flex items-center gap-2">
+                            <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center">
+                                <i data-lucide="{{ $culture->video_path || $culture->video_url ? 'video' : 'headphones' }}" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-stone-900 dark:text-stone-100">
+                                    {{ $culture->video_path || $culture->video_url ? 'Primary Video Recording' : 'Original Oral Recording' }}
+                                </h3>
+                                <p class="text-xs text-stone-500">Preserved community audio/video testimony</p>
+                            </div>
                         </div>
-                        <h3 class="text-sm sm:text-base font-bold text-stone-900 dark:text-stone-100 mt-1">
-                            Listen to Spoken Oral History & Folktale
-                        </h3>
-                        <p class="text-xs text-stone-600 dark:text-stone-400">
-                            Recorded directly from community voice transmission.
-                        </p>
+
+                        <span class="px-2.5 py-1 rounded text-[11px] font-mono font-bold bg-amber-500/10 text-amber-800 dark:text-amber-300">
+                            Language: {{ $culture->language ?? 'Indigenous Speech' }}
+                        </span>
+                    </div>
+
+                    {{-- Audio Player --}}
+                    @if($culture->audio_path || $culture->audio_url)
+                        <div class="p-3 bg-stone-50 dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800">
+                            <audio controls class="w-full">
+                                <source src="{{ $culture->audio_path ? Storage::url($culture->audio_path) : $culture->audio_url }}" type="audio/mpeg">
+                                Your browser does not support audio playback.
+                            </audio>
+                        </div>
+                    @endif
+
+                    {{-- Video Player --}}
+                    @if($culture->video_path)
+                        <div class="rounded-xl overflow-hidden bg-black max-h-[420px] flex items-center justify-center">
+                            <video controls class="w-full max-h-[420px]">
+                                <source src="{{ Storage::url($culture->video_path) }}">
+                            </video>
+                        </div>
+                    @elseif($culture->video_url)
+                        <div class="aspect-video rounded-xl overflow-hidden bg-black">
+                            <iframe src="{{ $culture->video_url }}" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                    @endif
+                </div>
+            @endif
+
+            {{-- Verbatim Transcript & Source Material --}}
+            <div class="rounded-2xl border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] p-5 sm:p-8 space-y-4">
+                <div class="flex items-center justify-between flex-wrap gap-2 border-b border-stone-100 dark:border-stone-800 pb-3">
+                    <div>
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                            Original Community Testimony & Verbatim Transcript
+                        </h2>
+                        <p class="text-xs text-stone-500">Unfiltered oral history as recited by knowledge keepers</p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs px-2.5 py-1 rounded-md font-semibold bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300">
+                            {{ $culture->audio_transcript ? 'Transcript Origin: Recorded Testimony' : 'Written Testimony' }}
+                        </span>
                     </div>
                 </div>
 
-                <div class="w-full md:w-auto md:min-w-[320px]">
-                    @if($culture->audio_path)
-                        <audio controls class="w-full rounded-xl">
-                            <source src="{{ Storage::url($culture->audio_path) }}" type="audio/mpeg">
-                            Your browser does not support audio playback.
-                        </audio>
-                    @elseif($culture->audio_url)
-                        <a href="{{ $culture->audio_url }}" target="_blank"
-                           class="inline-flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm transition shadow-md">
-                            <i data-lucide="external-link" class="w-4 h-4"></i>
-                            <span>Listen to External Audio Archive</span>
-                        </a>
+                {{-- Verbatim Text Content --}}
+                <div class="font-archive-body leading-relaxed text-stone-800 dark:text-stone-200 space-y-4 text-base sm:text-lg">
+                    @if($culture->raw_story)
+                        <div class="p-4 rounded-xl bg-stone-50/70 dark:bg-stone-900/60 border border-stone-200/60 dark:border-stone-800/60">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400 block mb-2">Original Spoken Narrative</span>
+                            {!! nl2br(e($culture->raw_story)) !!}
+                        </div>
+                    @elseif($culture->audio_transcript)
+                        <div class="p-4 rounded-xl bg-stone-50/70 dark:bg-stone-900/60 border border-stone-200/60 dark:border-stone-800/60">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400 block mb-2">Preserved Audio Transcript</span>
+                            {!! nl2br(e($culture->audio_transcript)) !!}
+                        </div>
+                    @else
+                        <div class="p-4 rounded-xl bg-stone-50/70 dark:bg-stone-900/60 border border-stone-200/60 dark:border-stone-800/60">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-stone-500 block mb-2">Documented Cultural Narrative</span>
+                            {!! nl2br(e($culture->description)) !!}
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Documented Sources List --}}
+                @if($culture->sources->count() > 0)
+                    <div class="pt-4 border-t border-stone-100 dark:border-stone-800 space-y-3">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-stone-500">Documented Source Items</h3>
+                        <div class="space-y-2">
+                            @foreach($culture->sources as $source)
+                                <div class="p-3 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/40 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                    <div>
+                                        <span class="font-bold text-stone-900 dark:text-stone-100 capitalize">{{ str_replace('_', ' ', $source->source_type) }}</span>
+                                        <span class="text-stone-400">•</span>
+                                        <span class="text-stone-600 dark:text-stone-400">Speaker: {{ $source->display_speaker }}</span>
+                                        @if($source->recording_location)
+                                            <span class="text-stone-400">•</span>
+                                            <span class="text-stone-500">Location: {{ $source->recording_location }}</span>
+                                        @endif
+                                    </div>
+                                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300">
+                                        {{ ucfirst($source->transcript_origin) }} ({{ $source->transcript_review_status }})
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        {{-- SECTION 3: HISTORY & CONTEXT --}}
+        @if($culture->historical_period || $culture->significance || $culture->description)
+            <div x-show="activeSection === 'history'" class="space-y-6">
+                <div class="rounded-2xl border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] p-5 sm:p-8 space-y-6">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                        <i data-lucide="history" class="w-4 h-4"></i>
+                        <span>Historical Origin, Meaning & Context</span>
+                    </h2>
+
+                    @if($culture->historical_period)
+                        <div class="space-y-1">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-stone-500">Historical Era</h3>
+                            <p class="text-stone-900 dark:text-stone-100 font-semibold">{{ $culture->historical_period }}</p>
+                        </div>
+                    @endif
+
+                    @if($culture->significance)
+                        <div class="space-y-2">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-stone-500">Cultural & Spiritual Significance</h3>
+                            <p class="font-archive-body text-base sm:text-lg leading-relaxed text-stone-800 dark:text-stone-200">
+                                {{ $culture->significance }}
+                            </p>
+                        </div>
+                    @endif
+
+                    @if($culture->challenges || $culture->preservation_efforts)
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-stone-100 dark:border-stone-800">
+                            @if($culture->preservation_efforts)
+                                <div class="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-1">
+                                    <h4 class="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Preservation Efforts</h4>
+                                    <p class="text-xs text-stone-700 dark:text-stone-300 leading-relaxed">{{ $culture->preservation_efforts }}</p>
+                                </div>
+                            @endif
+
+                            @if($culture->challenges)
+                                <div class="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-1">
+                                    <h4 class="text-xs font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider">Documented Threats & Challenges</h4>
+                                    <p class="text-xs text-stone-700 dark:text-stone-300 leading-relaxed">{{ $culture->challenges }}</p>
+                                </div>
+                            @endif
+                        </div>
                     @endif
                 </div>
             </div>
         @endif
 
-        {{-- EDUCATIONAL DOSSIER: CHAPTER NAVIGATION TABS --}}
-        <div class="border-b border-stone-200 dark:border-stone-800 pb-2">
-            <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-1">
-                <button @click="activeTab = 'story'"
-                        class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 sm:gap-2 flex-shrink-0 cursor-pointer"
-                        :class="activeTab === 'story' 
-                            ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20' 
-                            : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 border border-stone-200/80 dark:border-stone-800'">
-                    <i data-lucide="book-open" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-                    <span class="hidden sm:inline">Chapter 1: </span><span>Story & Origins</span>
-                </button>
+        {{-- SECTION 4: PRACTICES & TRANSMISSION --}}
+        @if($culture->rituals || $culture->transmission_methods || $culture->community_role || $culture->current_practitioners)
+            <div x-show="activeSection === 'practices'" class="space-y-6">
+                <div class="rounded-2xl border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] p-5 sm:p-8 space-y-6">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                        <i data-lucide="compass" class="w-4 h-4"></i>
+                        <span>Living Practices & Intergenerational Transmission</span>
+                    </h2>
 
-                <button @click="activeTab = 'practices'"
-                        class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 sm:gap-2 flex-shrink-0 cursor-pointer"
-                        :class="activeTab === 'practices' 
-                            ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20' 
-                            : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 border border-stone-200/80 dark:border-stone-800'">
-                    <i data-lucide="sparkles" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-                    <span class="hidden sm:inline">Chapter 2: </span><span>Rituals & Relics</span>
-                </button>
-
-                <button @click="activeTab = 'custodians'"
-                        class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 sm:gap-2 flex-shrink-0 cursor-pointer"
-                        :class="activeTab === 'custodians' 
-                            ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20' 
-                            : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 border border-stone-200/80 dark:border-stone-800'">
-                    <i data-lucide="shield" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-                    <span class="hidden sm:inline">Chapter 3: </span><span>Custodians</span>
-                </button>
-
-                <button @click="activeTab = 'media'"
-                        class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 sm:gap-2 flex-shrink-0 cursor-pointer"
-                        :class="activeTab === 'media' 
-                            ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20' 
-                            : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 border border-stone-200/80 dark:border-stone-800'">
-                    <i data-lucide="film" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
-                    <span>Media Vault</span>
-                    @if($culture->media_files && count($culture->media_files))
-                        <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-mono">
-                            {{ count($culture->media_files) }}
-                        </span>
+                    @if($culture->rituals)
+                        <div class="space-y-2">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-stone-500">Customary Rites & Ceremonial Steps</h3>
+                            <p class="font-archive-body text-base sm:text-lg leading-relaxed text-stone-800 dark:text-stone-200">
+                                {{ $culture->rituals }}
+                            </p>
+                        </div>
                     @endif
-                </button>
 
-                <button @click="activeTab = 'quiz'"
-                        class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 sm:gap-2 flex-shrink-0 cursor-pointer"
-                        :class="activeTab === 'quiz' 
-                            ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20' 
-                            : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 border border-stone-200/80 dark:border-stone-800'">
-                    <i data-lucide="help-circle" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500"></i>
-                    <span>Quiz</span><span class="hidden sm:inline"> & Knowledge Check</span>
-                </button>
+                    @if($culture->community_role)
+                        <div class="space-y-2">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-stone-500">Role in Community Life</h3>
+                            <p class="font-archive-body text-base leading-relaxed text-stone-800 dark:text-stone-200">
+                                {{ $culture->community_role }}
+                            </p>
+                        </div>
+                    @endif
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-stone-100 dark:border-stone-800">
+                        @if($culture->transmission_methods)
+                            <div class="p-4 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 space-y-1">
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-stone-500">Transmission Mode</h4>
+                                <p class="text-xs font-medium text-stone-800 dark:text-stone-200">{{ $culture->transmission_methods }}</p>
+                            </div>
+                        @endif
+
+                        @if($culture->current_practitioners)
+                            <div class="p-4 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 space-y-1">
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-stone-500">Documented Practitioners</h4>
+                                <p class="text-xs font-medium text-stone-800 dark:text-stone-200">{{ $culture->current_practitioners }}</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
             </div>
-        </div>
+        @endif
 
-        {{-- MAIN CONTENT GRID: DOSSIER CONTENT + EDUCATIONAL SIDEBAR --}}
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-
-            {{-- LEFT COLUMN: CHAPTER CONTENT (Cols 1-8) --}}
-            <div class="lg:col-span-8 space-y-8">
-
-                {{-- ==================== CHAPTER 1: STORY & ORIGINS ==================== --}}
-                <div x-show="activeTab === 'story'" class="space-y-8 animate-fadeIn" x-transition>
-                    
-                    {{-- Primary Story & Narrative Description --}}
-                    <div class="bg-white dark:bg-[#131218] border border-stone-200 dark:border-stone-800/80 rounded-3xl p-6 sm:p-10 shadow-sm space-y-6">
-                        <div class="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-4">
-                            <div class="flex items-center gap-2">
-                                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                                <span class="text-xs font-bold uppercase tracking-widest text-stone-500 dark:text-stone-400">Oral Account & Historical Chronicle</span>
-                            </div>
-                            <span class="text-xs text-stone-400 font-mono">Archive Record</span>
-                        </div>
-
-                        {{-- Drop-Cap Narrative Text --}}
-                        <div class="font-editorial text-stone-800 dark:text-stone-200 leading-relaxed drop-cap space-y-4"
-                             :style="'font-size: ' + fontSize + 'px; line-height: 1.8;'">
-                            {{ $culture->description }}
-                        </div>
-
-                        @if($culture->significance)
-                            <div class="mt-6 p-5 rounded-2xl bg-amber-500/5 border-l-4 border-amber-500 border-stone-200 dark:border-stone-800">
-                                <span class="text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400 block mb-1">
-                                    Cosmological & Cultural Significance
-                                </span>
-                                <p class="text-xs sm:text-sm text-stone-700 dark:text-stone-300 leading-relaxed font-editorial italic">
-                                    "{{ $culture->significance }}"
-                                </p>
-                            </div>
-                        @endif
-                    </div>
-
-                    {{-- Living Heritage: Oral Spoken Folktale Transcript (if present) --}}
-                    @if($culture->audio_transcript || $culture->raw_story)
-                        <div class="bg-white dark:bg-[#131218] border border-stone-200 dark:border-stone-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-base font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
-                                    <i data-lucide="file-text" class="w-5 h-5 text-amber-500"></i>
-                                    <span>Verbatim Spoken Transcript & Dialect Narrative</span>
-                                </h3>
-                                <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400">
-                                    Verified Voice
-                                </span>
-                            </div>
-                            <p class="text-xs text-stone-500 dark:text-stone-400">
-                                Transcribed directly from native audio recording and preserved for dialect linguistic study.
-                            </p>
-                            <div class="p-5 rounded-2xl bg-stone-50 dark:bg-stone-900/80 border border-stone-200 dark:border-stone-800 font-editorial text-stone-700 dark:text-stone-300 leading-relaxed text-sm sm:text-base">
-                                {{ $culture->audio_transcript ?? $culture->raw_story }}
-                            </div>
-                        </div>
-                    @endif
-
-                    {{-- "Did You Know?" Educational Callout --}}
-                    <div class="rounded-3xl border border-amber-300 dark:border-amber-900/60 bg-gradient-to-br from-amber-100/50 via-white to-amber-50 dark:from-amber-950/30 dark:via-[#131218] dark:to-stone-900 p-6 sm:p-8 shadow-sm flex items-start gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
-                            <i data-lucide="lightbulb" class="w-6 h-6"></i>
-                        </div>
-                        <div class="space-y-1">
-                            <span class="text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
-                                Educational Factoid
-                            </span>
-                            <h4 class="font-bold text-stone-900 dark:text-stone-100 text-base">
-                                Living Transmission in {{ $culture->region }}
-                            </h4>
-                            <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
-                                Cultural practices within {{ $culture->name }} have historically served as a community governance framework and oral legal code, passed between generations without written textbooks.
-                            </p>
-                        </div>
-                    </div>
+        {{-- SECTION 5: PEOPLE & CUSTODIANS --}}
+        <div x-show="activeSection === 'people'" class="space-y-6">
+            <div class="rounded-2xl border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] p-5 sm:p-8 space-y-6">
+                <div>
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        <span>Contributors, Speakers & Reviewers</span>
+                    </h2>
+                    <p class="text-xs text-stone-500 mt-1">
+                        Cultural knowledge is preserved through custodians. Individual contributors share testimony but do not solely represent entire communities.
+                    </p>
                 </div>
 
-                {{-- ==================== CHAPTER 2: RITUALS & RELICS ==================== --}}
-                <div x-show="activeTab === 'practices'" class="space-y-8 animate-fadeIn" x-transition>
-                    
-                    {{-- Sacred Rituals and Practices --}}
-                    <div class="bg-white dark:bg-[#131218] border border-stone-200 dark:border-stone-800/80 rounded-3xl p-6 sm:p-10 shadow-sm space-y-6">
-                        <div class="flex items-center gap-2 border-b border-stone-100 dark:border-stone-800 pb-4">
-                            <i data-lucide="sparkles" class="w-5 h-5 text-amber-500"></i>
-                            <h3 class="font-heritage text-xl font-bold text-stone-900 dark:text-stone-100">Sacred Ceremonies & Ritual Practices</h3>
-                        </div>
-
-                        <div class="prose dark:prose-invert max-w-none text-stone-700 dark:text-stone-300 font-editorial text-base sm:text-lg leading-relaxed">
-                            @if($culture->rituals)
-                                <p>{{ $culture->rituals }}</p>
-                            @else
-                                <p>Ceremonies surrounding {{ $culture->name }} celebrate generational renewal, ancestral honor, seasonal harvests, and communal rites of passage. Practitioners participate in coordinated chants, ceremonial masquerades, and rhythmic drumming.</p>
-                            @endif
-                        </div>
-
-                        {{-- Community Role Callout --}}
-                        @if($culture->community_role)
-                            <div class="p-5 rounded-2xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 space-y-1">
-                                <span class="text-[11px] font-black uppercase tracking-wider text-stone-500 dark:text-stone-400">Community Function & Role</span>
-                                <p class="text-sm font-semibold text-stone-800 dark:text-stone-200">{{ $culture->community_role }}</p>
-                            </div>
-                        @endif
-                    </div>
-
-                    {{-- Artifact Segmentation & Relic Visualizer (SAM 3.1) --}}
-                    @if($culture->artifact_segmentation && !empty($culture->artifact_segmentation['segmented_path']))
-                        <div class="bg-white dark:bg-[#131218] border border-stone-200 dark:border-stone-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="scissors" class="w-5 h-5 text-amber-500"></i>
-                                    <h3 class="text-lg font-bold text-stone-900 dark:text-stone-100">
-                                        Authentic Artifact Visual Isolation
-                                    </h3>
-                                </div>
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                                    SAM 3.1 Relic Model
-                                </span>
-                            </div>
-                            <p class="text-xs text-stone-500 dark:text-stone-400">
-                                High-precision visual boundary extraction preserving intricate carvings, textiles, or sacred implements.
-                            </p>
-                            
-                            {{-- Interactive Image Lightbox Frame --}}
-                            <div class="rounded-2xl overflow-hidden bg-stone-100 dark:bg-stone-950 p-6 border border-stone-200 dark:border-stone-800 flex flex-col items-center justify-center relative group">
-                                <img src="{{ Storage::url($culture->artifact_segmentation['segmented_path']) }}"
-                                     alt="Isolated Relic"
-                                     class="max-h-80 object-contain drop-shadow-2xl transition duration-500 group-hover:scale-105">
-                                <span class="text-[11px] font-mono text-stone-400 mt-4">
-                                    Artifact: {{ $culture->artifact_segmentation['label'] ?? 'Cultural Implement' }}
-                                </span>
-                            </div>
-                            <p class="text-[11px] text-stone-400 italic">
-                                Note: Computational segmentation aids visual inspection; it does not replace carbon dating or archaeological provenance.
-                            </p>
-                        </div>
-                    @endif
-
-                    {{-- AI-Assisted Artwork / Illustration (Muse Image) --}}
-                    @if($culture->ai_illustration)
-                        <div class="bg-white dark:bg-[#131218] border border-stone-200 dark:border-stone-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="palette" class="w-5 h-5 text-amber-500"></i>
-                                    <h3 class="text-lg font-bold text-stone-900 dark:text-stone-100">
-                                        Artistic Interpretation & Re-creation
-                                    </h3>
-                                </div>
-                                <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400">
-                                    Muse Image
-                                </span>
-                            </div>
-                            <div class="relative rounded-2xl overflow-hidden border border-stone-200 dark:border-stone-800 shadow-md">
-                                <img src="{{ Storage::url($culture->ai_illustration) }}"
-                                     alt="AI-Generated Cultural Artwork"
-                                     class="w-full h-80 object-cover">
-                                <div class="absolute bottom-3 left-3 right-3 px-4 py-2 bg-black/80 backdrop-blur-md rounded-xl text-xs text-stone-200 flex items-center justify-between">
-                                    <span class="flex items-center gap-1.5 text-amber-400 font-semibold">
-                                        <i data-lucide="info" class="w-4 h-4"></i>
-                                        <span>AI-Generated Conceptual Artwork</span>
-                                    </span>
-                                    <span class="text-[10px] text-stone-400">Artistic interpretation, not historical photography.</span>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-
-                {{-- ==================== CHAPTER 3: CUSTODIANS & FUTURE ==================== --}}
-                <div x-show="activeTab === 'custodians'" class="space-y-8 animate-fadeIn" x-transition>
-                    
-                    {{-- Living Custodians & Transmission --}}
-                    <div class="bg-white dark:bg-[#131218] border border-stone-200 dark:border-stone-800/80 rounded-3xl p-6 sm:p-10 shadow-sm space-y-6">
-                        <div class="flex items-center gap-2 border-b border-stone-100 dark:border-stone-800 pb-4">
-                            <i data-lucide="users" class="w-5 h-5 text-amber-500"></i>
-                            <h3 class="font-heritage text-xl font-bold text-stone-900 dark:text-stone-100">Custodianship & Preservation Challenges</h3>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="p-5 rounded-2xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 space-y-1">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-stone-400">Current Living Practitioners</span>
-                                <h4 class="font-bold text-base text-stone-900 dark:text-stone-100">{{ $culture->current_practitioners ?? 'Elders, Lineage Chieftains & Youth Guilds' }}</h4>
-                                <p class="text-xs text-stone-500 dark:text-stone-400 mt-1">Responsible for oral transmission, ritual initiation, and language retention.</p>
-                            </div>
-
-                            <div class="p-5 rounded-2xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 space-y-1">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-stone-400">Transmission Methods</span>
-                                <h4 class="font-bold text-base text-stone-900 dark:text-stone-100">{{ $culture->transmission_methods ?? 'Oral storytelling, seasonal gatherings, apprentice guilds' }}</h4>
-                                <p class="text-xs text-stone-500 dark:text-stone-400 mt-1">Historically passed in kinship circles without formal written syllabus.</p>
-                            </div>
-                        </div>
-
-                        {{-- Challenges & Threats to Survival --}}
-                        @if($culture->challenges)
-                            <div class="p-5 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 space-y-2">
-                                <div class="flex items-center gap-2 text-rose-700 dark:text-rose-400 text-xs font-bold uppercase tracking-wider">
-                                    <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-                                    <span>Preservation Challenges & Endangerment Risks</span>
-                                </div>
-                                <p class="text-xs sm:text-sm text-stone-700 dark:text-stone-300 leading-relaxed font-editorial">
-                                    {{ $culture->challenges }}
-                                </p>
-                            </div>
-                        @endif
-
-                        {{-- Future Vision & Conservation Efforts --}}
-                        @if($culture->preservation_efforts || $culture->future_vision)
-                            <div class="space-y-4 pt-2">
-                                <h4 class="font-bold text-stone-900 dark:text-stone-100 text-sm uppercase tracking-wider">
-                                    Active Safeguarding & Future Vision
-                                </h4>
-                                <p class="text-sm font-editorial text-stone-700 dark:text-stone-300 leading-relaxed">
-                                    {{ $culture->preservation_efforts ?? $culture->future_vision }}
-                                </p>
-                            </div>
-                        @endif
-                    </div>
-
-                    {{-- Preservation Action Plan & Task Checklist (Muse Wonder) --}}
-                    @if($culture->wonder_preservation_plan && is_array($culture->wonder_preservation_plan))
-                        <div class="bg-white dark:bg-[#131218] border border-stone-200 dark:border-stone-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
-                            <div class="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-3">
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="compass" class="w-5 h-5 text-amber-500"></i>
-                                    <h3 class="text-base font-bold text-stone-900 dark:text-stone-100">
-                                        Community Conservation Action Plan
-                                    </h3>
-                                </div>
-                                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400">
-                                    Actionable Steps
-                                </span>
-                            </div>
-
-                            @if(!empty($culture->wonder_preservation_plan['preservation_summary']))
-                                <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-400 italic border-l-2 border-amber-500 pl-3">
-                                    "{{ $culture->wonder_preservation_plan['preservation_summary'] }}"
-                                </p>
-                            @endif
-
-                            @if(!empty($culture->wonder_preservation_plan['preservation_checklist']))
-                                <div class="space-y-2 pt-2">
-                                    <span class="text-[10px] font-bold uppercase tracking-wider text-stone-400 block">Recommended Custodian Tasks:</span>
-                                    <div class="grid grid-cols-1 gap-2">
-                                        @foreach($culture->wonder_preservation_plan['preservation_checklist'] as $task)
-                                            <div class="p-3 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 flex items-start gap-3 text-xs text-stone-700 dark:text-stone-300">
-                                                <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0"></i>
-                                                <span>{{ is_array($task) ? ($task['task'] ?? '') : $task }}</span>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-                    @endif
-
-                    {{-- Archival Integrity & Fact-Check Screen --}}
-                    @if(!empty($culture->wonder_preservation_plan['originality_audit']))
-                        @php $audit = $culture->wonder_preservation_plan['originality_audit']; @endphp
-                        <div class="bg-white dark:bg-[#131218] border border-stone-200 dark:border-stone-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="shield-check" class="w-5 h-5 text-amber-500"></i>
-                                    <h3 class="text-base font-bold text-stone-900 dark:text-stone-100">
-                                        Archival Integrity & Historical Fact-Check
-                                    </h3>
-                                </div>
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider
-                                    {{ ($audit['plagiarism_risk'] ?? '') === 'low' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400' : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400' }}">
-                                    {{ strtoupper($audit['plagiarism_risk'] ?? 'low') }} RISK
-                                </span>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="p-3.5 bg-stone-50 dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800">
-                                    <span class="text-[10px] font-bold uppercase text-stone-400 block">Oral Authenticity Index</span>
-                                    <span class="text-2xl font-black text-amber-500">{{ $audit['oral_authenticity_score'] ?? 0 }}<span class="text-xs text-stone-400">/100</span></span>
-                                    <span class="text-[10px] text-stone-400 block mt-0.5">{{ $audit['authenticity_label'] ?? 'High Oral Fidelity' }}</span>
-                                </div>
-                                <div class="p-3.5 bg-stone-50 dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800">
-                                    <span class="text-[10px] font-bold uppercase text-stone-400 block">Source Fidelity</span>
-                                    <span class="text-sm font-bold text-stone-900 dark:text-stone-100 flex items-center gap-1.5 mt-2">
-                                        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i>
-                                        Faithful to Voice Source
-                                    </span>
-                                    <span class="text-[10px] text-stone-400 block">No fabricated claims</span>
-                                </div>
-                            </div>
-
-                            @if(!empty($audit['historical_fact_check_flags']))
-                                <div class="space-y-2 pt-2">
-                                    <span class="text-[10px] font-bold uppercase tracking-wider text-stone-400 block">Assertions Flagged for Elder Corroboration:</span>
-                                    @foreach($audit['historical_fact_check_flags'] as $flag)
-                                        <div class="p-3 bg-stone-50 dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 text-xs space-y-1">
-                                            <div class="flex items-center justify-between">
-                                                <span class="font-bold text-stone-900 dark:text-stone-100">{{ $flag['claim'] ?? '' }}</span>
-                                                <span class="text-[9px] uppercase px-2 py-0.5 rounded font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400">
-                                                    {{ str_replace('_', ' ', $flag['verification_status'] ?? 'elder check') }}
-                                                </span>
-                                            </div>
-                                            <p class="text-[11px] text-stone-500 dark:text-stone-400 italic">{{ $flag['guidance'] ?? '' }}</p>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @endif
-                        </div>
-                    @endif
-                </div>
-
-                {{-- ==================== CHAPTER 4: MEDIA VAULT ==================== --}}
-                <div x-show="activeTab === 'media'" class="space-y-8 animate-fadeIn" x-transition>
-                    
-                    {{-- Photographic Gallery with Lightbox --}}
-                    @if($culture->media_files && count($culture->media_files))
-                        <div x-data="{ activeImage: '{{ Storage::url($culture->media_files[0]) }}' }"
-                             class="bg-white dark:bg-[#131218] border border-stone-200 dark:border-stone-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-base font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
-                                    <i data-lucide="image" class="w-5 h-5 text-amber-500"></i>
-                                    <span>Field Photographic Archive</span>
-                                </h3>
-                                <span class="text-xs text-stone-400 font-mono">{{ count($culture->media_files) }} Heirlooms</span>
-                            </div>
-
-                            {{-- Main Display --}}
-                            <div class="rounded-2xl overflow-hidden border border-stone-200 dark:border-stone-800 h-80 sm:h-96 bg-stone-100 dark:bg-stone-950 flex items-center justify-center">
-                                <img :src="activeImage" class="w-full h-full object-contain transition duration-500">
-                            </div>
-
-                            {{-- Thumbnail Strip --}}
-                            <div class="grid grid-cols-4 sm:grid-cols-6 gap-2 pt-2">
-                                @foreach($culture->media_files as $file)
-                                    <button @click="activeImage = '{{ Storage::url($file) }}'"
-                                            class="rounded-xl overflow-hidden border-2 transition h-16 sm:h-20"
-                                            :class="activeImage === '{{ Storage::url($file) }}' ? 'border-amber-500 shadow-md' : 'border-transparent opacity-75 hover:opacity-100'">
-                                        <img src="{{ Storage::url($file) }}" class="w-full h-full object-cover">
-                                    </button>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-
-                    {{-- Video Documentaries / Field Footage --}}
-                    @if($culture->video_url || $culture->video_path)
-                        <div class="bg-white dark:bg-[#131218] border border-stone-200 dark:border-stone-800/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
-                            <h3 class="text-base font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
-                                <i data-lucide="video" class="w-5 h-5 text-amber-500"></i>
-                                <span>Video Documentary & Ceremony Footage</span>
-                            </h3>
-
-                            <div class="aspect-video rounded-2xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-black">
-                                @if($culture->video_path)
-                                    <video controls class="w-full h-full">
-                                        <source src="{{ Storage::url($culture->video_path) }}" type="video/mp4">
-                                        Your browser does not support video playback.
-                                    </video>
-                                @else
-                                    <iframe src="{{ $culture->video_url }}" class="w-full h-full" allowfullscreen></iframe>
-                                @endif
-                            </div>
-                        </div>
-                    @endif
-
-                    @if(!$culture->video_url && !$culture->video_path && (!$culture->media_files || !count($culture->media_files)))
-                        <div class="p-10 text-center bg-white dark:bg-[#131218] rounded-3xl border border-stone-200 dark:border-stone-800">
-                            <i data-lucide="image-off" class="w-10 h-10 text-stone-400 mx-auto mb-2"></i>
-                            <h4 class="font-bold text-stone-700 dark:text-stone-300">No Secondary Media Enshrined</h4>
-                            <p class="text-xs text-stone-400 mt-1">Oral story and hero images are documented in Chapter 1.</p>
-                        </div>
-                    @endif
-                </div>
-
-                {{-- ==================== CHAPTER 5: INTERACTIVE KNOWLEDGE CHECK ==================== --}}
-                <div x-show="activeTab === 'quiz'" class="space-y-6 animate-fadeIn" x-transition>
-                    <div class="bg-white dark:bg-[#131218] border border-amber-200 dark:border-amber-900/60 rounded-3xl p-6 sm:p-10 shadow-sm space-y-6"
-                         x-data="{
-                            selectedQ1: null,
-                            selectedQ2: null,
-                            submitted: false,
-                            q1Correct: 1, // index of correct answer
-                            q2Correct: 0
-                         }">
-                        
-                        <div class="flex items-center gap-3 border-b border-stone-100 dark:border-stone-800 pb-4">
-                            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
-                                ?
+                {{-- Record Submitter Attribution --}}
+                <div class="p-4 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50/70 dark:bg-stone-900/60 space-y-2">
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-stone-500">Submitting Guardian</span>
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold flex items-center justify-center text-sm">
+                                {{ substr($culture->submitter->name ?? 'G', 0, 1) }}
                             </div>
                             <div>
-                                <h3 class="font-heritage text-xl font-bold text-stone-900 dark:text-stone-100">
-                                    Interactive Knowledge Check
-                                </h3>
-                                <p class="text-xs text-stone-500 dark:text-stone-400">
-                                    Reinforce what you learned about {{ $culture->name }}. Test your comprehension!
-                                </p>
-                            </div>
-                        </div>
-
-                        {{-- Question 1 --}}
-                        <div class="space-y-3">
-                            <h4 class="text-sm sm:text-base font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
-                                <span class="px-2 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-xs font-mono text-amber-600 font-bold">Q1</span>
-                                <span>In which geographical cradle is the tradition of {{ $culture->name }} rooted?</span>
-                            </h4>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                <button type="button" @click="if(!submitted) selectedQ1 = 0"
-                                        class="p-3.5 rounded-xl border text-left text-xs sm:text-sm font-semibold transition"
-                                        :class="selectedQ1 === 0 
-                                            ? (submitted ? (q1Correct === 0 ? 'bg-emerald-100 border-emerald-500 text-emerald-900' : 'bg-rose-100 border-rose-500 text-rose-900') : 'bg-amber-50 border-amber-500 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200')
-                                            : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 hover:border-amber-300'">
-                                    A. Nile Delta Basin
-                                </button>
-                                <button type="button" @click="if(!submitted) selectedQ1 = 1"
-                                        class="p-3.5 rounded-xl border text-left text-xs sm:text-sm font-semibold transition"
-                                        :class="selectedQ1 === 1 
-                                            ? (submitted ? (q1Correct === 1 ? 'bg-emerald-100 border-emerald-500 text-emerald-900' : 'bg-rose-100 border-rose-500 text-rose-900') : 'bg-amber-50 border-amber-500 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200')
-                                            : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 hover:border-amber-300'">
-                                    B. {{ $culture->region }}
-                                </button>
-                                <button type="button" @click="if(!submitted) selectedQ1 = 2"
-                                        class="p-3.5 rounded-xl border text-left text-xs sm:text-sm font-semibold transition"
-                                        :class="selectedQ1 === 2 
-                                            ? (submitted ? (q1Correct === 2 ? 'bg-emerald-100 border-emerald-500 text-emerald-900' : 'bg-rose-100 border-rose-500 text-rose-900') : 'bg-amber-50 border-amber-500 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200')
-                                            : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 hover:border-amber-300'">
-                                    C. Congo Rainforest Highlands
-                                </button>
-                                <button type="button" @click="if(!submitted) selectedQ1 = 3"
-                                        class="p-3.5 rounded-xl border text-left text-xs sm:text-sm font-semibold transition"
-                                        :class="selectedQ1 === 3 
-                                            ? (submitted ? (q1Correct === 3 ? 'bg-emerald-100 border-emerald-500 text-emerald-900' : 'bg-rose-100 border-rose-500 text-rose-900') : 'bg-amber-50 border-amber-500 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200')
-                                            : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 hover:border-amber-300'">
-                                    D. Mediterranean Coastal Ports
-                                </button>
-                            </div>
-                        </div>
-
-                        {{-- Question 2 --}}
-                        <div class="space-y-3 pt-3 border-t border-stone-100 dark:border-stone-800">
-                            <h4 class="text-sm sm:text-base font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
-                                <span class="px-2 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-xs font-mono text-amber-600 font-bold">Q2</span>
-                                <span>What is the core medium through which this heritage has been historically preserved?</span>
-                            </h4>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                <button type="button" @click="if(!submitted) selectedQ2 = 0"
-                                        class="p-3.5 rounded-xl border text-left text-xs sm:text-sm font-semibold transition"
-                                        :class="selectedQ2 === 0 
-                                            ? (submitted ? (q2Correct === 0 ? 'bg-emerald-100 border-emerald-500 text-emerald-900' : 'bg-rose-100 border-rose-500 text-rose-900') : 'bg-amber-50 border-amber-500 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200')
-                                            : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 hover:border-amber-300'">
-                                    A. Oral Transmission, Elder Storytelling & Ceremonial Rites
-                                </button>
-                                <button type="button" @click="if(!submitted) selectedQ2 = 1"
-                                        class="p-3.5 rounded-xl border text-left text-xs sm:text-sm font-semibold transition"
-                                        :class="selectedQ2 === 1 
-                                            ? (submitted ? (q2Correct === 1 ? 'bg-emerald-100 border-emerald-500 text-emerald-900' : 'bg-rose-100 border-rose-500 text-rose-900') : 'bg-amber-50 border-amber-500 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200')
-                                            : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 hover:border-amber-300'">
-                                    B. Commercial Print Publishing Houses
-                                </button>
-                            </div>
-                        </div>
-
-                        {{-- Submit / Reset Button --}}
-                        <div class="pt-4 flex items-center justify-between">
-                            <button type="button" 
-                                    @click="submitted = true"
-                                    x-show="!submitted"
-                                    :disabled="selectedQ1 === null || selectedQ2 === null"
-                                    class="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-bold text-sm shadow-md transition flex items-center gap-2">
-                                <i data-lucide="check" class="w-4 h-4"></i>
-                                <span>Check Answers</span>
-                            </button>
-
-                            <div x-show="submitted" class="flex items-center gap-4">
-                                <span class="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                                    <i data-lucide="award" class="w-5 h-5"></i>
-                                    <span>Preservation Knowledge Verified!</span>
-                                </span>
-                                <button type="button" @click="submitted = false; selectedQ1 = null; selectedQ2 = null"
-                                        class="text-xs font-bold text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 underline">
-                                    Try Again
-                                </button>
+                                <h3 class="text-xs font-bold text-stone-900 dark:text-stone-100">{{ $culture->submitter->name ?? 'Community Guardian' }}</h3>
+                                <p class="text-[11px] text-stone-500">Submitted record on {{ $culture->created_at->format('F j, Y') }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-            </div>
-
-            {{-- RIGHT COLUMN: EDUCATIONAL CUSTODIAN PASSPORT & RELATED (Cols 9-12) --}}
-            <div class="lg:col-span-4 space-y-6">
-
-                {{-- Cultural Passport & Metadata Card --}}
-                <div class="bg-white dark:bg-[#131218] border border-stone-200 dark:border-stone-800/80 rounded-3xl p-6 shadow-sm space-y-6">
-                    <div class="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-3">
-                        <span class="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
-                            <i data-lucide="shield" class="w-4 h-4"></i>
-                            Archival Provenance
-                        </span>
-                        <span class="text-xs font-mono text-stone-400">#{{ str_pad($culture->id, 5, '0', STR_PAD_LEFT) }}</span>
-                    </div>
-
-                    {{-- Guardian Profile --}}
+                {{-- Specific Documented Contributors --}}
+                @if($culture->culturalContributors->count() > 0)
                     <div class="space-y-3">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-stone-400 block">Enshrined Cultural Guardian</span>
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-black text-lg flex items-center justify-center">
-                                {{ strtoupper(substr($culture->submitter->name ?? 'K', 0, 1)) }}
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <h4 class="font-bold text-stone-900 dark:text-stone-100 text-sm truncate">
-                                    {{ $culture->submitter->name ?? 'Kulturegram Preserver' }}
-                                </h4>
-                                <p class="text-xs text-stone-500 dark:text-stone-400">
-                                    Community Cultural Custodian
-                                </p>
-                            </div>
-                        </div>
-
-                        @if($culture->submitted_by)
-                            <a href="{{ route('profile.user', $culture->submitted_by) }}"
-                               class="inline-flex items-center justify-center gap-2 w-full mt-2 py-2 px-3 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 hover:border-amber-500 text-stone-700 dark:text-stone-300 text-xs font-bold transition">
-                                <span>View Guardian Profile</span>
-                                <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
-                            </a>
-                        @endif
-                    </div>
-
-                    {{-- Enshrinement Details --}}
-                    <div class="pt-4 border-t border-stone-100 dark:border-stone-800 space-y-2.5 text-xs text-stone-600 dark:text-stone-400">
-                        <div class="flex items-center justify-between">
-                            <span class="text-stone-400">Archival Date:</span>
-                            <span class="font-medium text-stone-800 dark:text-stone-200">{{ $culture->created_at->format('M d, Y') }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-stone-400">Intellectual Rights:</span>
-                            <span class="font-bold text-amber-600 dark:text-amber-400">{{ $culture->license_type ?? 'Cultural Commons (CC BY-NC)' }}</span>
-                        </div>
-                        @if($culture->license_credit)
-                            <div class="flex items-center justify-between">
-                                <span class="text-stone-400">Attribution Credit:</span>
-                                <span class="font-medium text-stone-800 dark:text-stone-200 truncate max-w-[160px]">{{ $culture->license_credit }}</span>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                {{-- Related Cultural Traditions --}}
-                @if(isset($relatedCultures) && count($relatedCultures))
-                    <div class="bg-white dark:bg-[#131218] border border-stone-200 dark:border-stone-800/80 rounded-3xl p-6 shadow-sm space-y-4">
-                        <div class="flex items-center justify-between">
-                            <h3 class="font-heritage text-base font-bold text-stone-900 dark:text-stone-100">
-                                Related Cultural Traditions
-                            </h3>
-                            <span class="text-[10px] text-amber-600 font-bold uppercase">Explore</span>
-                        </div>
-
-                        <div class="space-y-3">
-                            @foreach($relatedCultures as $related)
-                                <a href="{{ route('cultural-hub.show', $related->id) }}"
-                                   class="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-stone-50 dark:hover:bg-stone-900 transition group border border-transparent hover:border-stone-200 dark:hover:border-stone-800">
-                                    <div class="w-14 h-14 rounded-xl overflow-hidden bg-stone-100 dark:bg-stone-800 flex-shrink-0">
-                                        @if($related->image)
-                                            <img src="{{ Storage::url($related->image) }}" class="w-full h-full object-cover group-hover:scale-105 transition">
-                                        @else
-                                            <div class="w-full h-full flex items-center justify-center text-amber-500">
-                                                <i data-lucide="compass" class="w-6 h-6"></i>
-                                            </div>
-                                        @endif
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-stone-500">Documented Knowledge Contributors</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            @foreach($culture->culturalContributors as $contributor)
+                                <div class="p-3.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 space-y-1.5 text-xs">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-bold text-stone-900 dark:text-stone-100">{{ $contributor->display_name }}</span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-stone-100 dark:bg-stone-800 capitalize">{{ $contributor->role }}</span>
                                     </div>
-                                    <div class="min-w-0 flex-1">
-                                        <h4 class="font-bold text-xs text-stone-900 dark:text-stone-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 truncate">
-                                            {{ $related->name }}
-                                        </h4>
-                                        <span class="text-[10px] uppercase font-bold text-stone-400 block truncate">
-                                            {{ $related->region }} • {{ $related->category }}
-                                        </span>
-                                    </div>
-                                    <i data-lucide="chevron-right" class="w-4 h-4 text-stone-400 group-hover:text-amber-500 transition flex-shrink-0"></i>
-                                </a>
+                                    @if($contributor->relationship_to_material)
+                                        <p class="text-stone-600 dark:text-stone-400 text-[11px]">
+                                            Relationship: {{ $contributor->relationship_to_material }}
+                                        </p>
+                                    @endif
+                                </div>
                             @endforeach
                         </div>
                     </div>
                 @endif
+            </div>
+        </div>
 
-                {{-- Citation Modal --}}
-                <div x-show="openCitationModal" x-cloak
-                     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-                     @click.self="openCitationModal = false">
-                    <div class="bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-stone-200 dark:border-stone-800 shadow-2xl space-y-4">
-                        <div class="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-3">
-                            <h3 class="font-heritage text-lg font-bold text-stone-900 dark:text-stone-100">
-                                Academic & Curatorial Citation
-                            </h3>
-                            <button @click="openCitationModal = false" class="text-stone-400 hover:text-stone-700">
-                                <i data-lucide="x" class="w-5 h-5"></i>
-                            </button>
+        {{-- SECTION 6: MEDIA & ARTEFACTS --}}
+        @if($culture->image || $culture->media_files || $culture->audio_path || $culture->video_url || $culture->mediaAssets->count() > 0)
+            <div x-show="activeSection === 'media'" class="space-y-6">
+                <div class="rounded-2xl border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] p-5 sm:p-8 space-y-6">
+                    <div>
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                            <i data-lucide="film" class="w-4 h-4"></i>
+                            <span>Photographs, Artefacts & Supporting Media</span>
+                        </h2>
+                        <p class="text-xs text-stone-500 mt-1">Every media asset tracks permissions, origin, and license rights</p>
+                    </div>
+
+                    {{-- Primary Image --}}
+                    @if($culture->image)
+                        <div class="rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900">
+                            <img src="{{ Storage::url($culture->image) }}" alt="{{ $culture->name }}" class="max-h-[380px] w-full object-cover">
+                            <div class="p-3 text-xs flex justify-between items-center text-stone-500">
+                                <span>Primary Archival Photo</span>
+                                <span class="font-mono text-[10px]">{{ $culture->license_type ?? 'Archive Commons' }}</span>
+                            </div>
                         </div>
-                        <p class="text-xs text-stone-500">
-                            Use this citation format in educational papers, community histories, or research bibliographies:
+                    @endif
+
+                    {{-- Gallery Images --}}
+                    @if(!empty($culture->media_files) && is_array($culture->media_files))
+                        <div class="space-y-2">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-stone-500">Supporting Documentation Images</h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                @foreach($culture->media_files as $file)
+                                    <div class="rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-100 dark:bg-stone-900">
+                                        <img src="{{ Storage::url($file) }}" alt="Supporting cultural media" class="aspect-square w-full object-cover">
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
+
+        {{-- SECTION 7: RELATED KNOWLEDGE --}}
+        @if(!empty($relatedCultures) && count($relatedCultures) > 0)
+            <div x-show="activeSection === 'related'" class="space-y-6">
+                <div class="rounded-2xl border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] p-5 sm:p-8 space-y-6">
+                    <div>
+                        <h2 class="text-sm font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                            <i data-lucide="network" class="w-4 h-4"></i>
+                            <span>Connected Traditions & Knowledge Graph</span>
+                        </h2>
+                        <p class="text-xs text-stone-500 mt-1">Discovered through shared language families, ceremonial overlap, and geographic proximity</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        @foreach($relatedCultures as $related)
+                            <a href="{{ route('cultural-hub.show', $related->id) }}" 
+                               class="group block p-4 rounded-xl border border-stone-200 dark:border-stone-800 hover:border-amber-500 bg-stone-50/50 dark:bg-stone-900/50 transition">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 block mb-1">
+                                    {{ $related->category }}
+                                </span>
+                                <h3 class="text-sm font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-600 transition leading-snug">
+                                    {{ $related->name }}
+                                </h3>
+                                <p class="text-xs text-stone-500 mt-1 flex items-center gap-1">
+                                    <i data-lucide="map-pin" class="w-3 h-3"></i>
+                                    <span>{{ $related->region }}</span>
+                                </p>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        {{-- SECTION 8: SOURCES & VERIFICATION --}}
+        <div x-show="activeSection === 'sources'" class="space-y-6">
+            <div class="rounded-2xl border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] p-5 sm:p-8 space-y-6">
+                <div>
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                        <span>Claims, Citations & Source Verification</span>
+                    </h2>
+                    <p class="text-xs text-stone-500 mt-1">
+                        Every factual assertion is traced to source testimony, publications, or oral interviews.
+                    </p>
+                </div>
+
+                {{-- Claims Table / Cards --}}
+                @if($culture->claims->count() > 0)
+                    <div class="space-y-3">
+                        @foreach($culture->claims as $claim)
+                            @php
+                                $cBadge = $claim->review_badge;
+                            @endphp
+                            <div class="p-4 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50/40 dark:bg-stone-900/40 space-y-2 text-xs">
+                                <div class="flex items-center justify-between flex-wrap gap-2">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-stone-200 dark:bg-stone-800 capitalize">
+                                        {{ str_replace('_', ' ', $claim->claim_type) }}
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold border {{ $cBadge['class'] }}">
+                                        {{ $cBadge['label'] }}
+                                    </span>
+                                </div>
+                                <p class="text-stone-900 dark:text-stone-100 font-medium text-sm leading-relaxed">
+                                    {{ $claim->claim_text }}
+                                </p>
+                                @if($claim->evidence_reference)
+                                    <p class="text-[11px] text-stone-500 italic border-l-2 border-stone-300 dark:border-stone-700 pl-2">
+                                        Evidence Excerpt: "{{ $claim->evidence_reference }}"
+                                    </p>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="p-6 rounded-xl border border-dashed border-stone-200 dark:border-stone-800 text-center space-y-2">
+                        <i data-lucide="file-question" class="w-8 h-8 text-stone-400 mx-auto"></i>
+                        <h3 class="text-xs font-bold text-stone-700 dark:text-stone-300">No discrete claims catalogued yet</h3>
+                        <p class="text-xs text-stone-500 max-w-md mx-auto">
+                            This record is preserved as a holistic narrative. Knowledge keepers and researchers can submit itemized claims in the Contribute tab.
                         </p>
+                    </div>
+                @endif
 
-                        <div class="space-y-3 text-xs">
-                            <div>
-                                <span class="font-bold text-stone-700 dark:text-stone-300 block mb-1">APA 7th Format:</span>
-                                <div class="p-3 bg-stone-50 dark:bg-stone-950 rounded-xl font-mono text-[11px] text-stone-800 dark:text-stone-300 border border-stone-200 dark:border-stone-800 select-all">
-                                    {{ $culture->submitter->name ?? 'Kulturegram Preserver' }}. ({{ $culture->created_at->format('Y') }}). <em>{{ $culture->name }}</em> [Living Heritage Archive]. Kulturegram Cultural Preservation Network. {{ url()->current() }}
-                                </div>
-                            </div>
-                            <div>
-                                <span class="font-bold text-stone-700 dark:text-stone-300 block mb-1">Chicago / Turabian:</span>
-                                <div class="p-3 bg-stone-50 dark:bg-stone-950 rounded-xl font-mono text-[11px] text-stone-800 dark:text-stone-300 border border-stone-200 dark:border-stone-800 select-all">
-                                    "{{ $culture->name }}." Kulturegram Living Heritage Archive. Accessed {{ now()->format('F j, Y') }}. {{ url()->current() }}.
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="pt-2 flex justify-end">
-                            <button @click="copyCitationText(); openCitationModal = false"
-                                    class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs transition">
-                                Copy Citation
+                {{-- Moderator Review Status Controls (Guardians & Admins) --}}
+                @if(auth()->check() && (auth()->id() === $culture->submitted_by || auth()->user()->is_admin))
+                    <div class="pt-4 border-t border-stone-200 dark:border-stone-800 space-y-3">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">Guardian / Moderator Review Control</h3>
+                        <form action="{{ route('cultural-hub.review-status', $culture->id) }}" method="POST" class="flex flex-wrap items-center gap-2">
+                            @csrf
+                            <label class="text-xs text-stone-500">Record Status:</label>
+                            <select name="review_status" class="text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-1.5 font-bold">
+                                <option value="published" {{ $culture->review_status === 'published' ? 'selected' : '' }}>Published Archive</option>
+                                <option value="under_review" {{ $culture->review_status === 'under_review' ? 'selected' : '' }}>Under Community Review</option>
+                                <option value="awaiting_contributions" {{ $culture->review_status === 'awaiting_contributions' ? 'selected' : '' }}>Awaiting Evidence</option>
+                                <option value="disputed" {{ $culture->review_status === 'disputed' ? 'selected' : '' }}>Disputed Accounts</option>
+                                <option value="restricted" {{ $culture->review_status === 'restricted' ? 'selected' : '' }}>Restricted Sacred Knowledge</option>
+                            </select>
+                            <button type="submit" class="px-3 py-1.5 rounded-lg bg-stone-900 dark:bg-stone-100 text-white dark:text-black text-xs font-bold transition">
+                                Update Status
                             </button>
+                        </form>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        {{-- SECTION 9: CONTRIBUTE --}}
+        <div x-show="activeSection === 'contribute'" class="space-y-6">
+            <div class="rounded-2xl border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] p-5 sm:p-8 space-y-6">
+                <div>
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        <span>Submit Community Contribution or Correction</span>
+                    </h2>
+                    <p class="text-xs text-stone-500 mt-1">
+                        Help keep this cultural knowledge accurate. Submitted context is reviewed by community members before merging into the main record.
+                    </p>
+                </div>
+
+                <form action="{{ route('cultural-hub.contribute', $culture->id) }}" method="POST" class="space-y-4 max-w-2xl">
+                    @csrf
+                    <div>
+                        <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">Contribution Type *</label>
+                        <select name="revision_type" required class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2 text-stone-800 dark:text-stone-200">
+                            <option value="additional_context">Provide Additional Context / History</option>
+                            <option value="correction">Suggest Factual Correction</option>
+                            <option value="alternative_account">Provide Alternative Regional Account</option>
+                            <option value="additional_source">Cite Supporting Primary Source</option>
+                            <option value="new_media">Submit New Audio / Visual Documentation</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">Contribution Title (Optional)</label>
+                        <input type="text" name="title" placeholder="e.g., Elder dialect variation in neighboring village" class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2 text-stone-800 dark:text-stone-200">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">Proposed Testimony / Narrative *</label>
+                        <textarea name="proposed_content" required rows="4" placeholder="Detail the account, variation, or correction clearly..." class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2 text-stone-800 dark:text-stone-200"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">Evidence / Source Basis (Optional)</label>
+                        <input type="text" name="evidence_notes" placeholder="e.g., Oral interview with village elder, or book citation" class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2 text-stone-800 dark:text-stone-200">
+                    </div>
+
+                    @guest
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">Your Name (Optional)</label>
+                                <input type="text" name="contributor_name" placeholder="Community Member" class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2 text-stone-800 dark:text-stone-200">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">Email for Follow-up (Optional)</label>
+                                <input type="email" name="contributor_email" placeholder="contact@example.org" class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2 text-stone-800 dark:text-stone-200">
+                            </div>
                         </div>
+                    @endguest
+
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        <span>Submit for Archival Review</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+    {{-- ACADEMIC CITATION MODAL --}}
+    <div x-show="openCitationModal" 
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+         @click.self="openCitationModal = false">
+        <div class="w-full max-w-xl rounded-2xl bg-white dark:bg-[#131218] border border-stone-200 dark:border-stone-800 p-6 space-y-4 shadow-xl">
+            <div class="flex items-center justify-between border-b pb-3 border-stone-100 dark:border-stone-800">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-stone-900 dark:text-stone-100 flex items-center gap-2">
+                    <i data-lucide="quote" class="w-4 h-4 text-amber-500"></i>
+                    <span>Cite This Cultural Record</span>
+                </h3>
+                <button @click="openCitationModal = false" class="text-stone-400 hover:text-stone-600">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <span class="font-bold text-stone-700 dark:text-stone-300 block mb-1">APA Format:</span>
+                    <div class="p-3 bg-stone-50 dark:bg-stone-900 rounded-xl font-mono text-[11px] border border-stone-200 dark:border-stone-800 select-all">
+                        {{ $culture->submitter->name ?? 'Kulturegram Archive' }}. ({{ $culture->created_at->format('Y') }}). <em>{{ $culture->name }}</em> [Cultural Heritage Record #CR-{{ str_pad($culture->id, 5, '0', STR_PAD_LEFT) }}]. Kulturegram Cultural Archive. {{ url()->current() }}
                     </div>
                 </div>
 
+                <div>
+                    <span class="font-bold text-stone-700 dark:text-stone-300 block mb-1">Chicago / Turabian:</span>
+                    <div class="p-3 bg-stone-50 dark:bg-stone-900 rounded-xl font-mono text-[11px] border border-stone-200 dark:border-stone-800 select-all">
+                        "{{ $culture->name }}." Kulturegram Cultural Archive Record #CR-{{ str_pad($culture->id, 5, '0', STR_PAD_LEFT) }}. Accessed {{ now()->format('F j, Y') }}. {{ url()->current() }}.
+                    </div>
+                </div>
             </div>
 
+            <div class="pt-2 flex justify-end">
+                <button @click="copyCitationText(); openCitationModal = false"
+                        class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs transition">
+                    Copy Citation
+                </button>
+            </div>
         </div>
-
     </div>
+
 </div>
 @endsection
 
@@ -977,7 +1067,7 @@
         lucide.createIcons();
     });
 
-    function culturalDossierComponent(config) {
+    function culturalArchiveDossier(config) {
         return {
             cultureId: config.cultureId,
             lockedIn: config.lockedIn,
@@ -985,8 +1075,8 @@
             resonated: config.resonated,
             resonanceCount: config.resonanceCount,
             csrfToken: config.csrfToken,
-            activeTab: 'story',
-            fontSize: 18,
+            activeSection: config.activeSection || 'overview',
+            fontSize: 17,
             openCitationModal: false,
             isSubmittingLock: false,
             isSubmittingPulse: false,
@@ -994,8 +1084,6 @@
             async toggleLockIn() {
                 if (this.isSubmittingLock) return;
                 this.isSubmittingLock = true;
-                
-                // Optimistic UI update
                 this.lockedIn = !this.lockedIn;
                 this.lockCount += (this.lockedIn ? 1 : -1);
 
@@ -1014,7 +1102,7 @@
                         this.lockCount = data.count;
                     }
                 } catch(e) {
-                    console.error('Lock-in toggle failed:', e);
+                    console.error('Preserve lock-in failed:', e);
                 } finally {
                     this.isSubmittingLock = false;
                     this.$nextTick(() => lucide.createIcons());
@@ -1024,8 +1112,6 @@
             async toggleResonance() {
                 if (this.isSubmittingPulse) return;
                 this.isSubmittingPulse = true;
-
-                // Optimistic UI update
                 this.resonated = !this.resonated;
                 this.resonanceCount += (this.resonated ? 1 : -1);
 
@@ -1044,7 +1130,7 @@
                         this.resonanceCount = data.count;
                     }
                 } catch(e) {
-                    console.error('Resonance pulse failed:', e);
+                    console.error('Pulse failed:', e);
                 } finally {
                     this.isSubmittingPulse = false;
                     this.$nextTick(() => lucide.createIcons());
@@ -1053,13 +1139,13 @@
 
             copyShareLink() {
                 navigator.clipboard.writeText(window.location.href);
-                alert('Living Heritage link copied to clipboard!');
+                alert('Archive record link copied to clipboard!');
             },
 
             copyCitationText() {
-                const text = `{{ $culture->submitter->name ?? 'Kulturegram Preserver' }}. ({{ $culture->created_at->format('Y') }}). {{ $culture->name }} [Living Heritage Archive]. Kulturegram. ${window.location.href}`;
+                const text = `{{ $culture->submitter->name ?? 'Kulturegram Archive' }}. ({{ $culture->created_at->format('Y') }}). {{ $culture->name }} [Cultural Heritage Record #CR-{{ str_pad($culture->id, 5, '0', STR_PAD_LEFT) }}]. Kulturegram. ${window.location.href}`;
                 navigator.clipboard.writeText(text);
-                alert('Academic citation copied to clipboard!');
+                alert('Citation copied to clipboard!');
             }
         };
     }

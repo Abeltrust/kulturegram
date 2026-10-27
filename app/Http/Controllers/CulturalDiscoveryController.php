@@ -31,15 +31,24 @@ class CulturalDiscoveryController extends Controller
         }
 
         $users = $connectionService->recommendUsers($user, 4);
-        $communities = $connectionService->recommendCommunities($user, 3);
+        $communities = $connectionService->recommendCommunities($user, 4);
         $events = $eventService->recommendEvents($user, 3);
+
+        $userRecs = $users['recommendations'] ?? [];
+        $communityRecs = $communities['recommendations'] ?? [];
+        $eventRecs = $events['recommendations'] ?? [];
 
         return response()->json([
             'success' => true,
             'opted_out' => false,
-            'users' => $users,
-            'communities' => $communities,
-            'events' => $events,
+            'users' => $userRecs,
+            'communities' => $communityRecs,
+            'events' => $eventRecs,
+            'raw' => [
+                'users' => $users,
+                'communities' => $communities,
+                'events' => $events,
+            ],
         ]);
     }
 

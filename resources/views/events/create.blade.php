@@ -26,6 +26,7 @@
 
       <input type="hidden" name="reach_tags" :value="JSON.stringify(reachTags)">
       <input type="hidden" name="ai_reach_metadata" :value="JSON.stringify(aiMetadata)">
+      <input type="hidden" name="ai_flyer_path" :value="aiFlyerPath">
 
       {{-- AI Cultural Reach Assistant Drawer / Card --}}
       <div class="bg-gradient-to-r from-amber-500/10 via-stone-900/5 to-emerald-500/10 dark:from-amber-950/20 dark:via-stone-900 dark:to-emerald-950/20 rounded-2xl p-5 border border-amber-500/20 dark:border-amber-500/10 space-y-4">
@@ -112,9 +113,63 @@
         @error('title')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
       </div>
 
-      <!-- Description -->
-      <div>
-        <label for="description" class="block text-gray-700 dark:text-stone-300 font-semibold mb-2">Description</label>
+      <!-- Description & Concept Generator -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <label for="description" class="block text-gray-700 dark:text-stone-300 font-semibold">Description</label>
+          <button type="button" @click="showConceptHelper = !showConceptHelper"
+            class="text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-500 flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 transition">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span x-text="showConceptHelper ? 'Hide Concept Helper' : 'AI Cultural Concept & Description'"></span>
+          </button>
+        </div>
+
+        {{-- Interactive AI Concept Generator Drawer --}}
+        <div x-show="showConceptHelper" x-transition class="p-4 rounded-xl bg-stone-50 dark:bg-stone-800/40 border border-amber-500/20 space-y-3">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <p class="text-xs font-bold text-stone-800 dark:text-stone-200 flex items-center gap-1.5">
+                <i data-lucide="file-text" class="w-3.5 h-3.5 text-amber-500"></i>
+                Draft from Rough Key Points
+              </p>
+              <p class="text-[11px] text-stone-500 dark:text-stone-400">
+                Enter quick notes or an outline of your gathering. The AI will compose an authentic cultural concept and presentation for your community.
+              </p>
+            </div>
+          </div>
+
+          <textarea x-model="conceptPoints" rows="2"
+            class="w-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 rounded-xl p-3 text-xs focus:ring-2 focus:ring-amber-500 outline-none"
+            placeholder="e.g. Elders teaching traditional pottery songs to youth, hands-on clay shaping, blessing of ancestral earth, tea sharing..."></textarea>
+
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] text-stone-400 italic">No formal writing needed—just list your points.</span>
+            <button type="button" @click="generateConceptDescription()" :disabled="generatingConcept || (!conceptPoints && !formTitle)"
+              class="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow flex items-center gap-1.5 disabled:opacity-50 transition">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              <span x-text="generatingConcept ? 'Composing Concept...' : 'Generate Description'"></span>
+            </button>
+          </div>
+
+          {{-- Suggested Output Preview --}}
+          <template x-if="suggestedConcept">
+            <div class="mt-3 p-3.5 rounded-xl bg-white dark:bg-stone-900 border border-amber-500/20 space-y-2 text-xs">
+              <div class="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-2">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold text-[10px]">Concept Preview</span>
+                  <span class="text-[11px] font-semibold text-stone-500" x-text="suggestedConcept.tagline"></span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" @click="applyConceptDesc()" class="px-2.5 py-1 rounded-lg bg-amber-500 text-white font-bold text-[11px] hover:bg-amber-600 transition">
+                    Use This Description
+                  </button>
+                </div>
+              </div>
+              <p class="text-stone-700 dark:text-stone-300 whitespace-pre-line leading-relaxed text-xs" x-text="suggestedConcept.suggested_description"></p>
+            </div>
+          </template>
+        </div>
+
         <textarea name="description" id="description" rows="4" x-model="formDesc"
           class="w-full border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:outline-none"
           placeholder="Provide more details..." required>{{ old('description') }}</textarea>
@@ -253,23 +308,74 @@
           </label>
       </div>
 
-      <!-- Upload Image -->
-      <div>
-        <label for="image" class="block text-gray-700 dark:text-stone-300 font-semibold mb-2">Event Cover Image</label>
-        <div id="image-upload-box"
-          class="w-full py-10 border-2 border-dashed border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50 rounded-xl text-center cursor-pointer hover:border-amber-500 transition relative"
-          onclick="document.getElementById('image').click()">
-          <input type="file" name="image" id="image" accept="image/*" class="hidden" onchange="previewImage(event)">
+      <!-- Upload Image / AI Flyer -->
+      <div class="space-y-4">
+        <label for="image" class="block text-gray-700 dark:text-stone-300 font-semibold">Event Cover Flyer / Image</label>
+        
+        {{-- AI Flyer Active Preview Card --}}
+        <div x-show="aiFlyerUrl" x-transition class="space-y-3">
+          <div class="relative rounded-2xl overflow-hidden border-2 border-amber-500/40 shadow-lg bg-stone-900 group">
+            <img :src="aiFlyerUrl" alt="AI Generated Cultural Flyer" class="w-full h-72 object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-5">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-amber-500 text-stone-950 shadow">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> AI Cultural Flyer
+                  </span>
+                  <p class="text-xs text-stone-300 mt-1">Authentic cultural artwork generated for this event.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" @click="generateFlyer()" :disabled="generatingFlyer"
+                    class="px-3.5 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur text-white text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5" :class="generatingFlyer ? 'animate-spin' : ''"></i>
+                    <span x-text="generatingFlyer ? 'Regenerating...' : 'Regenerate'"></span>
+                  </button>
+                  <button type="button" @click="clearFlyer()"
+                    class="px-3.5 py-1.5 rounded-xl bg-red-600/80 hover:bg-red-600 text-white text-xs font-bold transition flex items-center gap-1.5">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    <span>Remove</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-          <div id="preview" class="hidden">
-            <img id="preview-img" class="mx-auto max-h-40 rounded-lg shadow object-cover" />
-            <p class="text-gray-500 text-sm mt-2">Click to change cover</p>
+        {{-- Manual File Upload Box (shown when no AI flyer or user wants to upload) --}}
+        <div x-show="!aiFlyerUrl" class="space-y-3">
+          <div id="image-upload-box"
+            class="w-full py-10 border-2 border-dashed border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50 rounded-xl text-center cursor-pointer hover:border-amber-500 transition relative"
+            onclick="document.getElementById('image').click()">
+            <input type="file" name="image" id="image" accept="image/*" class="hidden" onchange="previewImage(event)">
+
+            <div id="preview" class="hidden">
+              <img id="preview-img" class="mx-auto max-h-48 rounded-lg shadow object-cover" />
+              <p class="text-gray-500 text-sm mt-2">Click to change cover</p>
+            </div>
+
+            <div id="upload-text" class="text-gray-500">
+              <i data-lucide="image" class="w-12 h-12 mx-auto mb-3 text-stone-400"></i>
+              <p class="text-base text-stone-600 dark:text-stone-300 font-medium">Click to upload custom flyer / photo</p>
+              <p class="text-xs text-stone-400 mt-1">PNG, JPG up to 10MB</p>
+            </div>
           </div>
 
-          <div id="upload-text" class="text-gray-500">
-            <i data-lucide="image" class="w-12 h-12 mx-auto mb-3 text-stone-400"></i>
-            <p class="text-base text-stone-600 dark:text-stone-300">Click to upload an image</p>
-            <p class="text-xs text-stone-400 mt-1">PNG, JPG up to 10MB</p>
+          {{-- AI Flyer Action Prompt --}}
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl bg-gradient-to-r from-amber-500/10 via-stone-500/5 to-amber-500/5 border border-amber-500/20">
+            <div class="space-y-0.5">
+              <span class="text-xs font-bold text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
+                <i data-lucide="palette" class="w-4 h-4 text-amber-500"></i>
+                Don't have a flyer? Let AI design one for you
+              </span>
+              <p class="text-[11px] text-stone-500 dark:text-stone-400">
+                Generates an authentic cultural poster tailored to your event title, category, and heritage context.
+              </p>
+            </div>
+            <button type="button" @click="generateFlyer()" :disabled="generatingFlyer || !formTitle"
+              class="px-4 py-2 rounded-xl bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 hover:bg-amber-600 dark:hover:bg-amber-400 dark:hover:text-stone-950 font-bold text-xs shadow flex items-center gap-2 shrink-0 disabled:opacity-50 transition">
+              <i data-lucide="wand-2" class="w-3.5 h-3.5" :class="generatingFlyer ? 'animate-spin' : ''"></i>
+              <span x-text="generatingFlyer ? 'Designing Flyer...' : 'Generate AI Cultural Flyer'"></span>
+            </button>
           </div>
         </div>
         @error('image')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
@@ -368,6 +474,17 @@
               reachTags: [],
               aiMetadata: null,
 
+              // Cultural Concept & Description Generator
+              showConceptHelper: false,
+              conceptPoints: '',
+              generatingConcept: false,
+              suggestedConcept: null,
+
+              // AI Flyer Generator
+              generatingFlyer: false,
+              aiFlyerPath: '',
+              aiFlyerUrl: '',
+
               async optimize() {
                   if (!this.formTitle && !this.formDesc) {
                       alert('Please enter at least a draft Title or Description first so the AI can understand your cultural topic.');
@@ -401,6 +518,98 @@
                       this.optimizing = false;
                       setTimeout(() => lucide.createIcons(), 50);
                   }
+              },
+
+              async generateConceptDescription() {
+                  if (!this.conceptPoints && !this.formTitle) {
+                      alert('Please enter some key points or a gathering title first.');
+                      return;
+                  }
+
+                  this.generatingConcept = true;
+                  try {
+                      const res = await fetch("{{ route('events.ai-suggest-description') }}", {
+                          method: 'POST',
+                          headers: {
+                              'Content-Type': 'application/json',
+                              'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                          },
+                          body: JSON.stringify({
+                              title: this.formTitle || '',
+                              key_points: this.conceptPoints,
+                              type: document.getElementById('type') ? document.getElementById('type').value : 'workshop',
+                              cultural_focus: (this.reachTags && this.reachTags.length > 0) ? this.reachTags.join(', ') : ''
+                          })
+                      });
+                      const data = await res.json();
+                      if (data.success && data.suggested_description) {
+                          this.suggestedConcept = data;
+                      } else {
+                          alert(data.error || 'Could not generate concept. Please check your notes.');
+                      }
+                  } catch (e) {
+                      console.error('Concept generation error:', e);
+                  } finally {
+                      this.generatingConcept = false;
+                      setTimeout(() => lucide.createIcons(), 50);
+                  }
+              },
+
+              applyConceptDesc() {
+                  if (this.suggestedConcept?.suggested_description) {
+                      this.formDesc = this.suggestedConcept.suggested_description;
+                      if (!this.formTitle && this.suggestedConcept.concept_summary) {
+                          this.formTitle = this.suggestedConcept.concept_summary;
+                      }
+                  }
+              },
+
+              async generateFlyer() {
+                  if (!this.formTitle) {
+                      alert('Please enter an Event Title first before generating an AI flyer.');
+                      return;
+                  }
+
+                  this.generatingFlyer = true;
+                  try {
+                      const res = await fetch("{{ route('events.ai-generate-flyer') }}", {
+                          method: 'POST',
+                          headers: {
+                              'Content-Type': 'application/json',
+                              'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                          },
+                          body: JSON.stringify({
+                              title: this.formTitle,
+                              description: this.formDesc || this.formTitle,
+                              type: document.getElementById('type') ? document.getElementById('type').value : 'Cultural Gathering',
+                              cultural_context: (this.reachTags && this.reachTags.length > 0) ? this.reachTags.join(', ') : ''
+                          })
+                      });
+                      const data = await res.json();
+                      if (data.success && (data.image_path || data.flyer_path)) {
+                          this.aiFlyerPath = data.image_path || data.flyer_path;
+                          this.aiFlyerUrl = data.image_url || data.flyer_url;
+                          // Clear manual file input preview if any
+                          const manualPreview = document.getElementById('preview');
+                          if (manualPreview) manualPreview.classList.add('hidden');
+                          const uploadText = document.getElementById('upload-text');
+                          if (uploadText) uploadText.classList.remove('hidden');
+                          const manualInput = document.getElementById('image');
+                          if (manualInput) manualInput.value = '';
+                      } else {
+                          alert(data.error || 'Flyer generation failed. Please try again.');
+                      }
+                  } catch (e) {
+                      console.error('Flyer generation error:', e);
+                  } finally {
+                      this.generatingFlyer = false;
+                      setTimeout(() => lucide.createIcons(), 50);
+                  }
+              },
+
+              clearFlyer() {
+                  this.aiFlyerPath = '';
+                  this.aiFlyerUrl = '';
               },
 
               applyTitle() {

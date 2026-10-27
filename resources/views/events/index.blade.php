@@ -45,25 +45,25 @@
                         <div class="bg-white dark:bg-stone-900 rounded-2xl overflow-hidden border border-stone-200 dark:border-stone-800 shadow-sm hover:shadow-md transition flex flex-col justify-between group">
                             <div>
                                 <div class="relative h-40 w-full overflow-hidden bg-stone-100 dark:bg-stone-800">
-                                    @if($ev->image)
-                                        <img src="{{ asset('storage/' . $ev->image) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                    @if(!empty($ev['image']))
+                                        <img src="{{ $ev['image'] }}" alt="{{ $ev['title'] }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                                     @else
                                         <div class="w-full h-full flex items-center justify-center bg-amber-50 dark:bg-amber-950/30 text-amber-600">
                                             <i data-lucide="calendar" class="w-10 h-10"></i>
                                         </div>
                                     @endif
                                     <span class="absolute top-3 left-3 bg-stone-900/80 backdrop-blur text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                        {{ $ev->type }}
+                                        {{ $ev['type'] }}
                                     </span>
                                 </div>
                                 <div class="p-5">
                                     <h3 class="font-bold text-stone-900 dark:text-stone-100 text-base mb-1 group-hover:text-amber-600 transition-colors">
-                                        <a href="{{ route('events.show', $ev) }}">{{ $ev->title }}</a>
+                                        <a href="{{ route('events.show', $ev['id']) }}">{{ $ev['title'] }}</a>
                                     </h3>
                                     <div class="flex items-center gap-2 text-xs text-stone-500 mb-3">
-                                        <span>{{ \Carbon\Carbon::parse($ev->event_date)->format('M d, Y') }}</span>
+                                        <span>{{ $ev['event_date'] }}</span>
                                         <span>•</span>
-                                        <span>{{ $ev->location }}</span>
+                                        <span>{{ $ev['location'] }}</span>
                                     </div>
 
                                     {{-- Explainable Recommendation Reason --}}
@@ -82,7 +82,7 @@
                                 </div>
                             </div>
                             <div class="px-5 pb-5 pt-0">
-                                <a href="{{ route('events.show', $ev) }}" class="w-full py-2 rounded-xl bg-stone-100 hover:bg-amber-500 hover:text-white dark:bg-stone-800 dark:hover:bg-amber-600 text-stone-700 dark:text-stone-300 font-bold text-xs text-center block transition">
+                                <a href="{{ route('events.show', $ev['id']) }}" class="w-full py-2 rounded-xl bg-stone-100 hover:bg-amber-500 hover:text-white dark:bg-stone-800 dark:hover:bg-amber-600 text-stone-700 dark:text-stone-300 font-bold text-xs text-center block transition">
                                     View Gathering Details
                                 </a>
                             </div>

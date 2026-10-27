@@ -23,16 +23,22 @@ class ModerationController extends Controller
 
         $cultures = $query->paginate(15);
 
+        $submittedDrafts = \App\Models\CulturalRecordDraft::where('status', 'submitted_to_moderation')
+            ->with('contributor:id,name,username')
+            ->latest()
+            ->get();
+
         $counts = [
             'pending' => Culture::where('status', 'pending_review')->count(),
             'approved' => Culture::where('status', 'approved')->count(),
             'featured' => Culture::where('status', 'featured')->count(),
+            'pending_drafts' => $submittedDrafts->count(),
             'total_users' => User::count(),
             'total_events' => Event::count(),
             'total_communities' => Community::count(),
         ];
 
-        return view('admin.cultures', compact('cultures', 'status', 'counts'));
+        return view('admin.cultures', compact('cultures', 'status', 'counts', 'submittedDrafts'));
     }
 
     public function approve(Culture $culture)

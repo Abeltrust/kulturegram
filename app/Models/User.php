@@ -31,6 +31,7 @@ class User extends Authenticatable
         'is_online',
         'last_seen',
         'preferences',
+        'opt_in_collaboration',
         'is_admin',
     ];
 
@@ -45,6 +46,7 @@ class User extends Authenticatable
         'languages' => 'array',
         'cultural_interests' => 'array',
         'is_online' => 'boolean',
+        'opt_in_collaboration' => 'boolean',
         'is_admin' => 'boolean',
         'last_seen' => 'datetime',
         'preferences' => 'array',
@@ -135,6 +137,23 @@ class User extends Authenticatable
         return $this->belongsTo(LocalGovernment::class);
     }
 
+    public function taughtClasses()
+    {
+        return $this->hasMany(CulturalClass::class, 'instructor_id');
+    }
+
+    public function classEnrollments()
+    {
+        return $this->hasMany(CulturalClassEnrollment::class);
+    }
+
+    public function enrolledClasses()
+    {
+        return $this->belongsToMany(CulturalClass::class, 'cultural_class_enrollments')
+                    ->withPivot('price_paid', 'access_status', 'progress_seconds', 'is_completed', 'last_watched_at')
+                    ->withTimestamps();
+    }
+
     /**
      * Named "spokenLanguages" to avoid clashing with the legacy `languages` JSON column.
      */
@@ -146,6 +165,16 @@ class User extends Authenticatable
     public function userRelationships()
     {
         return $this->hasMany(UserRelationship::class);
+    }
+
+    public function culturalRecordDrafts()
+    {
+        return $this->hasMany(CulturalRecordDraft::class, 'contributor_id');
+    }
+
+    public function aiFeedbackLogs()
+    {
+        return $this->hasMany(AiFeedbackLog::class);
     }
 
     public function incrementRelationshipWith(User $user, $points = 1)
