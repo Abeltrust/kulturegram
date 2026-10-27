@@ -59,19 +59,19 @@
                     Preserve oral histories, sacred folktales, and endangered knowledge. Assist your memory with <strong>Muse Voice Transcribe</strong>, <strong>Muse Spark</strong>, <strong>Muse Wonder</strong>, and <strong>SAM 3.1</strong>.
                 </p>
             </div>
-            <div class="flex flex-wrap items-center gap-3 flex-shrink-0">
+            <div class="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full sm:w-auto flex-shrink-0">
                 <a href="{{ route('cultural-hub.living-heritage.create') }}"
-                   class="inline-flex items-center space-x-2 px-5 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors shadow-sm">
+                   class="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-5 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-colors shadow-sm">
                     <i data-lucide="mic" class="w-4 h-4"></i>
                     <span>Start Capture</span>
                 </a>
                 <a href="{{ route('cultural-hub.living-heritage.compare') }}"
-                   class="inline-flex items-center space-x-2 px-5 py-3 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors border border-stone-200 dark:border-stone-700">
+                   class="flex-1 sm:flex-initial inline-flex items-center justify-center space-x-2 px-4 sm:px-5 py-3 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors border border-stone-200 dark:border-stone-700 text-center">
                     <i data-lucide="git-compare" class="w-4 h-4"></i>
-                    <span>AI Model Lab</span>
+                    <span>Model Lab</span>
                 </a>
                 <a href="{{ route('cultural-hub.create') }}"
-                   class="inline-flex items-center space-x-2 px-4 py-3 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors">
+                   class="flex-1 sm:flex-initial inline-flex items-center justify-center space-x-2 px-4 py-3 bg-white dark:bg-stone-900 hover:bg-stone-50 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors border border-stone-200 dark:border-stone-800 text-center">
                     <span>Manual Entry</span>
                 </a>
             </div>
@@ -84,22 +84,22 @@
             <div class="lg:col-span-9 space-y-12 order-last lg:order-first">
                 
                 <!-- Mobile Dropdown Toolbar (Premium Glassmorphism) -->
-                <div class="lg:hidden flex items-center justify-between backdrop-blur-xl bg-white/80 dark:bg-stone-900/80 p-5 rounded-[2rem] border border-white/20 dark:border-stone-800/50 shadow-2xl relative z-40 mb-8">
-                    <div class="flex items-center space-x-4">
-                        <div class="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
-                            <i data-lucide="compass" class="w-6 h-6 text-amber-600 animate-spin-slow"></i>
+                <div class="lg:hidden flex items-center justify-between backdrop-blur-xl bg-white/80 dark:bg-stone-900/80 p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] border border-stone-200/80 dark:border-stone-800/80 shadow-md relative z-40 mb-6">
+                    <div class="flex items-center space-x-3 sm:space-x-4 min-w-0">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20 flex-shrink-0">
+                            <i data-lucide="compass" class="w-5 h-5 sm:w-6 sm:h-6 text-amber-600 animate-spin-slow"></i>
                         </div>
-                        <div>
+                        <div class="min-w-0">
                             <p class="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] mb-0.5">Exploring</p>
-                            <p class="text-base font-black text-stone-900 dark:text-white uppercase tracking-tight">{{ $categories[(string)$category] ?? 'Global Heritage' }}</p>
+                            <p class="text-sm sm:text-base font-black text-stone-900 dark:text-white uppercase tracking-tight truncate">{{ $categories[(string)$category] ?? 'Global Heritage' }}</p>
                         </div>
                     </div>
 
                     <!-- Three-Dot Trigger -->
-                    <div class="relative">
+                    <div class="relative flex-shrink-0">
                         <button @click="mobileFiltersOpen = !mobileFiltersOpen" 
-                                class="w-12 h-12 flex items-center justify-center rounded-[1.25rem] bg-stone-50 dark:bg-stone-800 hover:bg-amber-500 hover:text-white transition-all duration-300 shadow-inner">
-                            <i data-lucide="more-vertical" class="w-6 h-6"></i>
+                                class="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-xl sm:rounded-[1.25rem] bg-stone-50 dark:bg-stone-800 hover:bg-amber-500 hover:text-white transition-all duration-300 shadow-inner">
+                            <i data-lucide="more-vertical" class="w-5 h-5 sm:w-6 sm:h-6"></i>
                         </button>
 
                         <!-- Mobile Menu Dropdown (Cinematic Transition) -->
@@ -108,14 +108,14 @@
                              x-transition:enter="transition ease-out duration-300"
                              x-transition:enter-start="opacity-0 scale-90 -translate-y-4"
                              x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                             class="absolute right-0 mt-4 w-72 backdrop-blur-2xl bg-white/95 dark:bg-stone-900/95 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-white/20 dark:border-stone-800/50 overflow-hidden py-4 z-50"
+                             class="absolute right-0 mt-3 w-64 max-w-[calc(100vw-2.5rem)] backdrop-blur-2xl bg-white/95 dark:bg-stone-900/95 rounded-2xl sm:rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-stone-200 dark:border-stone-800 overflow-hidden py-2 z-50"
                              x-cloak>
                             @foreach($categories as $key => $label)
                                 <a href="{{ route('cultural-hub.index', ['category' => $key]) }}"
-                                   class="flex items-center justify-between px-8 py-4 hover:bg-amber-500/10 transition-colors group">
-                                    <div class="flex items-center space-x-4">
+                                   class="flex items-center justify-between px-5 py-3 hover:bg-amber-500/10 transition-colors group">
+                                    <div class="flex items-center space-x-3">
                                         <div class="w-2 h-2 rounded-full {{ $category === $key ? 'bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.8)]' : 'bg-stone-200 dark:bg-stone-700' }}"></div>
-                                        <span class="text-xs font-black uppercase tracking-widest {{ $category === $key ? 'text-amber-600' : 'text-stone-600 dark:text-stone-400' }}">
+                                        <span class="text-xs font-black uppercase tracking-wider {{ $category === $key ? 'text-amber-600' : 'text-stone-600 dark:text-stone-400' }}">
                                             {{ $label }}
                                         </span>
                                     </div>

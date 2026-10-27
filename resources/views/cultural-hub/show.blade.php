@@ -26,6 +26,14 @@
         color: #d97706;
         font-weight: 800;
     }
+    @media (max-width: 640px) {
+        .drop-cap::first-letter {
+            font-size: 2.3rem;
+            line-height: 0.85;
+            padding-top: 2px;
+            padding-right: 8px;
+        }
+    }
 </style>
 @endpush
 
@@ -40,29 +48,30 @@
         csrfToken: '{{ csrf_token() }}'
      })">
 
-    {{-- Top Sticky Reading Toolbar --}}
-    <div class="sticky top-14 md:top-16 z-30 backdrop-blur-md bg-white/85 dark:bg-[#121218]/85 border-b border-stone-200/80 dark:border-stone-800/80 transition">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4">
+    {{-- Top Sticky Reading Toolbar (Relative on mobile to prevent stacked header overlap, Sticky on desktop) --}}
+    <div class="relative sm:sticky sm:top-16 z-30 backdrop-blur-md bg-white/95 dark:bg-[#121218]/95 border-b border-stone-200/80 dark:border-stone-800/80 transition-colors shadow-sm">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-2 sm:gap-4">
             {{-- Breadcrumb & Title --}}
-            <div class="flex items-center gap-2 overflow-hidden min-w-0">
+            <div class="flex items-center gap-1.5 overflow-hidden min-w-0 flex-1 sm:flex-initial">
                 <a href="{{ route('cultural-hub.index') }}" 
                    class="text-xs font-bold uppercase tracking-wider text-stone-500 hover:text-amber-600 dark:hover:text-amber-400 transition flex items-center gap-1 flex-shrink-0">
                     <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
-                    <span>Cultural Hub</span>
+                    <span class="hidden sm:inline">Cultural Hub</span>
+                    <span class="sm:hidden">Hub</span>
                 </a>
                 <span class="text-stone-300 dark:text-stone-700">/</span>
-                <span class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider truncate">
+                <span class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider truncate max-w-[130px] sm:max-w-none">
                     {{ $culture->category }}
                 </span>
-                <span class="text-stone-300 dark:text-stone-700 hidden sm:inline">/</span>
-                <span class="text-xs font-semibold text-stone-700 dark:text-stone-300 truncate hidden sm:inline">
+                <span class="text-stone-300 dark:text-stone-700 hidden md:inline">/</span>
+                <span class="text-xs font-semibold text-stone-700 dark:text-stone-300 truncate hidden md:inline">
                     {{ $culture->name }}
                 </span>
             </div>
 
             {{-- Interactive Action Controls --}}
-            <div class="flex items-center gap-2 flex-shrink-0">
-                {{-- Font Size Adjuster --}}
+            <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                {{-- Font Size Adjuster (Desktop Only) --}}
                 <div class="hidden md:flex items-center rounded-lg border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 p-0.5 text-xs font-bold">
                     <button @click="fontSize = Math.max(14, fontSize - 1)" 
                             class="px-2 py-1 text-stone-600 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400" title="Decrease font size">A-</button>
@@ -73,30 +82,31 @@
 
                 {{-- Citation Builder Trigger --}}
                 <button @click="openCitationModal = true"
-                        class="px-3 py-1.5 rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 text-xs font-semibold hover:border-amber-500 hover:text-amber-600 dark:hover:text-amber-400 transition flex items-center gap-1.5 shadow-sm">
+                        class="px-2.5 sm:px-3 py-1.5 rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 text-xs font-semibold hover:border-amber-500 hover:text-amber-600 dark:hover:text-amber-400 transition flex items-center gap-1.5 shadow-sm"
+                        title="Cite Record">
                     <i data-lucide="quote" class="w-3.5 h-3.5 text-amber-500"></i>
-                    <span class="hidden sm:inline">Cite Record</span>
+                    <span class="hidden md:inline">Cite Record</span>
                 </button>
 
                 {{-- Lock-In Presence (Bookmark / Connection) --}}
                 @auth
                     <button @click="toggleLockIn()"
                             :disabled="isSubmittingLock"
-                            class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                            class="px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
                             :class="lockedIn 
                                 ? 'bg-amber-500 text-white shadow-amber-500/25 hover:bg-amber-600' 
                                 : 'bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:border-amber-500'">
                         <i data-lucide="lock" class="w-3.5 h-3.5" :class="lockedIn ? 'text-white' : 'text-amber-500'"></i>
-                        <span x-text="lockedIn ? 'Locked In' : 'Lock-In Presence'"></span>
+                        <span class="hidden sm:inline" x-text="lockedIn ? 'Locked In' : 'Lock-In'"></span>
                         <span class="text-[10px] px-1.5 py-0.2 rounded-full font-mono"
                               :class="lockedIn ? 'bg-amber-600 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400'"
                               x-text="lockCount"></span>
                     </button>
                 @else
                     <a href="{{ route('login') }}"
-                       class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:border-amber-500 flex items-center gap-1.5">
+                       class="px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:border-amber-500 flex items-center gap-1.5">
                         <i data-lucide="lock" class="w-3.5 h-3.5 text-amber-500"></i>
-                        <span>Lock-In</span>
+                        <span class="hidden sm:inline">Lock-In</span>
                         <span class="text-[10px] px-1.5 py-0.2 bg-stone-100 dark:bg-stone-800 rounded-full font-mono">{{ $culture->locked_in_count }}</span>
                     </a>
                 @endauth
@@ -105,19 +115,19 @@
                 @auth
                     <button @click="toggleResonance()"
                             :disabled="isSubmittingPulse"
-                            class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 border"
+                            class="px-2 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 border"
                             :class="resonated 
                                 ? 'bg-orange-500/10 border-orange-500 text-orange-600 dark:text-orange-400' 
                                 : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:border-orange-500'">
                         <i data-lucide="zap" class="w-3.5 h-3.5" :class="resonated ? 'text-orange-500 fill-orange-500' : 'text-stone-400'"></i>
-                        <span class="hidden sm:inline" x-text="resonated ? 'Resonated' : 'Pulse'"></span>
+                        <span class="hidden md:inline" x-text="resonated ? 'Resonated' : 'Pulse'"></span>
                         <span class="text-[10px] font-mono" x-text="resonanceCount"></span>
                     </button>
                 @endauth
 
                 {{-- Share Button --}}
                 <button @click="copyShareLink()"
-                        class="p-1.5 rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:text-amber-600 transition"
+                        class="p-1.5 rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:text-amber-600 transition flex-shrink-0"
                         title="Copy Share Link">
                     <i data-lucide="share-2" class="w-4 h-4"></i>
                 </button>
@@ -126,34 +136,24 @@
     </div>
 
     {{-- Main Container --}}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-10">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 md:py-12 space-y-6 sm:space-y-10">
 
-        {{-- GRAND EDUCATIONAL HERO BANNER --}}
-        <div class="relative rounded-3xl overflow-hidden border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] shadow-xl">
-            {{-- Background Image / Pattern --}}
-            <div class="relative h-72 sm:h-96 lg:h-[420px] w-full overflow-hidden">
-                @if($culture->image)
-                    <img src="{{ Storage::url($culture->image) }}" 
-                         alt="{{ $culture->name }}"
-                         class="w-full h-full object-cover object-center filter brightness-[0.88] contrast-[1.05]">
-                @else
-                    <div class="w-full h-full bg-gradient-to-br from-amber-700 via-stone-900 to-black flex items-center justify-center">
-                        <i data-lucide="landmark" class="w-20 h-20 text-white/20"></i>
-                    </div>
-                @endif
-                <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-
+        {{-- GRAND EDUCATIONAL ARCHIVAL DOSSIER HERO --}}
+        <div class="rounded-2xl sm:rounded-3xl overflow-hidden border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] shadow-lg">
+            
+            {{-- Editorial Header Section (Title, Badges, Significance) --}}
+            <div class="p-5 sm:p-8 lg:p-10 space-y-4">
                 {{-- Top Floating Badges --}}
-                <div class="absolute top-6 left-6 right-6 flex flex-wrap items-center justify-between gap-3">
-                    <div class="flex items-center gap-2">
-                        <span class="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-500 text-black shadow-md flex items-center gap-1.5">
+                <div class="flex flex-wrap items-center justify-between gap-2.5">
+                    <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                        <span class="px-3 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider bg-amber-500 text-black shadow-sm flex items-center gap-1.5">
                             <i data-lucide="bookmark" class="w-3.5 h-3.5"></i>
                             {{ $culture->category }}
                         </span>
                         
                         @if($culture->is_ai_assisted)
-                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-black/60 backdrop-blur-md text-amber-300 border border-amber-400/30 flex items-center gap-1">
-                                <i data-lucide="sparkles" class="w-3 h-3 text-amber-400"></i>
+                            <span class="px-2.5 py-1 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1">
+                                <i data-lucide="sparkles" class="w-3 h-3 text-amber-500"></i>
                                 <span>AI Preservation Assist</span>
                             </span>
                         @endif
@@ -163,85 +163,103 @@
                     @php
                         $level = strtolower($culture->endangerment_level ?? 'vulnerable');
                     @endphp
-                    <div class="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider backdrop-blur-md shadow-md border flex items-center gap-1.5
-                        {{ str_contains($level, 'critical') ? 'bg-rose-950/80 text-rose-300 border-rose-600/50' : 
-                           (str_contains($level, 'endangered') ? 'bg-amber-950/80 text-amber-300 border-amber-600/50' : 
-                           'bg-emerald-950/80 text-emerald-300 border-emerald-600/50') }}">
+                    <div class="px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider border flex items-center gap-1.5
+                        {{ str_contains($level, 'critical') ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800' : 
+                           (str_contains($level, 'endangered') ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800' : 
+                           'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800') }}">
                         <span class="w-2 h-2 rounded-full animate-ping
                             {{ str_contains($level, 'critical') ? 'bg-rose-500' : (str_contains($level, 'endangered') ? 'bg-amber-500' : 'bg-emerald-500') }}"></span>
                         <span>{{ $culture->endangerment_level ?? 'Living Tradition' }}</span>
                     </div>
                 </div>
 
-                {{-- Hero Content Information --}}
-                <div class="absolute bottom-6 sm:bottom-10 left-6 sm:left-10 right-6 sm:right-10 max-w-4xl space-y-3">
-                    <div class="flex items-center gap-3 text-amber-400 text-xs sm:text-sm font-bold uppercase tracking-widest">
-                        <span class="flex items-center gap-1">
-                            <i data-lucide="map-pin" class="w-4 h-4"></i>
-                            {{ $culture->region }}
+                {{-- Geographic and Cultural Coordinates --}}
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-amber-600 dark:text-amber-400 text-xs sm:text-sm font-bold uppercase tracking-wider pt-1">
+                    <span class="flex items-center gap-1">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                        {{ $culture->region }}
+                    </span>
+                    <span>•</span>
+                    <span class="flex items-center gap-1">
+                        <i data-lucide="languages" class="w-3.5 h-3.5"></i>
+                        {{ $culture->language ?? 'Indigenous Dialect' }}
+                    </span>
+                    @if($culture->historical_period)
+                        <span class="hidden sm:inline">•</span>
+                        <span class="hidden sm:flex items-center gap-1">
+                            <i data-lucide="history" class="w-3.5 h-3.5"></i>
+                            {{ $culture->historical_period }}
                         </span>
-                        <span>•</span>
-                        <span class="flex items-center gap-1">
-                            <i data-lucide="languages" class="w-4 h-4"></i>
-                            {{ $culture->language ?? 'Indigenous Dialect' }}
-                        </span>
-                        @if($culture->historical_period)
-                            <span class="hidden sm:inline">•</span>
-                            <span class="hidden sm:flex items-center gap-1">
-                                <i data-lucide="history" class="w-4 h-4"></i>
-                                {{ $culture->historical_period }}
-                            </span>
-                        @endif
-                    </div>
-
-                    <h1 class="font-heritage text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-none drop-shadow-md">
-                        {{ $culture->name }}
-                    </h1>
-
-                    @if($culture->significance)
-                        <p class="text-stone-200 text-sm sm:text-base line-clamp-2 max-w-3xl leading-relaxed text-shadow">
-                            {{ $culture->significance }}
-                        </p>
                     @endif
                 </div>
+
+                {{-- H1 Dossier Title --}}
+                <h1 class="font-heritage text-2xl sm:text-4xl lg:text-5xl font-black text-stone-900 dark:text-stone-100 tracking-tight leading-tight">
+                    {{ $culture->name }}
+                </h1>
+
+                {{-- Significance Quote Block --}}
+                @if($culture->significance)
+                    <p class="text-stone-600 dark:text-stone-300 text-xs sm:text-sm md:text-base leading-relaxed font-editorial italic max-w-4xl border-l-2 border-amber-500 pl-3 sm:pl-4">
+                        "{{ $culture->significance }}"
+                    </p>
+                @endif
             </div>
 
+            {{-- Cultural Artwork / Field Photograph Frame (Clean Showcase with zero text collision) --}}
+            @if($culture->image)
+                <div class="relative bg-stone-100 dark:bg-stone-950 border-t border-b border-stone-200/80 dark:border-stone-800">
+                    <div class="w-full max-h-[460px] sm:max-h-[560px] flex items-center justify-center overflow-hidden">
+                        <img src="{{ Storage::url($culture->image) }}" 
+                             alt="{{ $culture->name }}"
+                             class="w-full h-full max-h-[460px] sm:max-h-[560px] object-cover sm:object-contain object-center">
+                    </div>
+                    <div class="px-4 py-2 bg-stone-50/90 dark:bg-stone-900/90 border-t border-stone-200/60 dark:border-stone-800 text-[11px] text-stone-500 dark:text-stone-400 flex items-center justify-between">
+                        <span class="flex items-center gap-1.5 font-medium">
+                            <i data-lucide="camera" class="w-3.5 h-3.5 text-amber-500"></i>
+                            <span>Archival Visual Record</span>
+                        </span>
+                        <span class="font-mono text-[10px]">{{ $culture->license_type ?? 'Living Heritage Commons' }}</span>
+                    </div>
+                </div>
+            @endif
+
             {{-- Curated Educational Metrics Ribbon --}}
-            <div class="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-stone-200 dark:divide-stone-800 bg-stone-100/90 dark:bg-stone-900/90 p-4 border-t border-stone-200 dark:border-stone-800">
-                <div class="p-3 text-center sm:text-left">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-0 sm:divide-x divide-stone-200 dark:divide-stone-800 bg-stone-50/80 dark:bg-stone-900/80 p-3 sm:p-4">
+                <div class="p-3 rounded-xl sm:rounded-none bg-white dark:bg-stone-800/50 sm:bg-transparent border sm:border-0 border-stone-200/50 dark:border-stone-700/50 text-left">
                     <span class="text-[10px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-widest block">Geographic Cradle</span>
-                    <span class="font-bold text-stone-900 dark:text-stone-100 text-sm sm:text-base truncate block mt-0.5">{{ $culture->region }}</span>
+                    <span class="font-bold text-stone-900 dark:text-stone-100 text-xs sm:text-base block mt-0.5 break-words">{{ $culture->region }}</span>
                 </div>
-                <div class="p-3 text-center sm:text-left">
+                <div class="p-3 rounded-xl sm:rounded-none bg-white dark:bg-stone-800/50 sm:bg-transparent border sm:border-0 border-stone-200/50 dark:border-stone-700/50 text-left">
                     <span class="text-[10px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-widest block">Primary Language</span>
-                    <span class="font-bold text-stone-900 dark:text-stone-100 text-sm sm:text-base truncate block mt-0.5">{{ $culture->language ?? 'Unspecified' }}</span>
+                    <span class="font-bold text-stone-900 dark:text-stone-100 text-xs sm:text-base block mt-0.5 break-words">{{ $culture->language ?? 'Unspecified' }}</span>
                 </div>
-                <div class="p-3 text-center sm:text-left">
+                <div class="p-3 rounded-xl sm:rounded-none bg-white dark:bg-stone-800/50 sm:bg-transparent border sm:border-0 border-stone-200/50 dark:border-stone-700/50 text-left">
                     <span class="text-[10px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-widest block">Living Custodians</span>
-                    <span class="font-bold text-stone-900 dark:text-stone-100 text-sm sm:text-base truncate block mt-0.5">{{ $culture->current_practitioners ?? 'Generational Elders' }}</span>
+                    <span class="font-bold text-stone-900 dark:text-stone-100 text-xs sm:text-base block mt-0.5 break-words">{{ $culture->current_practitioners ?? 'Generational Elders' }}</span>
                 </div>
-                <div class="p-3 text-center sm:text-left">
+                <div class="p-3 rounded-xl sm:rounded-none bg-white dark:bg-stone-800/50 sm:bg-transparent border sm:border-0 border-stone-200/50 dark:border-stone-700/50 text-left">
                     <span class="text-[10px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-widest block">Transmission Mode</span>
-                    <span class="font-bold text-amber-600 dark:text-amber-400 text-sm sm:text-base truncate block mt-0.5">{{ $culture->transmission_methods ?? 'Oral & Ceremonial' }}</span>
+                    <span class="font-bold text-amber-600 dark:text-amber-400 text-xs sm:text-base block mt-0.5 break-words">{{ $culture->transmission_methods ?? 'Oral & Ceremonial' }}</span>
                 </div>
             </div>
         </div>
 
         {{-- INTERACTIVE ORAL AUDIO HIGHLIGHT (If audio exists) --}}
         @if($culture->audio_path || $culture->audio_url)
-            <div class="rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-5 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/30 flex-shrink-0">
-                        <i data-lucide="headphones" class="w-7 h-7"></i>
+            <div class="rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-4 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-5">
+                <div class="flex items-start sm:items-center gap-3 sm:gap-4">
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/30 flex-shrink-0">
+                        <i data-lucide="headphones" class="w-6 h-6 sm:w-7 sm:h-7"></i>
                     </div>
-                    <div>
-                        <div class="flex items-center gap-2">
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-amber-200 text-amber-900 dark:bg-amber-950 dark:text-amber-300">
                                 Oral Narration Archive
                             </span>
                             <span class="text-xs text-stone-500 dark:text-stone-400 font-medium">Authentic Field Audio</span>
                         </div>
-                        <h3 class="text-base font-bold text-stone-900 dark:text-stone-100 mt-1">
+                        <h3 class="text-sm sm:text-base font-bold text-stone-900 dark:text-stone-100 mt-1">
                             Listen to Spoken Oral History & Folktale
                         </h3>
                         <p class="text-xs text-stone-600 dark:text-stone-400">
@@ -250,7 +268,7 @@
                     </div>
                 </div>
 
-                <div class="w-full md:w-auto md:min-w-[340px]">
+                <div class="w-full md:w-auto md:min-w-[320px]">
                     @if($culture->audio_path)
                         <audio controls class="w-full rounded-xl">
                             <source src="{{ Storage::url($culture->audio_path) }}" type="audio/mpeg">
@@ -269,40 +287,40 @@
 
         {{-- EDUCATIONAL DOSSIER: CHAPTER NAVIGATION TABS --}}
         <div class="border-b border-stone-200 dark:border-stone-800 pb-2">
-            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+            <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-1">
                 <button @click="activeTab = 'story'"
-                        class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer"
+                        class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 sm:gap-2 flex-shrink-0 cursor-pointer"
                         :class="activeTab === 'story' 
                             ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20' 
                             : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 border border-stone-200/80 dark:border-stone-800'">
-                    <i data-lucide="book-open" class="w-4 h-4"></i>
-                    <span>Chapter 1: Story & Origins</span>
+                    <i data-lucide="book-open" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+                    <span class="hidden sm:inline">Chapter 1: </span><span>Story & Origins</span>
                 </button>
 
                 <button @click="activeTab = 'practices'"
-                        class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer"
+                        class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 sm:gap-2 flex-shrink-0 cursor-pointer"
                         :class="activeTab === 'practices' 
                             ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20' 
                             : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 border border-stone-200/80 dark:border-stone-800'">
-                    <i data-lucide="sparkles" class="w-4 h-4"></i>
-                    <span>Chapter 2: Rituals & Relics</span>
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+                    <span class="hidden sm:inline">Chapter 2: </span><span>Rituals & Relics</span>
                 </button>
 
                 <button @click="activeTab = 'custodians'"
-                        class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer"
+                        class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 sm:gap-2 flex-shrink-0 cursor-pointer"
                         :class="activeTab === 'custodians' 
                             ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20' 
                             : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 border border-stone-200/80 dark:border-stone-800'">
-                    <i data-lucide="shield" class="w-4 h-4"></i>
-                    <span>Chapter 3: Custodians & Future</span>
+                    <i data-lucide="shield" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
+                    <span class="hidden sm:inline">Chapter 3: </span><span>Custodians</span>
                 </button>
 
                 <button @click="activeTab = 'media'"
-                        class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer"
+                        class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 sm:gap-2 flex-shrink-0 cursor-pointer"
                         :class="activeTab === 'media' 
                             ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20' 
                             : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 border border-stone-200/80 dark:border-stone-800'">
-                    <i data-lucide="film" class="w-4 h-4"></i>
+                    <i data-lucide="film" class="w-3.5 h-3.5 sm:w-4 sm:h-4"></i>
                     <span>Media Vault</span>
                     @if($culture->media_files && count($culture->media_files))
                         <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-mono">
@@ -312,12 +330,12 @@
                 </button>
 
                 <button @click="activeTab = 'quiz'"
-                        class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 flex-shrink-0 cursor-pointer"
+                        class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 sm:gap-2 flex-shrink-0 cursor-pointer"
                         :class="activeTab === 'quiz' 
                             ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20' 
                             : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 border border-stone-200/80 dark:border-stone-800'">
-                    <i data-lucide="help-circle" class="w-4 h-4 text-amber-500"></i>
-                    <span>Interactive Knowledge Check</span>
+                    <i data-lucide="help-circle" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500"></i>
+                    <span>Quiz</span><span class="hidden sm:inline"> & Knowledge Check</span>
                 </button>
             </div>
         </div>
