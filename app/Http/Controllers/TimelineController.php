@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\Resonance;
 use App\Models\User;
 use App\Services\ContentParserService;
 use Illuminate\Http\Request;
@@ -15,7 +16,16 @@ class TimelineController extends Controller
     {
         $filter = $request->get('filter', 'all');
 
-        $query = Post::with(['user', 'taps', 'resonances.user', 'lockIns', 'checkIns'])
+        $query = Post::with([
+            'user',
+            'taps',
+            'resonances.user',
+            'resonances.replies.user',
+            'resonances.interactions',
+            'resonances.replies.interactions',
+            'lockIns',
+            'checkIns'
+        ])
             ->public()
             ->latest();
 
@@ -181,25 +191,53 @@ class TimelineController extends Controller
     {
         $request->validate([
             'content' => 'required|string|max:1000',
+            'parent_id' => 'nullable|exists:resonances,id',
         ]);
+
+        $parentId = $request->input('parent_id');
+        $parentResonance = null;
+        if ($parentId) {
+            $parentResonance = Resonance::where('post_id', $post->id)->find($parentId);
+            if (!$parentResonance) {
+                return response()->json(['error' => 'Parent resonance not found for this post.'], 404);
+            }
+        }
 
         $resonance = $post->resonances()->create([
             'user_id' => Auth::id(),
+            'parent_id' => $parentResonance ? $parentResonance->id : null,
             'content' => $request->input('content'),
         ]);
 
         $post->increment('resonance_count');
 
-        // Notify post author if not self
-        if ($post->user_id !== Auth::id()) {
-            $post->user->notifications()->create([
+        // Notify parent resonance author if replying to someone else
+        if ($parentResonance && $parentResonance->user_id !== Auth::id()) {
+            $parentResonance->user->notifications()->create([
                 'from_user_id' => Auth::id(),
-                'type' => 'resonance',
-                'title' => 'New Resonance',
-                'message' => Auth::user()->name . ' resonated with your story: "' . Str::limit($resonance->content, 60) . '"',
+                'type' => 'resonance_reply',
+                'title' => 'New Reply to Your Resonance',
+                'message' => Auth::user()->name . ' replied to your comment: "' . Str::limit($resonance->content, 60) . '"',
                 'data' => [
                     'post_id' => $post->id,
                     'resonance_id' => $resonance->id,
+                    'parent_id' => $parentResonance->id,
+                    'author_name' => Auth::user()->name,
+                ],
+            ]);
+        }
+
+        // Notify post author if not self and not already notified as parent author
+        if ($post->user_id !== Auth::id() && (!$parentResonance || $parentResonance->user_id !== $post->user_id)) {
+            $post->user->notifications()->create([
+                'from_user_id' => Auth::id(),
+                'type' => 'resonance',
+                'title' => $parentResonance ? 'New Reply on Your Story' : 'New Resonance',
+                'message' => Auth::user()->name . ($parentResonance ? ' replied to a comment on your story: "' : ' resonated with your story: "') . Str::limit($resonance->content, 60) . '"',
+                'data' => [
+                    'post_id' => $post->id,
+                    'resonance_id' => $resonance->id,
+                    'parent_id' => $parentResonance ? $parentResonance->id : null,
                     'author_name' => Auth::user()->name,
                 ],
             ]);
@@ -208,7 +246,7 @@ class TimelineController extends Controller
         // Notify any users mentioned in this resonance
         $mentionedUsers = ContentParserService::getMentionedUsers($resonance->content);
         foreach ($mentionedUsers as $mentionedUser) {
-            if ($mentionedUser->id !== Auth::id() && $mentionedUser->id !== $post->user_id) {
+            if ($mentionedUser->id !== Auth::id() && $mentionedUser->id !== $post->user_id && (!$parentResonance || $mentionedUser->id !== $parentResonance->user_id)) {
                 $mentionedUser->notifications()->create([
                     'from_user_id' => Auth::id(),
                     'type' => 'mention',
@@ -227,16 +265,70 @@ class TimelineController extends Controller
             'success' => true,
             'resonance' => [
                 'id' => $resonance->id,
+                'parent_id' => $resonance->parent_id,
                 'content' => $resonance->content,
                 'formatted_content' => $resonance->formatted_content,
+                'taps_count' => 0,
+                'is_tapped' => false,
+                'is_post_author' => $resonance->user_id === $post->user_id,
                 'user' => [
                     'id' => $resonance->user->id,
                     'name' => $resonance->user->name,
                     'username' => $resonance->user->username,
+                    'profile_photo_url' => $resonance->user->profile_photo_url,
                 ],
                 'time' => $resonance->created_at->diffForHumans(),
             ],
             'count' => $post->resonances()->count(),
+        ]);
+    }
+
+    public function tapResonance(Resonance $resonance)
+    {
+        $user = Auth::user();
+
+        $interaction = $user->interactions()
+            ->where('interactable_type', Resonance::class)
+            ->where('interactable_id', $resonance->id)
+            ->where('type', 'tap')
+            ->first();
+
+        if ($interaction) {
+            $interaction->delete();
+            $resonance->decrement('taps_count');
+            $tapped = false;
+        } else {
+            $user->interactions()->create([
+                'interactable_type' => Resonance::class,
+                'interactable_id' => $resonance->id,
+                'type' => 'tap',
+            ]);
+            $resonance->increment('taps_count');
+            $tapped = true;
+
+            // Notify comment author if not self
+            if ($resonance->user_id !== $user->id) {
+                $isPostAuthor = $resonance->post && $resonance->post->user_id === $user->id;
+                $resonance->user->notifications()->create([
+                    'from_user_id' => $user->id,
+                    'type' => 'resonance_tap',
+                    'title' => $isPostAuthor ? 'Story Author Liked Your Comment' : 'New Reaction to Your Comment',
+                    'message' => $user->name . ($isPostAuthor ? ' (Story Author) liked your resonance: "' : ' reacted to your resonance: "') . Str::limit($resonance->content, 60) . '"',
+                    'data' => [
+                        'post_id' => $resonance->post_id,
+                        'resonance_id' => $resonance->id,
+                        'is_author' => $isPostAuthor,
+                    ],
+                ]);
+            }
+        }
+
+        $fresh = $resonance->fresh();
+        return response()->json([
+            'success' => true,
+            'tapped' => $tapped,
+            'count' => (int)$fresh->taps_count,
+            'is_author_liked' => $fresh->isAuthorLiked(),
         ]);
     }
 

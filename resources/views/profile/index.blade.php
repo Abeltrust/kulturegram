@@ -785,14 +785,128 @@
 
                             {{-- Resonance (Comments) Box --}}
                             <div id="resonance-box-{{ $post->id }}" class="hidden pt-3 border-t border-stone-100 dark:border-stone-800 space-y-3">
-                                <div id="resonance-list-{{ $post->id }}" class="space-y-2 sm:space-y-2.5">
-                                    @forelse($post->resonances as $resonance)
-                                        <div class="p-2.5 sm:p-3 bg-stone-50 dark:bg-stone-800/60 rounded-xl border border-stone-100 dark:border-stone-800 text-xs">
-                                            <div class="flex items-center justify-between mb-1">
-                                                <span class="font-bold text-stone-900 dark:text-stone-200">{{ $resonance->user->name }}</span>
-                                                <span class="text-[10px] text-stone-400">{{ $resonance->created_at->diffForHumans() }}</span>
+                                <div id="resonance-list-{{ $post->id }}" class="space-y-2.5 sm:space-y-3">
+                                    @forelse($post->resonances->whereNull('parent_id') as $resonance)
+                                        <div id="resonance-item-{{ $resonance->id }}" class="p-2.5 sm:p-3 bg-stone-50 dark:bg-stone-800/60 rounded-xl border border-stone-100 dark:border-stone-800 text-xs space-y-1.5 transition-all">
+                                            <!-- Author Header -->
+                                            <div class="flex items-center justify-between gap-2">
+                                                <div class="flex items-center gap-2 min-w-0">
+                                                    <img src="{{ $resonance->user->profile_photo_url }}" 
+                                                         class="w-6 h-6 rounded-full object-cover border border-stone-200 dark:border-stone-700 shrink-0" 
+                                                         alt="{{ $resonance->user->name }}">
+                                                    <div class="flex items-center gap-1.5 min-w-0 truncate">
+                                                        <span class="font-bold text-stone-900 dark:text-stone-100 truncate">{{ $resonance->user->name }}</span>
+                                                        @if($resonance->user_id === $post->user_id)
+                                                            <span class="px-1.5 py-0.2 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider shrink-0 border border-amber-500/20">Author</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <span class="text-[10px] text-stone-400 shrink-0">{{ $resonance->created_at->diffForHumans() }}</span>
                                             </div>
-                                            <div class="text-stone-700 dark:text-stone-300 leading-relaxed">{!! $resonance->formatted_content !!}</div>
+
+                                            <!-- Content -->
+                                            <div class="text-stone-700 dark:text-stone-300 leading-relaxed pl-8">
+                                                {!! $resonance->formatted_content !!}
+                                            </div>
+
+                                            <!-- Actions: Reaction + Reply + Author Liked Badge -->
+                                            <div class="flex items-center justify-between pt-1 pl-8">
+                                                <div class="flex items-center gap-3">
+                                                    @auth
+                                                        <!-- Tap / Heart Reaction -->
+                                                        <button type="button" 
+                                                            onclick="toggleResonanceTap({{ $resonance->id }})" 
+                                                            data-resonance-tap-btn="{{ $resonance->id }}"
+                                                            class="flex items-center gap-1 text-[11px] font-semibold transition active:scale-90 {{ auth()->user()->hasTapped($resonance) ? 'text-rose-600 dark:text-rose-400' : 'text-stone-500 dark:text-stone-400 hover:text-rose-600 dark:hover:text-rose-400' }}"
+                                                            title="React to comment">
+                                                            <i data-lucide="heart" class="w-3.5 h-3.5 {{ auth()->user()->hasTapped($resonance) ? 'fill-current' : '' }}"></i>
+                                                            <span data-resonance-tap-count="{{ $resonance->id }}">{{ $resonance->taps_count > 0 ? $resonance->taps_count : '' }}</span>
+                                                        </button>
+
+                                                        <!-- Reply Button -->
+                                                        <button type="button" 
+                                                            onclick="toggleResonanceReplyBox({{ $post->id }}, {{ $resonance->id }}, '{{ addslashes($resonance->user->name) }}')"
+                                                            class="flex items-center gap-1 text-[11px] font-semibold text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition"
+                                                            title="Reply to this comment">
+                                                            <i data-lucide="reply" class="w-3.5 h-3.5"></i>
+                                                            <span>Reply</span>
+                                                        </button>
+                                                    @endauth
+                                                </div>
+
+                                                <!-- Author Liked Badge -->
+                                                <div data-resonance-author-badge="{{ $resonance->id }}" 
+                                                     class="{{ $resonance->isAuthorLiked() ? 'flex' : 'hidden' }} items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                                                    <i data-lucide="heart" class="w-2.5 h-2.5 fill-current text-rose-500"></i>
+                                                    <span>Liked by author</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Inline Reply Input Form -->
+                                            @auth
+                                                <div id="resonance-reply-form-{{ $resonance->id }}" class="hidden pt-2 pl-8">
+                                                    <div class="flex items-center gap-1.5 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-xl p-1.5 shadow-sm">
+                                                        <input type="text" 
+                                                            id="resonance-reply-input-{{ $resonance->id }}" 
+                                                            placeholder="Reply to {{ $resonance->user->name }}..." 
+                                                            class="flex-1 bg-transparent px-2 text-xs text-stone-800 dark:text-stone-200 outline-none"
+                                                            onkeydown="if(event.key === 'Enter') submitResonanceReply({{ $post->id }}, {{ $resonance->id }})">
+                                                        <button type="button" 
+                                                            onclick="submitResonanceReply({{ $post->id }}, {{ $resonance->id }})" 
+                                                            class="p-1.5 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition active:scale-95"
+                                                            title="Send reply">
+                                                            <i data-lucide="send" class="w-3 h-3"></i>
+                                                        </button>
+                                                        <button type="button" 
+                                                            onclick="toggleResonanceReplyBox({{ $post->id }}, {{ $resonance->id }})" 
+                                                            class="p-1.5 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 rounded-lg transition"
+                                                            title="Cancel">
+                                                            <i data-lucide="x" class="w-3 h-3"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            @endauth
+
+                                            <!-- Nested Replies List -->
+                                            <div id="resonance-replies-list-{{ $resonance->id }}" class="space-y-2 mt-2 pl-6 sm:pl-8 border-l-2 border-stone-200 dark:border-stone-700 {{ $resonance->replies->count() > 0 ? '' : 'hidden' }}">
+                                                @foreach($resonance->replies as $reply)
+                                                    <div id="resonance-item-{{ $reply->id }}" class="p-2 bg-white/70 dark:bg-stone-900/60 rounded-xl border border-stone-100 dark:border-stone-800 text-xs space-y-1">
+                                                        <div class="flex items-center justify-between gap-2">
+                                                            <div class="flex items-center gap-1.5 min-w-0">
+                                                                <img src="{{ $reply->user->profile_photo_url }}" 
+                                                                     class="w-5 h-5 rounded-full object-cover border border-stone-200 dark:border-stone-700 shrink-0" 
+                                                                     alt="{{ $reply->user->name }}">
+                                                                <span class="font-bold text-stone-900 dark:text-stone-100 truncate">{{ $reply->user->name }}</span>
+                                                                @if($reply->user_id === $post->user_id)
+                                                                    <span class="px-1 py-0.2 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] font-black uppercase tracking-wider shrink-0 border border-amber-500/20">Author</span>
+                                                                @endif
+                                                            </div>
+                                                            <span class="text-[9px] sm:text-[10px] text-stone-400 shrink-0">{{ $reply->created_at->diffForHumans() }}</span>
+                                                        </div>
+                                                        <div class="text-stone-700 dark:text-stone-300 leading-relaxed pl-6.5">
+                                                            {!! $reply->formatted_content !!}
+                                                        </div>
+                                                        <div class="flex items-center justify-between pt-0.5 pl-6.5">
+                                                            @auth
+                                                                <button type="button" 
+                                                                    onclick="toggleResonanceTap({{ $reply->id }})" 
+                                                                    data-resonance-tap-btn="{{ $reply->id }}"
+                                                                    class="flex items-center gap-1 text-[10px] font-semibold transition active:scale-90 {{ auth()->user()->hasTapped($reply) ? 'text-rose-600 dark:text-rose-400' : 'text-stone-400 hover:text-rose-600 dark:hover:text-rose-400' }}"
+                                                                    title="React to reply">
+                                                                    <i data-lucide="heart" class="w-3 h-3 {{ auth()->user()->hasTapped($reply) ? 'fill-current' : '' }}"></i>
+                                                                    <span data-resonance-tap-count="{{ $reply->id }}">{{ $reply->taps_count > 0 ? $reply->taps_count : '' }}</span>
+                                                                </button>
+                                                            @endauth
+
+                                                            <div data-resonance-author-badge="{{ $reply->id }}" 
+                                                                 class="{{ $reply->isAuthorLiked() ? 'flex' : 'hidden' }} items-center gap-0.5 text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.2 rounded-full border border-amber-500/20">
+                                                                <i data-lucide="heart" class="w-2 h-2 fill-current text-rose-500"></i>
+                                                                <span>Liked by author</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
                                         </div>
                                     @empty
                                         <p class="text-xs text-stone-400 dark:text-stone-500 py-1 italic">No resonances yet. Be the first to resonate!</p>
@@ -802,7 +916,8 @@
                                 @auth
                                     <div class="flex items-center gap-2 pt-1">
                                         <input type="text" id="resonance-input-{{ $post->id }}" placeholder="Write a resonance..."
-                                            class="flex-1 border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/80 dark:text-stone-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                                            class="flex-1 border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/80 dark:text-stone-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                                            onkeydown="if(event.key === 'Enter') submitProfileResonance({{ $post->id }})">
                                         <button type="button" onclick="submitProfileResonance({{ $post->id }})"
                                             class="px-3.5 py-2 glass-orange text-white rounded-xl text-xs font-bold transition flex items-center justify-center shrink-0 active:scale-95">
                                             <i data-lucide="send" class="w-3.5 h-3.5"></i>
@@ -1683,25 +1798,210 @@
                         const emptyPlaceholder = list.querySelector('.italic');
                         if (emptyPlaceholder) emptyPlaceholder.remove();
 
-                        const newDiv = document.createElement('div');
-                        newDiv.className = 'p-2.5 sm:p-3 bg-stone-50 dark:bg-stone-800/60 rounded-xl border border-stone-100 dark:border-stone-800 text-xs';
-                        newDiv.innerHTML = `
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="font-bold text-stone-900 dark:text-stone-200">${data.resonance.user.name}</span>
-                                <span class="text-[10px] text-stone-400">Just now</span>
+                        const res = data.resonance;
+                        const authorBadgeHtml = res.is_post_author ? `<span class="px-1.5 py-0.2 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider shrink-0 border border-amber-500/20">Author</span>` : '';
+                        const newDivHtml = `
+                            <div id="resonance-item-${res.id}" class="p-2.5 sm:p-3 bg-stone-50 dark:bg-stone-800/60 rounded-xl border border-stone-100 dark:border-stone-800 text-xs sm:text-sm space-y-1.5 transition-all">
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <img src="${res.user.profile_photo_url}" class="w-6 h-6 rounded-full object-cover border border-stone-200 dark:border-stone-700 shrink-0" alt="${res.user.name}">
+                                        <div class="flex items-center gap-1.5 min-w-0 truncate">
+                                            <span class="font-bold text-stone-900 dark:text-stone-100 truncate">${res.user.name}</span>
+                                            ${authorBadgeHtml}
+                                        </div>
+                                    </div>
+                                    <span class="text-[10px] sm:text-xs text-stone-400 shrink-0">${res.time}</span>
+                                </div>
+                                <div class="text-stone-700 dark:text-stone-300 leading-relaxed pl-8">
+                                    ${res.formatted_content || res.content}
+                                </div>
+                                <div class="flex items-center justify-between pt-1 pl-8">
+                                    <div class="flex items-center gap-3">
+                                        <button type="button" 
+                                            onclick="toggleResonanceTap(${res.id})" 
+                                            data-resonance-tap-btn="${res.id}"
+                                            class="flex items-center gap-1 text-[11px] sm:text-xs font-semibold text-stone-500 dark:text-stone-400 hover:text-rose-600 dark:hover:text-rose-400 transition active:scale-90"
+                                            title="React to comment">
+                                            <i data-lucide="heart" class="w-3.5 h-3.5"></i>
+                                            <span data-resonance-tap-count="${res.id}"></span>
+                                        </button>
+                                        <button type="button" 
+                                            onclick="toggleResonanceReplyBox(${postId}, ${res.id}, '${res.user.name.replace(/'/g, "\\'")}')"
+                                            class="flex items-center gap-1 text-[11px] sm:text-xs font-semibold text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 transition"
+                                            title="Reply to this comment">
+                                            <i data-lucide="reply" class="w-3.5 h-3.5"></i>
+                                            <span>Reply</span>
+                                        </button>
+                                    </div>
+                                    <div data-resonance-author-badge="${res.id}" class="hidden items-center gap-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                                        <i data-lucide="heart" class="w-2.5 h-2.5 fill-current text-rose-500"></i>
+                                        <span>Liked by author</span>
+                                    </div>
+                                </div>
+                                <div id="resonance-reply-form-${res.id}" class="hidden pt-2 pl-8">
+                                    <div class="flex items-center gap-1.5 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-xl p-1.5 shadow-sm">
+                                        <input type="text" id="resonance-reply-input-${res.id}" placeholder="Reply to ${res.user.name}..." class="flex-1 bg-transparent px-2 text-xs text-stone-800 dark:text-stone-200 outline-none" onkeydown="if(event.key === 'Enter') submitResonanceReply(${postId}, ${res.id})">
+                                        <button type="button" onclick="submitResonanceReply(${postId}, ${res.id})" class="p-1.5 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition active:scale-95"><i data-lucide="send" class="w-3 h-3"></i></button>
+                                        <button type="button" onclick="toggleResonanceReplyBox(${postId}, ${res.id})" class="p-1.5 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 rounded-lg transition"><i data-lucide="x" class="w-3 h-3"></i></button>
+                                    </div>
+                                </div>
+                                <div id="resonance-replies-list-${res.id}" class="space-y-2 mt-2 pl-6 sm:pl-8 border-l-2 border-stone-200 dark:border-stone-700 hidden"></div>
                             </div>
-                            <div class="text-stone-700 dark:text-stone-300 leading-relaxed">${data.resonance.formatted_content || data.resonance.content}</div>
                         `;
-                        list.appendChild(newDiv);
+                        list.insertAdjacentHTML('beforeend', newDivHtml);
                     }
                     input.value = '';
                     const countBadge = document.querySelector(`[data-resonance-count="${postId}"]`);
                     if (countBadge) {
                         countBadge.textContent = `${data.count} Resonance`;
                     }
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
                 }
             })
             .catch(err => console.error('Profile resonance error:', err));
+        }
+
+        // Toggle Tap / Heart Reaction on a Resonance (Profile)
+        function toggleResonanceTap(resonanceId) {
+            const btn = document.querySelector(`[data-resonance-tap-btn="${resonanceId}"]`);
+            const countSpan = document.querySelector(`[data-resonance-tap-count="${resonanceId}"]`);
+            const authorBadge = document.querySelector(`[data-resonance-author-badge="${resonanceId}"]`);
+            if (!btn) return;
+
+            const icon = btn.querySelector('i, svg');
+            let isTapped = btn.classList.contains('text-rose-600');
+            let currentCount = parseInt(countSpan ? countSpan.textContent : '0') || 0;
+
+            // Optimistic UI update
+            if (isTapped) {
+                btn.classList.remove('text-rose-600', 'dark:text-rose-400');
+                btn.classList.add('text-stone-500', 'dark:text-stone-400');
+                if (icon) icon.classList.remove('fill-current');
+                if (countSpan) countSpan.textContent = Math.max(0, currentCount - 1) || '';
+            } else {
+                btn.classList.add('text-rose-600', 'dark:text-rose-400');
+                btn.classList.remove('text-stone-500', 'dark:text-stone-400');
+                if (icon) icon.classList.add('fill-current');
+                if (countSpan) countSpan.textContent = currentCount + 1;
+            }
+
+            fetch(`/resonances/${resonanceId}/tap`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (countSpan) {
+                    countSpan.textContent = data.count > 0 ? data.count : '';
+                }
+                if (authorBadge) {
+                    if (data.is_author_liked) {
+                        authorBadge.classList.remove('hidden');
+                        authorBadge.classList.add('flex');
+                    } else {
+                        authorBadge.classList.add('hidden');
+                        authorBadge.classList.remove('flex');
+                    }
+                }
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            })
+            .catch(err => {
+                console.error('Error tapping resonance:', err);
+                if (isTapped) {
+                    btn.classList.add('text-rose-600', 'dark:text-rose-400');
+                    if (icon) icon.classList.add('fill-current');
+                    if (countSpan) countSpan.textContent = currentCount || '';
+                } else {
+                    btn.classList.remove('text-rose-600', 'dark:text-rose-400');
+                    if (icon) icon.classList.remove('fill-current');
+                    if (countSpan) countSpan.textContent = Math.max(0, currentCount - 1) || '';
+                }
+            });
+        }
+
+        // Toggle Reply Box for a Resonance (Profile)
+        function toggleResonanceReplyBox(postId, resonanceId, authorName = '') {
+            const form = document.getElementById(`resonance-reply-form-${resonanceId}`);
+            if (!form) return;
+            const isHidden = form.classList.contains('hidden');
+            form.classList.toggle('hidden');
+            if (isHidden) {
+                const input = document.getElementById(`resonance-reply-input-${resonanceId}`);
+                if (input) {
+                    if (authorName && !input.value) {
+                        input.value = `@${authorName.replace(/\s+/g, '')} `;
+                    }
+                    input.focus();
+                }
+            }
+        }
+
+        // Submit Threaded Reply to a Resonance (Profile)
+        function submitResonanceReply(postId, resonanceId) {
+            const input = document.getElementById(`resonance-reply-input-${resonanceId}`);
+            if (!input) return;
+            const content = input.value.trim();
+            if (!content) return;
+
+            fetch(`/timeline/${postId}/resonance`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ content, parent_id: resonanceId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const repliesList = document.getElementById(`resonance-replies-list-${resonanceId}`);
+                    if (repliesList) {
+                        repliesList.classList.remove('hidden');
+                        const reply = data.resonance;
+                        const authorBadgeHtml = reply.is_post_author ? `<span class="px-1 py-0.2 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] font-black uppercase tracking-wider shrink-0 border border-amber-500/20">Author</span>` : '';
+                        const replyHtml = `
+                            <div id="resonance-item-${reply.id}" class="p-2 bg-white/70 dark:bg-stone-900/60 rounded-xl border border-stone-100 dark:border-stone-800 text-xs space-y-1">
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-1.5 min-w-0">
+                                        <img src="${reply.user.profile_photo_url}" class="w-5 h-5 rounded-full object-cover border border-stone-200 dark:border-stone-700 shrink-0" alt="${reply.user.name}">
+                                        <span class="font-bold text-stone-900 dark:text-stone-100 truncate">${reply.user.name}</span>
+                                        ${authorBadgeHtml}
+                                    </div>
+                                    <span class="text-[9px] sm:text-[10px] text-stone-400 shrink-0">${reply.time}</span>
+                                </div>
+                                <div class="text-stone-700 dark:text-stone-300 leading-relaxed pl-6.5">
+                                    ${reply.formatted_content || reply.content}
+                                </div>
+                                <div class="flex items-center justify-between pt-0.5 pl-6.5">
+                                    <button type="button" 
+                                        onclick="toggleResonanceTap(${reply.id})" 
+                                        data-resonance-tap-btn="${reply.id}"
+                                        class="flex items-center gap-1 text-[10px] font-semibold text-stone-400 hover:text-rose-600 dark:hover:text-rose-400 transition active:scale-90"
+                                        title="React to reply">
+                                        <i data-lucide="heart" class="w-3 h-3"></i>
+                                        <span data-resonance-tap-count="${reply.id}"></span>
+                                    </button>
+                                    <div data-resonance-author-badge="${reply.id}" class="hidden items-center gap-0.5 text-[9px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.2 rounded-full border border-amber-500/20">
+                                        <i data-lucide="heart" class="w-2 h-2 fill-current text-rose-500"></i>
+                                        <span>Liked by author</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        repliesList.insertAdjacentHTML('beforeend', replyHtml);
+                    }
+                    input.value = '';
+                    toggleResonanceReplyBox(postId, resonanceId);
+                    const countSpan = document.querySelector(`[data-resonance-count="${postId}"]`);
+                    if (countSpan) countSpan.innerText = `${data.count} Resonance`;
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                }
+            })
+            .catch(err => console.error('Error replying to resonance:', err));
         }
     @endauth
 

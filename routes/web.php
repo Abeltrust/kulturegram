@@ -73,6 +73,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/timeline/{post}/tap', [TimelineController::class, 'tap'])->name('posts.tap');
     Route::post('/timeline/{post}/checkin', [TimelineController::class, 'checkin'])->name('posts.checkin');
     Route::post('/timeline/{post}/resonance', [TimelineController::class, 'resonance'])->name('timeline.resonance');
+    Route::post('/resonances/{resonance}/tap', [TimelineController::class, 'tapResonance'])->name('resonances.tap');
 
 
     // Cultural Hub

@@ -33,7 +33,6 @@
         /* Mobile footprint reduction */
         @media (max-width: 640px) {
             html { font-size: 13px; }
-            .h-16 { @apply h-14; } /* Tighter header */
             .p-8 { @apply p-6; }
             .p-10 { @apply p-7; }
             .gap-8 { @apply gap-4; }
@@ -239,14 +238,14 @@
     <div id="nav-progress"></div>
 
     <!-- Header -->
-    <header class="fixed top-0 left-0 right-0 h-16 bg-white/95 dark:bg-stone-900/95 backdrop-blur-sm border-b border-stone-200 dark:border-stone-800 z-50 flex transition-colors duration-200">
-        <div class="w-full flex items-center h-full px-4 md:px-6 gap-4">
+    <header class="fixed top-0 left-0 right-0 h-[60px] sm:h-16 bg-white/95 dark:bg-stone-900/95 backdrop-blur-sm border-b border-stone-200 dark:border-stone-800 z-50 flex transition-colors duration-200">
+        <div class="w-full flex items-center h-full px-4 md:px-6 gap-3 sm:gap-4">
             <!-- Left: Logo -->
-            <div class="flex items-center space-x-3 flex-shrink-0">
-               <div class="w-6 h-6 sm:w-8 sm:h-8 bg-orange-500 shadow-md shadow-orange-500/25 border-t border-white/30 rounded-lg flex items-center justify-center">
-                    <i data-lucide="book-open" class="w-4 h-4 sm:w-5 sm:h-5 text-white"></i>
+            <div class="flex items-center space-x-2.5 sm:space-x-3 flex-shrink-0">
+               <div class="w-[38px] h-[38px] bg-orange-500 shadow-md shadow-orange-500/25 border-t border-white/30 rounded-xl flex items-center justify-center shrink-0" style="width: 38px; height: 38px; min-width: 38px; min-height: 38px;">
+                    <i data-lucide="book-open" class="w-5 h-5 text-white"></i>
                 </div>
-                <a href="{{ route('timeline.index') }}" class="text-base sm:text-xl font-black text-stone-900 dark:text-white hover:text-orange-500 transition-colors duration-200">
+                <a href="{{ route('timeline.index') }}" class="text-[20px] sm:text-xl font-black text-stone-900 dark:text-white hover:text-orange-500 tracking-tight transition-colors duration-200">
                     Kulturegram
                 </a>
             </div>
@@ -269,42 +268,47 @@
             @endauth
 
             <!-- Right: Icons & User Menu -->
-            <div class="flex items-center space-x-2 md:space-x-4 flex-shrink-0 ml-auto">
+            <div class="flex items-center space-x-2 sm:space-x-3 md:space-x-4 flex-shrink-0 ml-auto">
                     @auth
                         <!-- Create Post Button (Desktop Header) -->
                         <button onclick="document.getElementById('createPostModal').classList.remove('hidden'); document.getElementById('createPostModal').classList.add('flex');"
-                            class="hidden md:flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-orange-500 hover:bg-orange-600 text-white shadow-md shadow-orange-500/25 border-t border-white/30 hover:scale-105 transition-all duration-200 cursor-pointer"
+                            class="hidden md:flex items-center justify-center w-10 h-10 rounded-lg bg-orange-500 hover:bg-orange-600 text-white shadow-md shadow-orange-500/25 border-t border-white/30 hover:scale-105 transition-all duration-200 cursor-pointer"
                             title="Create Post">
-                            <i data-lucide="plus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                            <i data-lucide="plus" class="w-5 h-5"></i>
                         </button>
 
                         <!-- Live Button -->
                         <a href="{{ route('live-stream.index') }}" 
-                        class="w-8 h-8 sm:w-9 sm:h-9 relative p-1.5 sm:p-2 text-stone-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all duration-200" 
+                        class="w-10 h-10 relative flex items-center justify-center text-stone-600 dark:text-stone-300 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-all duration-200 shrink-0" 
+                        style="width: 40px; height: 40px; min-width: 40px; min-height: 40px;"
                         title="Go Live">
-                            <i data-lucide="video" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                            <i data-lucide="video" class="w-6 h-6"></i>
                         </a>
 
                         <!-- Notifications -->
                         <a href="{{ route('notifications.index') }}" 
-                        class="w-8 h-8 sm:w-9 sm:h-9 relative p-1.5 sm:p-2 text-stone-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all duration-200" 
+                        class="w-10 h-10 relative flex items-center justify-center text-stone-600 dark:text-stone-300 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-all duration-200 shrink-0" 
+                        style="width: 40px; height: 40px; min-width: 40px; min-height: 40px;"
                         title="Notifications">
-                            <i data-lucide="bell" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                            <i data-lucide="bell" class="w-6 h-6"></i>
                             @if(auth()->user()->notifications()->unread()->count() > 0)
-                                <span class="absolute -top-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-500 rounded-full"></span>
+                                <span class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 ring-2 ring-white dark:ring-stone-900 rounded-full"></span>
                             @endif
                         </a>
 
                         <!-- Direct Profile Link -->
                         <a href="{{ route('profile.show') }}" 
-                            class="flex items-center space-x-1 sm:space-x-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg p-1 transition-colors"
+                            class="flex items-center space-x-1.5 sm:space-x-2 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-full p-0.5 sm:p-1 transition-colors shrink-0"
                             title="My Profile & Story">
                             <img src="{{ auth()->user()->profile_photo_url }}" 
-                                 class="w-8 h-8 rounded-full object-cover border border-stone-200 dark:border-stone-700">
+                                 width="38"
+                                 height="38"
+                                 class="w-[38px] h-[38px] rounded-full object-cover border-2 border-stone-200 dark:border-stone-700 hover:border-amber-500 transition-colors shrink-0"
+                                 style="width: 38px; height: 38px; min-width: 38px; min-height: 38px;">
                             <span class="hidden lg:block text-sm font-black text-stone-700 dark:text-stone-300">{{ auth()->user()->name }}</span>
                         </a>
                     @else
-                        <a href="{{ route('login') }}" class="text-sm sm:text-base text-stone-600 hover:text-stone-800 font-medium transition-colors">Sign In</a>
+                        <a href="{{ route('login') }}" class="text-[15px] sm:text-base text-stone-700 dark:text-stone-300 hover:text-orange-500 font-bold px-3 py-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors shrink-0">Sign In</a>
                     @endauth
                 </div>
         </div>
@@ -402,7 +406,7 @@
 
 
         <!-- Main Content -->
-        <main class="flex-1 w-full max-w-full min-w-0 overflow-x-hidden pt-16 md:ml-20 {{ (request()->routeIs('messages.*')) ? 'pb-0' : 'pb-16' }} md:pb-0 min-h-screen relative">
+        <main class="flex-1 w-full max-w-full min-w-0 overflow-x-hidden pt-[60px] sm:pt-16 md:ml-20 {{ (request()->routeIs('messages.*')) ? 'pb-0' : 'pb-16' }} md:pb-0 min-h-screen relative">
             
             <!-- Global Skeleton Loader -->
             <div x-show="pageLoading" 
