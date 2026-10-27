@@ -27,7 +27,7 @@
         <div>
             <div class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-2">
                 <i data-lucide="sparkles" class="w-3 h-3"></i>
-                <span>Meta Global AI Developer Hackathon</span>
+                <span>Cultural Preservation Intelligence</span>
             </div>
             <h1 class="text-2xl sm:text-3xl font-extrabold text-stone-900 dark:text-stone-100 tracking-tight">
                 Living Heritage Capture
@@ -55,7 +55,7 @@
     <div x-show="!isConfigured" class="mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300 flex items-start space-x-3">
         <i data-lucide="info" class="w-5 h-5 flex-shrink-0 mt-0.5 text-amber-600"></i>
         <div>
-            <span class="font-bold">Meta Model API Key Pending / Hackathon Evaluation Mode:</span>
+            <span class="font-bold">Meta Model API Key Pending / Offline Archival Mode:</span>
             <span>You can upload oral audio, manually enter and correct transcripts, fill all structured fields, and save or submit drafts. AI buttons will display clean diagnostic notices if triggered without active credentials.</span>
         </div>
     </div>

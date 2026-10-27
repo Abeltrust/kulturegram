@@ -54,7 +54,7 @@ class LivingHeritageCaptureTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Living Heritage Capture');
         $response->assertSee('Stage 1: Capture Oral Story');
-        $response->assertSee('Meta Global AI Developer Hackathon');
+        $response->assertSee('Cultural Preservation Intelligence');
     }
 
     public function test_living_heritage_index_renders_with_status_indicators(): void

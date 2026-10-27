@@ -220,7 +220,7 @@ class MetaModelApiClient
         // Handle specific failure modes
         $errorMsg = match ($status) {
             401 => 'Authentication failed. Please verify your META_MODEL_API_KEY.',
-            403 => "Model '{$model}' is not accessible with this account or hackathon credits are pending.",
+            403 => "Model '{$model}' is not accessible with this account or API permissions are pending.",
             404 => "Endpoint or model '{$model}' not found at {$endpoint}.",
             422 => 'The request payload was rejected by the model API as unprocessable.',
             429 => 'Rate limit exceeded on Meta Model API. Please wait a moment before trying again.',

@@ -10,7 +10,7 @@
         <div class="max-w-3xl space-y-4">
             <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-400 text-xs font-bold uppercase tracking-wider">
                 <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                <span>Meta Global AI Developer Hackathon</span>
+                <span>Cultural Preservation Intelligence</span>
             </div>
 
             <h1 class="text-3xl sm:text-4xl font-extrabold text-stone-900 dark:text-stone-100 tracking-tight">
@@ -50,13 +50,13 @@
                 <div class="w-3 h-3 rounded-full mt-1 sm:mt-0 {{ $isConfigured ? 'bg-green-500 animate-pulse' : 'bg-amber-500' }}"></div>
                 <div>
                     <h3 class="text-sm font-bold text-stone-900 dark:text-stone-100">
-                        {{ $isConfigured ? 'Shared Meta Model API Connected' : 'Meta Model API Key Pending / Hackathon Evaluation Mode' }}
+                        {{ $isConfigured ? 'Shared Meta Model API Connected' : 'Meta Model API Key Pending / Offline Archival Mode' }}
                     </h3>
                     <p class="text-xs text-stone-500 dark:text-stone-400">
                         @if($isConfigured)
                             One shared credentials client (<code class="font-mono text-stone-700 dark:text-stone-300">{{ $maskedKey }}</code>) powers Muse Spark, Muse Wonder, Muse Image, Muse Voice Transcribe, and SAM 3.1.
                         @else
-                            Waiting for hackathon credits / local <code class="font-mono text-amber-700 dark:text-amber-400">META_MODEL_API_KEY</code>. All manual capture forms, recording uploads, and offline draft workflows remain 100% operational.
+                            Awaiting configured <code class="font-mono text-amber-700 dark:text-amber-400">META_MODEL_API_KEY</code>. All manual capture forms, recording uploads, and offline draft workflows remain 100% operational.
                         @endif
                     </p>
                 </div>

@@ -1,4 +1,4 @@
-# Meta Global AI Developer Hackathon — Kulturegram Setup & Integration Guide
+# Kulturegram Cultural AI — Architecture & Integration Setup Guide
 
 ## 1. Executive Summary & Architecture
 
@@ -6,7 +6,7 @@
 
 ### Core Architectural Principle: Single Shared API Key
 
-Per the Hackathon core requirement, a **single shared Meta Model API key** (`META_MODEL_API_KEY`) powers all compatible hosted Meta models:
+A **single shared Meta Model API key** (`META_MODEL_API_KEY`) powers all compatible hosted Meta models across the platform:
 - **Muse Voice Transcribe**: Authentic oral audio transcription with dialect safeguarding.
 - **Muse Spark**: Structured cultural record synthesis with strict anti-hallucination discipline.
 - **Muse Wonder**: Bounded preservation audit (gap detection, neutral elder questions, task checklist).
@@ -132,4 +132,4 @@ When your Meta Model API key is credited, verify each capability:
 - [Meta AI Documentation](https://ai.meta.com/)
 - [Segment Anything Model (SAM)](https://segment-anything.com/)
 - [Llama & Open-Weight Model Hub](https://llama.meta.com/)
-- [Meta Global AI Developer Hackathon Resources](https://lablab.ai/event/meta-global-ai-hackathon)
+- [Kulturegram Platform Architecture](file:///c:/Timeline/CULTURAL_AI_SYSTEM.md)

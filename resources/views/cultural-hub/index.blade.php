@@ -45,12 +45,12 @@
             @endif
         </div>
 
-        <!-- Meta Global AI Hackathon Living Heritage Banner -->
+        <!-- Living Heritage Preservation Banner -->
         <div class="mb-10 bg-white dark:bg-stone-900 border border-amber-200/80 dark:border-amber-900/50 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
             <div class="space-y-2 max-w-2xl">
                 <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-widest">
                     <i data-lucide="sparkles" class="w-3 h-3"></i>
-                    <span>Meta Global AI Developer Hackathon</span>
+                    <span>Cultural Preservation Intelligence</span>
                 </div>
                 <h3 class="text-xl sm:text-2xl font-extrabold text-stone-900 dark:text-stone-100 tracking-tight">
                     Living Heritage Capture

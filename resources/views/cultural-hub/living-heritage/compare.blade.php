@@ -13,7 +13,7 @@
     <div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-3xl p-6 sm:p-10 shadow-sm space-y-3">
         <div class="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-amber-600">
             <i data-lucide="git-compare" class="w-4 h-4"></i>
-            <span>Meta Global AI Hackathon • Architecture Lab</span>
+            <span>Living Heritage • Architecture & Inference Lab</span>
         </div>
         <h1 class="text-2xl sm:text-3xl font-extrabold text-stone-900 dark:text-stone-100 tracking-tight">
             Cultural AI Model Comparison Lab

@@ -71,7 +71,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/cultural-hub/{culture}/lock-in', [CulturalHubController::class, 'lockin'])->name('cultural-hub.lock-in');
     Route::post('/cultural-hub/{culture}/resonance', [CulturalHubController::class, 'resonance'])->name('cultural-hub.resonance');
 
-    // Living Heritage Capture (Meta Global AI Hackathon)
+    // Living Heritage Capture Pipeline
     Route::get('/cultural-hub/living-heritage', [LivingHeritageController::class, 'index'])->name('cultural-hub.living-heritage.index');
     Route::get('/cultural-hub/living-heritage/capture', [LivingHeritageController::class, 'create'])->name('cultural-hub.living-heritage.create');
     Route::post('/cultural-hub/living-heritage/transcribe', [LivingHeritageController::class, 'transcribeAudio'])->middleware('throttle:20,1')->name('cultural-hub.living-heritage.transcribe');

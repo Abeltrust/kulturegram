@@ -5,7 +5,7 @@ return [
     |--------------------------------------------------------------------------
     | Shared Meta Model API Configuration
     |--------------------------------------------------------------------------
-    | Core Hackathon Requirement:
+    | Architectural Design:
     | A single shared Meta Model API key is used for every compatible hosted
     | Meta model (Muse Spark, Muse Wonder, Muse Image, Muse Voice Transcribe,
     | and SAM 3.1).
