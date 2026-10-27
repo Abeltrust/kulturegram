@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class EventController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, \App\Services\MetaAI\EventDiscoveryService $discoveryService)
     {
         $filter = $request->get('filter', 'all');
 
@@ -57,7 +57,13 @@ class EventController extends Controller
 
         $events = $eventQuery->paginate(12);
 
-        return view('events.index', compact('events', 'liveStreams', 'upcomingStreams', 'filter'));
+        // 4. AI-Curated Events based on user declared cultural profile
+        $recommendedEvents = collect();
+        if (Auth::check()) {
+            $recommendedEvents = $discoveryService->recommendEvents(Auth::user(), 4);
+        }
+
+        return view('events.index', compact('events', 'liveStreams', 'upcomingStreams', 'filter', 'recommendedEvents'));
     }
 
     public function show(Event $event)
@@ -112,13 +118,25 @@ class EventController extends Controller
             'accepts_contributions' => 'boolean',
         ]);
 
-        $event = new Event($request->except(['image', 'is_hosted', 'accepts_contributions', 'virtual_room_id', 'meeting_link']));
+        $event = new Event($request->except(['image', 'is_hosted', 'accepts_contributions', 'virtual_room_id', 'meeting_link', 'reach_tags', 'ai_reach_metadata']));
         $event->organizer_id = Auth::id();
         $event->price = $request->input('price', 0) ?: 0;
         $event->is_hosted = $request->boolean('is_hosted');
         $event->virtual_room_id = $request->filled('virtual_room_id') ? $request->input('virtual_room_id') : null;
         $event->meeting_link = $request->filled('meeting_link') ? $request->input('meeting_link') : null;
         $event->accepts_contributions = $request->boolean('accepts_contributions');
+
+        if ($request->filled('reach_tags')) {
+            $event->reach_tags = is_array($request->input('reach_tags')) 
+                ? $request->input('reach_tags') 
+                : json_decode($request->input('reach_tags'), true);
+        }
+
+        if ($request->filled('ai_reach_metadata')) {
+            $event->ai_reach_metadata = is_array($request->input('ai_reach_metadata')) 
+                ? $request->input('ai_reach_metadata') 
+                : json_decode($request->input('ai_reach_metadata'), true);
+        }
 
         if ($request->hasFile('image')) {
             $event->image = $request->file('image')->store('events', 'public');
@@ -133,6 +151,28 @@ class EventController extends Controller
 
         return redirect()->route('events.index')
             ->with('success', 'Event created successfully!');
+    }
+
+    /**
+     * AI Cultural Reach Optimizer for Event Organizers
+     */
+    public function aiOptimize(Request $request, \App\Services\MetaAI\EventDiscoveryService $discoveryService)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'type' => 'nullable|string|max:100',
+            'location' => 'nullable|string|max:255',
+            'is_online' => 'nullable|boolean',
+            'community_id' => 'nullable|integer',
+        ]);
+
+        $optimization = $discoveryService->optimizeEvent($request->all());
+
+        return response()->json([
+            'success' => $optimization['success'] ?? true,
+            'data' => $optimization['suggestions'] ?? $optimization,
+        ]);
     }
 
     public function join(Event $event)

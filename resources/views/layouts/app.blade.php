@@ -357,6 +357,10 @@
                             ['route' => 'analytics.index', 'params' => [], 'icon' => 'bar-chart-3', 'tooltip' => 'Story insights'],
                             ['route' => 'settings.index', 'params' => [auth()->id()], 'icon' => 'settings', 'tooltip' => 'Account preferences'],
                         ];
+                        if (auth()->user()->is_admin) {
+                            $secondaryItems[] = ['route' => 'admin.cultures.index', 'params' => [], 'icon' => 'shield', 'tooltip' => 'Heritage Moderation'];
+                            $secondaryItems[] = ['route' => 'admin.privacy-audit.index', 'params' => [], 'icon' => 'shield-check', 'tooltip' => 'AI Privacy & Policy Audit'];
+                        }
                         @endphp
                         @foreach($secondaryItems as $item)
                         <div class="relative group">

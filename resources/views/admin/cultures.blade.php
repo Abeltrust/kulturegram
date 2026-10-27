@@ -63,6 +63,11 @@
            class="px-4 py-2 rounded-xl text-sm font-bold transition {{ $status === 'all' ? 'bg-amber-500 text-white shadow-sm' : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:text-stone-900' }}">
             All Submissions
         </a>
+        <a href="{{ route('admin.privacy-audit.index') }}"
+           class="px-4 py-2 rounded-xl text-sm font-bold transition text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 bg-stone-100 dark:bg-stone-800 flex items-center gap-1.5 ml-auto">
+            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
+            <span>Privacy & Policy Audit</span>
+        </a>
     </div>
 
     {{-- Submissions List --}}

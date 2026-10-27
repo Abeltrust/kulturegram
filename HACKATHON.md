@@ -76,11 +76,46 @@ A 5-stage preservation workflow assisting contributors without replacing human a
 
 ---
 
-## 4. Test Suite Summary
+## 4. Platform-Wide AI Integrations (Live Stream, Privacy Audit, Cultural Connections, and Events)
 
-- **Total Test Files:** 10 feature test suites
-- **Total Tests Passing:** 86 tests passed (313 assertions)
-  - `LivingHeritageCaptureTest`: 16 passed (62 assertions)
-  - `MetaModelApiClientTest`: 6 passed (23 assertions)
-  - Existing Core Test Suite (Admin, Auth, Community, Events, Messages, Timeline, Vault): 64 passed (228 assertions)
-- **Zero Live Credential Dependency:** All automated tests run reproducibly in local environments without incurring credit costs or requiring live upstream tokens.
+In addition to Living Heritage Capture, AI is integrated across Kulturegram's core features:
+
+### A. AI-Powered Live Stream Monitoring (`/live-stream/{stream}`)
+- **Context-Aware Stream Analysis:** Uses Meta AI (`muse-spark-1.3`) to analyze live broadcast chat in real time against the stream title, category, and cultural topic.
+- **Cultural Nuance Understanding:** Specifically calibrated to respect traditional dialect expressions, proverbs, historical debates, chieftaincy disputes, and playful banter without censorship.
+- **Transparent Platform Rule Citations:** Flags messages for targeted harassment, hate speech, spam, unauthorized PII exposure, and dangerous disruption with citations to Kulturegram Community Guidelines.
+- **Non-Blocking Architecture:** Chat message persistence and broadcast remain sub-second; AI moderation runs asynchronously without blocking the live room experience.
+- **Human-in-the-Loop Host Moderation Queue:** Host and authorized moderators can review flagged messages, inspect AI rationale, dismiss false flags, or remove offending messages. No automated bans.
+
+### B. AI Privacy Protection & System Policy Auditing (`/admin/privacy-audit`)
+- **Content Privacy Protection:** Detects private phone numbers (Nigerian & international), email addresses, government identity numbers (NIN/SSN), credit cards, and plaintext credentials with safe redaction preview and pre-submission warnings.
+- **6-Pillar Technical Security Verification:**
+  1. *Cryptographic Password Hashing:* Sampled user accounts verified for standard Bcrypt/Argon2 signatures.
+  2. *Personal Heritage Vault Isolation:* Private heirloom access strictly partitioned by user ownership.
+  3. *Timeline Post Privacy Boundaries:* Private posts quarantined from public feeds and unauthenticated indexers.
+  4. *Public Model Serialization Protection:* Token and password hash stripping verified against Eloquent `$hidden` rules.
+  5. *Session Timeout & Cookie Hardening:* Enforces HttpOnly session cookies and idle timeouts.
+  6. *Indigenous Data Sovereignty & Right to Erasure:* Verified authenticated account deletion cascading personal artifacts.
+- **Executive AI Synthesis:** Uses Meta AI (`muse-wonder-1.0`) to generate an executive compliance briefing comparing technical system benchmarks against the published Data Sovereignty & Privacy Policy (`/privacy`).
+- **Interactive PII Test Bench:** Admin tool to test and inspect redaction rules in real time.
+
+### C. AI Cultural Connection Recommendations (`/cultural-discovery/recommendations`)
+- **Voluntary-Only Matching:** Recommends peers, cultural groups, and historical projects based strictly on user-declared interests, language proficiencies, and regional heritage—never private messages or sensitive inferences.
+- **Explainable Matches:** Clear attribution badges on every card (e.g., *"Recommended because you share an interest in Oral History and Yoruba Heritage"*).
+- **User Control & Data Sovereignty:** One-click dismissals stored in `cultural_recommendation_dismissals` and an instant global opt-out switch respecting user preference.
+- **Seamless Interface Integration:** Embedded directly into the main Timeline feed (`timeline/index.blade.php`) and Communities directory (`communities/index.blade.php`).
+
+### D. AI-Assisted Event Discovery & Organizer Reach (`/events` & `/events/create`)
+- **Interest-Based Discovery:** Recommends public cultural gatherings matching declared traditions and regional proximity with clear explanations.
+- **Organizer Reach Assistant:** Suggests culturally resonant titles, engaging descriptions, targeted interest tags, and optimal community reach channels before publication.
+- **Strict Privacy & Permissions:** Preserves event privacy boundaries and registration caps.
+
+---
+
+## 5. Test Suite Summary
+
+- **Total Test Files:** 11 feature test suites
+- **New AI Platform Test Suite:** `tests/Feature/AIPlatformIntegrationsTest.php` (13 tests, 49 assertions, 100% passing)
+- **Living Heritage Test Suite:** `tests/Feature/LivingHeritageCaptureTest.php` (17 tests, 68 assertions, 100% passing)
+- **Zero Live Credential Dependency:** Automated tests run fully offline with mocks, SQLite in-memory, and deterministic fixtures.
+

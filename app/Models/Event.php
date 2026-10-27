@@ -30,6 +30,8 @@ class Event extends Model
         'organizer_id',
         'community_id',
         'accepts_contributions',
+        'reach_tags',
+        'ai_reach_metadata',
     ];
 
     protected $casts = [
@@ -39,6 +41,8 @@ class Event extends Model
         'is_online' => 'boolean',
         'is_hosted' => 'boolean',
         'requirements' => 'array',
+        'reach_tags' => 'array',
+        'ai_reach_metadata' => 'array',
     ];
 
     // Relationships

@@ -101,4 +101,146 @@ class LiveStreamController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Get live stream messages (clean messages for public, all messages if moderator/host)
+     */
+    public function getMessages(LiveStream $stream, Request $request)
+    {
+        $sinceId = $request->query('since_id', 0);
+        $userId = Auth::id();
+        $isHostOrMod = $userId && ($userId === $stream->user_id || Auth::user()->is_admin);
+
+        $query = \App\Models\LiveStreamMessage::where('live_stream_id', $stream->id)
+            ->with('user:id,name,username,avatar')
+            ->orderBy('id', 'asc');
+
+        if ($sinceId > 0) {
+            $query->where('id', '>', $sinceId);
+        }
+
+        if (!$isHostOrMod) {
+            // Viewers see clean messages + their own pending messages
+            $query->where(function ($q) use ($userId) {
+                $q->whereIn('flag_status', ['clean', 'dismissed']);
+                if ($userId) {
+                    $q->orWhere('user_id', $userId);
+                }
+            });
+        }
+
+        $messages = $query->limit(50)->get();
+
+        return response()->json([
+            'success' => true,
+            'messages' => $messages,
+            'last_id' => $messages->last()?->id ?? $sinceId,
+        ]);
+    }
+
+    /**
+     * Post a new message with non-blocking AI moderation
+     */
+    public function postMessage(
+        LiveStream $stream,
+        Request $request,
+        \App\Services\MetaAI\LiveStreamModerationService $moderationService
+    ) {
+        $request->validate([
+            'message' => 'required|string|max:1000',
+        ]);
+
+        $message = $moderationService->processMessage(
+            $stream,
+            Auth::user(),
+            $request->input('message')
+        );
+
+        $message->load('user:id,name,username,avatar');
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'moderation' => [
+                'flagged' => (bool) ($message->is_flagged || $message->flag_status === 'flagged'),
+                'category' => $message->flag_category,
+                'reason' => $message->flag_reason,
+                'rule' => $message->flag_rule,
+            ],
+        ]);
+    }
+
+    /**
+     * Get queue of flagged messages for stream host or moderator
+     */
+    public function getFlaggedMessages(LiveStream $stream)
+    {
+        $userId = Auth::id();
+        if (!$userId || ($userId !== $stream->user_id && !Auth::user()->is_admin)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $flagged = \App\Models\LiveStreamMessage::where('live_stream_id', $stream->id)
+            ->where('flag_status', 'flagged')
+            ->with('user:id,name,username,avatar')
+            ->latest()
+            ->get();
+
+        $stats = [
+            'total_messages' => \App\Models\LiveStreamMessage::where('live_stream_id', $stream->id)->count(),
+            'flagged_count' => $flagged->count(),
+            'dismissed_count' => \App\Models\LiveStreamMessage::where('live_stream_id', $stream->id)->where('flag_status', 'dismissed')->count(),
+            'removed_count' => \App\Models\LiveStreamMessage::where('live_stream_id', $stream->id)->where('flag_status', 'removed')->count(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'flagged_messages' => $flagged,
+            'stats' => $stats,
+        ]);
+    }
+
+    /**
+     * Dismiss an AI flag on a message (reinstate message)
+     */
+    public function dismissFlag(
+        LiveStream $stream,
+        \App\Models\LiveStreamMessage $message,
+        Request $request,
+        \App\Services\MetaAI\LiveStreamModerationService $moderationService
+    ) {
+        $userId = Auth::id();
+        if (!$userId || ($userId !== $stream->user_id && !Auth::user()->is_admin)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $success = $moderationService->dismissFlag($message, Auth::user(), $request->input('notes'));
+
+        return response()->json([
+            'success' => $success,
+            'message' => $message->fresh(),
+        ]);
+    }
+
+    /**
+     * Remove a flagged message permanently from chat view
+     */
+    public function removeMessage(
+        LiveStream $stream,
+        \App\Models\LiveStreamMessage $message,
+        Request $request,
+        \App\Services\MetaAI\LiveStreamModerationService $moderationService
+    ) {
+        $userId = Auth::id();
+        if (!$userId || ($userId !== $stream->user_id && !Auth::user()->is_admin)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $success = $moderationService->removeMessage($message, Auth::user(), $request->input('reason'));
+
+        return response()->json([
+            'success' => $success,
+            'message' => $message->fresh(),
+        ]);
+    }
 }

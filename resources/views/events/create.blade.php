@@ -17,17 +17,96 @@
         </div>
     @endif
 
-    <form action="{{ route('events.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+    <form action="{{ route('events.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6" x-data="eventOptimizer()">
       @csrf
 
       @if(isset($community_id))
           <input type="hidden" name="community_id" value="{{ $community_id }}">
       @endif
 
+      <input type="hidden" name="reach_tags" :value="JSON.stringify(reachTags)">
+      <input type="hidden" name="ai_reach_metadata" :value="JSON.stringify(aiMetadata)">
+
+      {{-- AI Cultural Reach Assistant Drawer / Card --}}
+      <div class="bg-gradient-to-r from-amber-500/10 via-stone-900/5 to-emerald-500/10 dark:from-amber-950/20 dark:via-stone-900 dark:to-emerald-950/20 rounded-2xl p-5 border border-amber-500/20 dark:border-amber-500/10 space-y-4">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
+              <i data-lucide="sparkles" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-stone-900 dark:text-stone-100 text-sm flex items-center gap-2">
+                AI Cultural Reach Assistant
+                <span class="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-amber-500/20 text-amber-500">Meta AI</span>
+              </h3>
+              <p class="text-xs text-stone-500">Enhance your gathering's discoverability, target audience tags, and community reach.</p>
+            </div>
+          </div>
+
+          <button type="button" @click="optimize()" :disabled="optimizing"
+            class="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow transition flex items-center gap-1.5 shrink-0 disabled:opacity-50">
+            <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
+            <span x-text="optimizing ? 'Analyzing...' : 'Optimize Reach with AI'"></span>
+          </button>
+        </div>
+
+        {{-- Optimization Suggestions Panel --}}
+        <template x-if="optimization">
+          <div class="bg-white/80 dark:bg-stone-950/80 rounded-xl p-4 border border-amber-500/20 space-y-3 text-xs animate-in fade-in duration-200">
+            <div class="flex items-center justify-between text-stone-700 dark:text-stone-300 font-bold border-b border-stone-200 dark:border-stone-800 pb-2">
+              <span class="text-amber-500 font-black">AI Recommendations</span>
+              <button type="button" @click="applyAll()" class="text-amber-600 dark:text-amber-400 hover:underline">Apply All Suggestions</button>
+            </div>
+
+            {{-- Suggested Title --}}
+            <div>
+              <span class="text-stone-400 font-semibold uppercase tracking-wider text-[10px] block">Suggested Catchy Cultural Title:</span>
+              <div class="flex items-center justify-between gap-2 mt-0.5">
+                <span class="font-bold text-stone-800 dark:text-stone-200" x-text="optimization.optimized_title"></span>
+                <button type="button" @click="applyTitle()" class="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold text-[10px]">Use</button>
+              </div>
+            </div>
+
+            {{-- Suggested Description --}}
+            <div>
+              <span class="text-stone-400 font-semibold uppercase tracking-wider text-[10px] block">Culturally Enriched Description:</span>
+              <div class="flex items-start justify-between gap-2 mt-0.5">
+                <p class="text-stone-600 dark:text-stone-400 line-clamp-3 leading-relaxed" x-text="optimization.optimized_description"></p>
+                <button type="button" @click="applyDescription()" class="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold text-[10px] shrink-0">Use</button>
+              </div>
+            </div>
+
+            {{-- Reach Tags --}}
+            <template x-if="optimization.reach_tags && optimization.reach_tags.length > 0">
+              <div>
+                <span class="text-stone-400 font-semibold uppercase tracking-wider text-[10px] block">Recommended Reach Tags:</span>
+                <div class="flex flex-wrap gap-1.5 mt-1">
+                  <template x-for="tag in optimization.reach_tags" :key="tag">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20" x-text="'#' + tag"></span>
+                  </template>
+                </div>
+              </div>
+            </template>
+
+            {{-- Target Communities & Timing Tips --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2 border-t border-stone-200 dark:border-stone-800 text-[11px] text-stone-500">
+              <div>
+                <strong class="text-stone-700 dark:text-stone-300">Target Cultural Circles:</strong>
+                <span x-text="optimization.target_communities ? optimization.target_communities.join(', ') : 'Heritage Hubs'"></span>
+              </div>
+              <div>
+                <strong class="text-stone-700 dark:text-stone-300">Cultural Timing Advice:</strong>
+                <span x-text="optimization.timing_suggestions || 'Evenings & Weekends'"></span>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+
       <!-- Title -->
       <div>
         <label for="title" class="block text-gray-700 dark:text-stone-300 font-semibold mb-2">Event/Meeting Title</label>
-        <input type="text" name="title" id="title" value="{{ old('title') }}"
+        <input type="text" name="title" id="title" x-model="formTitle" value="{{ old('title') }}"
           class="w-full border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:outline-none"
           placeholder="What is this event about?" required>
         @error('title')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
@@ -36,7 +115,7 @@
       <!-- Description -->
       <div>
         <label for="description" class="block text-gray-700 dark:text-stone-300 font-semibold mb-2">Description</label>
-        <textarea name="description" id="description" rows="4"
+        <textarea name="description" id="description" rows="4" x-model="formDesc"
           class="w-full border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:outline-none"
           placeholder="Provide more details..." required>{{ old('description') }}</textarea>
         @error('description')<p class="text-red-500 text-sm mt-1">{{ $message }}</p>@enderror
@@ -279,5 +358,68 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>
       lucide.createIcons();
+
+      document.addEventListener('alpine:init', () => {
+          Alpine.data('eventOptimizer', () => ({
+              formTitle: "{{ old('title', '') }}",
+              formDesc: "{{ old('description', '') }}",
+              optimizing: false,
+              optimization: null,
+              reachTags: [],
+              aiMetadata: null,
+
+              async optimize() {
+                  if (!this.formTitle && !this.formDesc) {
+                      alert('Please enter at least a draft Title or Description first so the AI can understand your cultural topic.');
+                      return;
+                  }
+
+                  this.optimizing = true;
+                  try {
+                      const res = await fetch("{{ route('events.ai-optimize') }}", {
+                          method: 'POST',
+                          headers: {
+                              'Content-Type': 'application/json',
+                              'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                          },
+                          body: JSON.stringify({
+                              title: this.formTitle || 'Cultural Gathering',
+                              description: this.formDesc || this.formTitle,
+                              type: document.getElementById('type') ? document.getElementById('type').value : 'cultural',
+                              location: document.getElementById('location') ? document.getElementById('location').value : 'Online'
+                          })
+                      });
+                      const data = await res.json();
+                      if (data.success && data.data) {
+                          this.optimization = data.data;
+                          this.reachTags = data.data.reach_tags || [];
+                          this.aiMetadata = data.data;
+                      }
+                  } catch (e) {
+                      console.error('Optimization error:', e);
+                  } finally {
+                      this.optimizing = false;
+                      setTimeout(() => lucide.createIcons(), 50);
+                  }
+              },
+
+              applyTitle() {
+                  if (this.optimization?.optimized_title) {
+                      this.formTitle = this.optimization.optimized_title;
+                  }
+              },
+
+              applyDescription() {
+                  if (this.optimization?.optimized_description) {
+                      this.formDesc = this.optimization.optimized_description;
+                  }
+              },
+
+              applyAll() {
+                  this.applyTitle();
+                  this.applyDescription();
+              }
+          }));
+      });
   </script>
 @endsection

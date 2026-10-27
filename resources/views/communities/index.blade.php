@@ -45,6 +45,9 @@
             <!-- Main Content Area (Column 1-9 on LARGE) -->
             <div class="lg:col-span-9 space-y-12 order-last lg:order-first">
                 
+                {{-- AI Cultural Connections & Collaborations --}}
+                @include('components.cultural-connections-card')
+                
                 <!-- Mobile Dropdown Toolbar (Premium Glassmorphism) -->
                 <div class="lg:hidden flex items-center justify-between backdrop-blur-xl bg-white/80 dark:bg-stone-900/80 p-5 rounded-[2rem] border border-white/20 dark:border-stone-800/50 shadow-2xl relative z-40 mb-8">
                     <div class="flex items-center space-x-4">

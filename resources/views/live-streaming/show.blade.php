@@ -100,69 +100,175 @@
             </div>
         </div>
 
-        {{-- Chat Sidebar --}}
+        {{-- Chat & AI Moderation Sidebar --}}
         <div :class="showChat ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 absolute pointer-events-none'"
-            class="w-full md:w-80 lg:w-96 bg-stone-900 border-t md:border-t-0 md:border-l border-stone-800 flex flex-col h-[40vh] md:h-full md:translate-y-0 md:opacity-100 md:static transition-all duration-300 z-10 shrink-0">
+            class="w-full md:w-84 lg:w-96 bg-stone-900 border-t md:border-t-0 md:border-l border-stone-800 flex flex-col h-[40vh] md:h-full md:translate-y-0 md:opacity-100 md:static transition-all duration-300 z-10 shrink-0">
 
-            <div
-                class="p-4 border-b border-stone-800 flex items-center justify-between bg-stone-900/95 backdrop-blur-sm z-10">
-                <h3 class="text-stone-100 font-bold flex items-center gap-2">
-                    <i data-lucide="message-circle" class="w-5 h-5 text-amber-500"></i> Live Chat
-                </h3>
-                <button @click="showChat = false" class="md:hidden text-stone-400 hover:text-white transition">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-stone-700">
-                <div class="bg-black/20 rounded-lg p-3 text-center border border-stone-800 mb-6">
-                    <p class="text-xs text-stone-500">Welcome to the live chat! Keep the community clean and respectful.</p>
-                </div>
-
-                <div class="text-sm">
-                    <span class="text-blue-400 font-bold">System</span>
-                    <span class="text-stone-300 ml-1">Connected to cultural hub.</span>
-                </div>
-            </div>
-
-            {{-- Reaction Floating Container --}}
-            <div id="reaction-container"
-                class="absolute bottom-24 right-4 w-20 h-64 pointer-events-none z-20 overflow-hidden"></div>
-
-            {{-- Reply Preview --}}
-            <div x-show="replyingTo" x-cloak
-                class="px-4 py-2 bg-stone-800 border-t border-stone-700 flex items-center justify-between animate-in slide-in-from-bottom-2 duration-200">
-                <div class="flex flex-col">
-                    <span class="text-[10px] font-black text-amber-500 uppercase tracking-widest">Replying to</span>
-                    <span class="text-xs text-stone-300 truncate max-w-[200px]" x-text="replyAuthor"></span>
-                </div>
-                <button @click="cancelReply" class="text-stone-500 hover:text-white transition">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
-            </div>
-
-            <div class="p-3 bg-stone-900 border-t border-stone-800 mt-auto flex items-center gap-2">
-                @if($stream->is_live)
-                    <form @submit.prevent="sendMessage" class="relative flex-1">
-                        <input type="text" id="chat-input" placeholder="Send a message..." x-model="messageBody"
-                            class="w-full bg-stone-950 border border-stone-800 text-stone-100 rounded-full pl-4 pr-12 py-2.5 text-sm focus:outline-none focus:border-amber-500 transition">
-                        <button type="submit"
-                            class="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-amber-600 hover:bg-amber-500 text-white rounded-full transition">
-                            <i data-lucide="send" class="w-4 h-4 ml-0.5"></i>
-                        </button>
-                    </form>
-
-                    {{-- Reaction Button --}}
-                    <button @click="sendReaction"
-                        class="w-10 h-10 rounded-full bg-stone-800 hover:bg-stone-700 flex items-center justify-center text-amber-500 border border-stone-700 transition active:scale-90"
-                        title="Send Love">
-                        <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
+            {{-- Sidebar Header & Tabs --}}
+            <div class="p-3 border-b border-stone-800 flex items-center justify-between bg-stone-900/95 backdrop-blur-sm z-10">
+                <div class="flex items-center gap-1">
+                    <button @click="activeTab = 'chat'" 
+                        :class="activeTab === 'chat' ? 'bg-stone-800 text-amber-500 font-bold' : 'text-stone-400 hover:text-stone-200'"
+                        class="px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1.5">
+                        <i data-lucide="message-circle" class="w-4 h-4"></i>
+                        <span>Live Chat</span>
                     </button>
-                @else
-                    <div class="text-center py-2 text-stone-500 text-sm flex-1">Stream has ended.</div>
-                @endif
+
+                    @if(auth()->id() === $stream->user_id || auth()->user()?->is_admin)
+                    <button @click="activeTab = 'moderation'; fetchFlagged()" 
+                        :class="activeTab === 'moderation' ? 'bg-stone-800 text-amber-500 font-bold' : 'text-stone-400 hover:text-stone-200'"
+                        class="px-3 py-1.5 rounded-lg text-xs transition flex items-center gap-1.5 relative">
+                        <i data-lucide="shield-alert" class="w-4 h-4 text-amber-400"></i>
+                        <span>AI Monitor</span>
+                        <template x-if="flaggedCount > 0">
+                            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-rose-500 text-white animate-pulse" x-text="flaggedCount"></span>
+                        </template>
+                    </button>
+                    @endif
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="AI Stream Guard Active"></span>
+                    <button @click="showChat = false" class="md:hidden text-stone-400 hover:text-white transition">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
             </div>
+
+            {{-- TAB 1: LIVE CHAT VIEW --}}
+            <div x-show="activeTab === 'chat'" class="flex-1 flex flex-col overflow-hidden">
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-stone-700">
+                    <div class="bg-black/20 rounded-lg p-3 text-center border border-stone-800 mb-4">
+                        <p class="text-xs text-stone-500">Welcome to {{ $stream->title }}! AI Stream Guard is actively protecting cultural conversations.</p>
+                    </div>
+
+                    <div class="text-xs text-stone-400 flex items-center gap-1.5 px-1 py-1">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i>
+                        <span>Topic: <strong class="text-stone-200">{{ $stream->category ?? 'Cultural Heritage' }}</strong></span>
+                    </div>
+                </div>
+
+                {{-- Reaction Floating Container --}}
+                <div id="reaction-container"
+                    class="absolute bottom-24 right-4 w-20 h-64 pointer-events-none z-20 overflow-hidden"></div>
+
+                {{-- Reply Preview --}}
+                <div x-show="replyingTo" x-cloak
+                    class="px-4 py-2 bg-stone-800 border-t border-stone-700 flex items-center justify-between animate-in slide-in-from-bottom-2 duration-200">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-black text-amber-500 uppercase tracking-widest">Replying to</span>
+                        <span class="text-xs text-stone-300 truncate max-w-[200px]" x-text="replyAuthor"></span>
+                    </div>
+                    <button @click="cancelReply" class="text-stone-500 hover:text-white transition">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                {{-- Input Bar --}}
+                <div class="p-3 bg-stone-900 border-t border-stone-800 mt-auto flex items-center gap-2">
+                    @if($stream->is_live)
+                        <form @submit.prevent="sendMessage" class="relative flex-1">
+                            <input type="text" id="chat-input" placeholder="Share your cultural thoughts..." x-model="messageBody"
+                                class="w-full bg-stone-950 border border-stone-800 text-stone-100 rounded-full pl-4 pr-12 py-2.5 text-sm focus:outline-none focus:border-amber-500 transition">
+                            <button type="submit" :disabled="sending"
+                                class="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-amber-600 hover:bg-amber-500 text-white rounded-full transition disabled:opacity-50">
+                                <i data-lucide="send" class="w-4 h-4 ml-0.5"></i>
+                            </button>
+                        </form>
+
+                        {{-- Reaction Button --}}
+                        <button @click="sendReaction"
+                            class="w-10 h-10 rounded-full bg-stone-800 hover:bg-stone-700 flex items-center justify-center text-amber-500 border border-stone-700 transition active:scale-90"
+                            title="Send Love">
+                            <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
+                        </button>
+                    @else
+                        <div class="text-center py-2 text-stone-500 text-sm flex-1">Stream has ended.</div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- TAB 2: AI MODERATION MONITOR (HOST & ADMIN) --}}
+            @if(auth()->id() === $stream->user_id || auth()->user()?->is_admin)
+            <div x-show="activeTab === 'moderation'" x-cloak class="flex-1 flex flex-col overflow-hidden bg-stone-950/80">
+                {{-- Stream Context Card --}}
+                <div class="p-3 bg-stone-900 border-b border-stone-800 text-xs">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-bold text-amber-500 flex items-center gap-1">
+                            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                            AI Moderation Assistant
+                        </span>
+                        <span class="text-[10px] text-stone-400">Meta muse-spark-1.3</span>
+                    </div>
+                    <p class="text-stone-400 line-clamp-2">{{ $stream->description ?: 'Cultural stream on Kulturegram' }}</p>
+
+                    {{-- Stats Bar --}}
+                    <div class="grid grid-cols-3 gap-2 mt-3 text-center">
+                        <div class="bg-stone-950 p-1.5 rounded-lg border border-stone-800">
+                            <div class="text-[10px] text-stone-500">Total</div>
+                            <div class="text-xs font-bold text-stone-200" x-text="stats.total_messages || 0">0</div>
+                        </div>
+                        <div class="bg-stone-950 p-1.5 rounded-lg border border-stone-800">
+                            <div class="text-[10px] text-stone-500">Flagged</div>
+                            <div class="text-xs font-bold text-rose-400" x-text="flaggedCount">0</div>
+                        </div>
+                        <div class="bg-stone-950 p-1.5 rounded-lg border border-stone-800">
+                            <div class="text-[10px] text-stone-500">Clean Rate</div>
+                            <div class="text-xs font-bold text-emerald-400" x-text="stats.total_messages ? Math.round((1 - (flaggedCount / stats.total_messages)) * 100) + '%' : '100%'">100%</div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Flagged Messages Queue --}}
+                <div class="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-thin scrollbar-thumb-stone-700">
+                    <div class="text-[11px] font-bold text-stone-400 flex items-center justify-between">
+                        <span>Flagged Messages Review (<span x-text="flaggedMessages.length"></span>)</span>
+                        <button @click="fetchFlagged()" class="text-amber-500 hover:underline flex items-center gap-1">
+                            <i data-lucide="refresh-cw" class="w-3 h-3"></i> Refresh
+                        </button>
+                    </div>
+
+                    <template x-if="flaggedMessages.length === 0">
+                        <div class="text-center py-8 text-stone-500 text-xs">
+                            <i data-lucide="check-circle" class="w-8 h-8 mx-auto text-emerald-500/50 mb-2"></i>
+                            <p>All clean! No active flags in this stream.</p>
+                            <p class="text-[10px] text-stone-600 mt-1">Disagreements and cultural debates are protected.</p>
+                        </div>
+                    </template>
+
+                    <template x-for="item in flaggedMessages" :key="item.id">
+                        <div class="bg-stone-900 border border-stone-800 rounded-xl p-3 space-y-2">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-bold text-stone-200" x-text="item.user?.name || 'Viewer'"></span>
+                                <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-400 border border-rose-500/30" x-text="item.flag_category || 'Flagged'"></span>
+                            </div>
+
+                            <p class="text-xs text-stone-300 bg-black/40 p-2 rounded-lg font-mono border border-stone-800" x-text="item.message"></p>
+
+                            {{-- AI Explanation & Rule --}}
+                            <div class="text-[10px] text-stone-400 space-y-0.5 bg-amber-500/5 p-2 rounded-lg border border-amber-500/10">
+                                <div><strong class="text-amber-400">Reason:</strong> <span x-text="item.flag_reason || 'Potential policy violation'"></span></div>
+                                <div class="text-stone-500"><strong class="text-stone-400">Rule:</strong> <span x-text="item.flag_rule || 'Community Guidelines'"></span></div>
+                            </div>
+
+                            {{-- Actions --}}
+                            <div class="flex items-center gap-2 pt-1">
+                                <button @click="dismissFlag(item.id)" 
+                                    class="flex-1 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold text-[11px] transition flex items-center justify-center gap-1">
+                                    <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i> Dismiss Flag
+                                </button>
+                                <button @click="removeMessage(item.id)" 
+                                    class="flex-1 py-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/40 font-bold text-[11px] transition flex items-center justify-center gap-1">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-400"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            @endif
         </div>
+    </div>
     </div>
 
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -218,9 +324,15 @@
         document.addEventListener('alpine:init', () => {
             Alpine.data('chatComponent', () => ({
                 showChat: true,
+                activeTab: 'chat',
                 replyingTo: null,
                 replyAuthor: '',
                 messageBody: '',
+                sending: false,
+                lastMessageId: 0,
+                flaggedMessages: [],
+                flaggedCount: 0,
+                stats: { total_messages: 0, flagged_count: 0 },
 
                 init() {
                     initCamera();
@@ -238,6 +350,15 @@
                     // Expose vibe function globally for onclick inside dynamic HTML
                     window.vibeMessage = (btn) => this.vibeMessage(btn);
                     window.initiateReplyFromGlobal = (author) => this.initiateReply(author);
+
+                    // Fetch existing messages and start polling
+                    this.fetchMessages();
+                    setInterval(() => this.fetchMessages(), 3000);
+
+                    @if(auth()->id() === $stream->user_id || auth()->user()?->is_admin)
+                    this.fetchFlagged();
+                    setInterval(() => this.fetchFlagged(), 5000);
+                    @endif
                 },
 
                 endStreamBeacon() {
@@ -248,64 +369,189 @@
                     stopStreamGlobal();
                 },
 
-                sendMessage() {
-                    if (!this.messageBody.trim()) return;
+                async fetchMessages() {
+                    try {
+                        const url = "{{ route('live-stream.messages.get', $stream) }}?since_id=" + this.lastMessageId;
+                        const res = await fetch(url);
+                        const data = await res.json();
+                        if (data.success && data.messages.length > 0) {
+                            const chatContainer = document.getElementById('chat-messages');
+                            data.messages.forEach(msg => {
+                                // Avoid re-rendering own message if already appended optimistically
+                                if (document.getElementById('msg-' + msg.id)) return;
 
-                    const message = this.messageBody.trim();
+                                const msgEl = document.createElement('div');
+                                msgEl.id = 'msg-' + msg.id;
+                                msgEl.className = 'group flex flex-col mb-4 transition-all duration-300';
+                                
+                                const timeStr = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                const authorName = msg.user ? msg.user.name : 'Participant';
+                                const isHost = msg.user_id === {{ $stream->user_id }};
+
+                                msgEl.innerHTML = `
+                                    <div class="flex items-start gap-2">
+                                        <div class="flex-1 bg-white/5 rounded-2xl rounded-tl-none p-3 border border-white/5">
+                                            <div class="flex items-center justify-between mb-1">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="text-amber-500 font-bold text-xs">${authorName}</span>
+                                                    ${isHost ? '<span class="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-amber-500/20 text-amber-400 border border-amber-500/30">Host</span>' : ''}
+                                                </div>
+                                                <span class="text-[9px] text-stone-500">${timeStr}</span>
+                                            </div>
+                                            <p class="text-stone-200 text-sm whitespace-pre-wrap">${msg.message}</p>
+                                        </div>
+
+                                        <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onclick="vibeMessage(this)" class="p-1.5 rounded-lg hover:bg-white/10 text-stone-500 hover:text-red-500 transition active:scale-90" title="Vibe">
+                                                <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                            <button onclick="initiateReplyFromGlobal('${authorName}')" class="p-1.5 rounded-lg hover:bg-white/10 text-stone-500 hover:text-amber-500 transition" title="Reply">
+                                                <i data-lucide="reply" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                                chatContainer.appendChild(msgEl);
+                                this.lastMessageId = Math.max(this.lastMessageId, msg.id);
+                            });
+                            chatContainer.scrollTop = chatContainer.scrollHeight;
+                            setTimeout(() => lucide.createIcons(), 50);
+                        }
+                    } catch (e) {
+                        // Silent catch for live poll resilience
+                    }
+                },
+
+                async sendMessage() {
+                    if (!this.messageBody.trim() || this.sending) return;
+
+                    const messageText = this.messageBody.trim();
                     const isReply = this.replyingTo !== null;
                     const targetAuthor = this.replyAuthor;
 
+                    // Optimistic UI Append
                     const chatContainer = document.getElementById('chat-messages');
+                    const tempId = 'temp-' + Date.now();
                     const messageDiv = document.createElement('div');
-                    messageDiv.className = 'group flex flex-col mb-4 opacity-0 transform translate-y-2 transition-all duration-300';
+                    messageDiv.id = tempId;
+                    messageDiv.className = 'group flex flex-col mb-4 transition-all duration-300';
 
                     let replyHTML = '';
                     if (isReply) {
                         replyHTML = `
-                                    <div class="mb-1 text-[10px] text-stone-500 flex items-center gap-1">
-                                        <i data-lucide="corner-down-right" class="w-2.5 h-2.5"></i>
-                                        Replying to ${targetAuthor}
-                                    </div>
-                                `;
+                            <div class="mb-1 text-[10px] text-stone-500 flex items-center gap-1">
+                                <i data-lucide="corner-down-right" class="w-2.5 h-2.5"></i>
+                                Replying to ${targetAuthor}
+                            </div>
+                        `;
                     }
 
                     messageDiv.innerHTML = `
-                                ${replyHTML}
-                                <div class="flex items-start gap-2">
-                                    <div class="flex-1 bg-white/5 rounded-2xl rounded-tl-none p-3 border border-white/5">
-                                        <div class="flex items-center justify-between mb-1">
-                                            <span class="text-amber-500 font-bold text-xs">{{ auth()->user()->name }}</span>
-                                            <span class="text-[9px] text-stone-500">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                        </div>
-                                        <p class="text-stone-200 text-sm whitespace-pre-wrap">${message}</p>
-                                    </div>
-
-                                    <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onclick="vibeMessage(this)" class="p-1.5 rounded-lg hover:bg-white/10 text-stone-500 hover:text-red-500 transition active:scale-90" title="Vibe">
-                                            <i data-lucide="zap" class="w-3.5 h-3.5"></i>
-                                        </button>
-                                        <button onclick="initiateReplyFromGlobal('${'{{ auth()->user()->name }}'}')" class="p-1.5 rounded-lg hover:bg-white/10 text-stone-500 hover:text-amber-500 transition" title="Reply">
-                                            <i data-lucide="reply" class="w-3.5 h-3.5"></i>
-                                        </button>
-                                    </div>
+                        ${replyHTML}
+                        <div class="flex items-start gap-2">
+                            <div class="flex-1 bg-amber-500/10 rounded-2xl rounded-tl-none p-3 border border-amber-500/20">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-amber-500 font-bold text-xs">{{ auth()->user()->name }}</span>
+                                    <span class="text-[9px] text-stone-500">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                 </div>
-                            `;
+                                <p class="text-stone-200 text-sm whitespace-pre-wrap">${messageText}</p>
+                            </div>
+                        </div>
+                    `;
 
                     chatContainer.appendChild(messageDiv);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
 
-                    // Delay icon creation to avoid DOM jank during message rendering
-                    setTimeout(() => lucide.createIcons(), 50);
-
-                    // Animation
-                    setTimeout(() => {
-                        messageDiv.classList.remove('opacity-0', 'translate-y-2');
-                    }, 10);
-
-                    // Reset State
+                    // Reset Input
                     this.messageBody = '';
                     this.replyingTo = null;
                     this.replyAuthor = '';
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                    this.sending = true;
+
+                    try {
+                        const response = await fetch("{{ route('live-stream.messages.post', $stream) }}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                            },
+                            body: JSON.stringify({ message: messageText })
+                        });
+                        const res = await response.json();
+                        if (res.success && res.message) {
+                            messageDiv.id = 'msg-' + res.message.id;
+                            this.lastMessageId = Math.max(this.lastMessageId, res.message.id);
+                            
+                            // If flagged and host/mod, refresh moderation view
+                            if (res.moderation?.flagged) {
+                                this.fetchFlagged();
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Failed to post message:', err);
+                    } finally {
+                        this.sending = false;
+                        setTimeout(() => lucide.createIcons(), 50);
+                    }
+                },
+
+                async fetchFlagged() {
+                    try {
+                        const res = await fetch("{{ route('live-stream.messages.flagged', $stream) }}");
+                        const data = await res.json();
+                        if (data.success) {
+                            this.flaggedMessages = data.flagged_messages || [];
+                            this.flaggedCount = this.flaggedMessages.length;
+                            this.stats = data.stats || { total_messages: 0, flagged_count: 0 };
+                            setTimeout(() => lucide.createIcons(), 50);
+                        }
+                    } catch (e) {
+                        // ignore
+                    }
+                },
+
+                async dismissFlag(messageId) {
+                    try {
+                        const res = await fetch(`/live-stream/{{ $stream->id }}/messages/${messageId}/dismiss`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                            },
+                            body: JSON.stringify({ notes: 'Host dismissed AI flag as respectful discussion' })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            this.flaggedMessages = this.flaggedMessages.filter(m => m.id !== messageId);
+                            this.flaggedCount = this.flaggedMessages.length;
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                },
+
+                async removeMessage(messageId) {
+                    if (!confirm('Are you sure you want to remove this message from chat?')) return;
+                    try {
+                        const res = await fetch(`/live-stream/{{ $stream->id }}/messages/${messageId}/remove`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                            },
+                            body: JSON.stringify({ reason: 'Removed by host for policy compliance' })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            this.flaggedMessages = this.flaggedMessages.filter(m => m.id !== messageId);
+                            this.flaggedCount = this.flaggedMessages.length;
+                            // Also remove from DOM if visible
+                            const domMsg = document.getElementById('msg-' + messageId);
+                            if (domMsg) domMsg.remove();
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
                 },
 
                 initiateReply(author) {

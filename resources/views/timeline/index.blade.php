@@ -92,6 +92,9 @@
                     </a>
                 </div>
             </div>
+
+            {{-- AI-Powered Cultural Connections & Like-Minded Collaborators --}}
+            @include('components.cultural-connections-card')
         @endauth
 
         @if(request()->filled('tag'))

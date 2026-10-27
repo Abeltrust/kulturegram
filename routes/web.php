@@ -153,15 +153,37 @@ Route::middleware('auth')->group(function () {
     Route::post('/live-stream/{stream}/end', [LiveStreamController::class, 'end'])->name('live-stream.end');
     Route::post('/live-stream/{stream}/ajax-end', [LiveStreamController::class, 'ajaxEnd'])->name('live-stream.ajax-end');
 
+    // Live Stream AI Moderation & Real-Time Messaging
+    Route::get('/live-stream/{stream}/messages', [LiveStreamController::class, 'getMessages'])->name('live-stream.messages.get');
+    Route::post('/live-stream/{stream}/messages', [LiveStreamController::class, 'postMessage'])->name('live-stream.messages.post');
+    Route::get('/live-stream/{stream}/flagged', [LiveStreamController::class, 'getFlaggedMessages'])->name('live-stream.messages.flagged');
+    Route::post('/live-stream/{stream}/messages/{message}/dismiss', [LiveStreamController::class, 'dismissFlag'])->name('live-stream.messages.dismiss');
+    Route::post('/live-stream/{stream}/messages/{message}/remove', [LiveStreamController::class, 'removeMessage'])->name('live-stream.messages.remove');
+
+    // Cultural Discovery & Like-Minded Connections
+    Route::get('/cultural-discovery/recommendations', [\App\Http\Controllers\CulturalDiscoveryController::class, 'recommendations'])->name('cultural-discovery.recommendations');
+    Route::post('/cultural-discovery/dismiss', [\App\Http\Controllers\CulturalDiscoveryController::class, 'dismiss'])->name('cultural-discovery.dismiss');
+    Route::post('/cultural-discovery/toggle-opt-in', [\App\Http\Controllers\CulturalDiscoveryController::class, 'toggleOptIn'])->name('cultural-discovery.toggle-opt-in');
+
+    // Content Privacy Pre-Scan API
+    Route::post('/api/privacy/scan', [\App\Http\Controllers\Admin\PrivacyAuditController::class, 'scanContent'])->name('privacy.scan');
+
+    // AI-Assisted Event Reach Optimizer
+    Route::post('/events/ai-optimize', [EventController::class, 'aiOptimize'])->name('events.ai-optimize');
+
     // Kulturegram Meet - Virtual Classroom
     Route::get('/events/{event}/meet', [EventController::class, 'meet'])->name('events.meet');
 
-    // Admin Moderation
+    // Admin Moderation & Privacy Audit
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/cultures', [\App\Http\Controllers\Admin\ModerationController::class, 'index'])->name('cultures.index');
         Route::post('/cultures/{culture}/approve', [\App\Http\Controllers\Admin\ModerationController::class, 'approve'])->name('cultures.approve');
         Route::post('/cultures/{culture}/feature', [\App\Http\Controllers\Admin\ModerationController::class, 'feature'])->name('cultures.feature');
         Route::delete('/cultures/{culture}', [\App\Http\Controllers\Admin\ModerationController::class, 'destroy'])->name('cultures.destroy');
+
+        // AI System Privacy Policy Audit
+        Route::get('/privacy-audit', [\App\Http\Controllers\Admin\PrivacyAuditController::class, 'index'])->name('privacy-audit.index');
+        Route::post('/privacy-audit/run', [\App\Http\Controllers\Admin\PrivacyAuditController::class, 'run'])->name('privacy-audit.run');
     });
 });
 
