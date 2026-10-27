@@ -28,8 +28,10 @@ A 5-stage preservation workflow assisting contributors without replacing human a
 1. **Stage 1 (Capture Story):** Audio recording upload (MP3, WAV, M4A, OGG, AAC <= 25MB) or written narrative input with mandatory **Cultural Consent & Safeguarding Agreement**.
 2. **Stage 2 (Transcribe & Review):** **Muse Voice Transcribe** integration with editable transcript textarea allowing contributors to correct dialect words, names, and cultural nuances while preserving original audio authentic recordings.
 3. **Stage 3 (Prepare with AI):** **Muse Spark** structured extraction mapping oral accounts into Kulturegram's archival schema (title, region, category, narrative description, rituals, transmission methods, challenges, tags) with anti-hallucination discipline and elder follow-up questions.
-4. **Stage 4 (Multi-Model Enrichment):**
-   - **Muse Wonder:** Bounded preservation assistant providing gap audits, verification flags, and an actionable preservation checklist.
+4. **Stage 4 (Multi-Model Enrichment & Safeguarding):**
+   - **Muse Wonder:** Bounded preservation assistant providing:
+     - **Preservation Gap Audit & Task Checklist:** Actionable elder questions and conservation tasks.
+     - **Cultural Fact-Check & Plagiarism Screen:** Evaluates oral authenticity (0-100), flags generic web copy/textbook plagiarism risk (low/medium/high), checks fidelity against source recording, and identifies historical assertions requiring community elder verification.
    - **Muse Image:** Cultural illustration generator strictly watermarked and attributed as AI-generated artwork (never replacing authentic evidence).
    - **SAM 3.1:** Authentic artifact segmentation isolating cultural tools, carvings, and textiles without claiming antiquity proof.
 5. **Stage 5 (Review & Moderation):** Dual submission options allowing contributors to save private drafts (`status = 'draft'`) or submit to community moderation (`status = 'pending_review'`).
