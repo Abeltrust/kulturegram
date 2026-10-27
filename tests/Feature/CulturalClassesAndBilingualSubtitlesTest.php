@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\CulturalClass;
 use App\Models\User;
 use App\Models\Post;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -115,6 +117,32 @@ class CulturalClassesAndBilingualSubtitlesTest extends TestCase
         $post = Post::where('user_id', $this->instructor->id)->where('chapter', 'Cultural Class')->first();
         $this->assertNotNull($post);
         $this->assertStringContainsString('Swahili Coastal Greetings', $post->content);
+
+        $response->assertRedirect(route('education.classes.show', $class->slug));
+    }
+
+    public function test_instructor_can_publish_class_with_actual_mp4_video_upload()
+    {
+        Storage::fake('public');
+
+        $fakeVideo = UploadedFile::fake()->create('hausa_lesson.mp4', 1024, 'video/mp4');
+
+        $response = $this->actingAs($this->instructor)->post(route('education.classes.store'), [
+            'title' => 'Hausa Advanced Pronunciation',
+            'cultural_focus' => 'Hausa Phonetics',
+            'target_language' => 'Hausa',
+            'source_language' => 'English',
+            'level' => 'intermediate',
+            'price_type' => 'free',
+            'price' => 0.00,
+            'description' => 'Master tones and vowels in Hausa.',
+            'video' => $fakeVideo,
+        ]);
+
+        $class = CulturalClass::where('title', 'Hausa Advanced Pronunciation')->first();
+        $this->assertNotNull($class);
+        $this->assertNotNull($class->video_url);
+        Storage::disk('public')->assertExists($class->video_url);
 
         $response->assertRedirect(route('education.classes.show', $class->slug));
     }

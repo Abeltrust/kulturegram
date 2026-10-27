@@ -92,7 +92,7 @@ class CulturalClassController extends Controller
             'price_type' => 'required|string|in:free,paid',
             'price' => 'nullable|numeric|min:0',
             'description' => 'nullable|string|max:5000',
-            'video' => 'nullable|file|mimes:mp4,webm,mov,avi,m4v,mp3,wav,m4a|max:102400', // 100MB
+            'video' => 'nullable|file|mimes:mp4,webm,mov,avi,m4v,mp3,wav,m4a,mkv,mpeg,mpga,ogg,aac,3gp|max:102400', // 100MB
             'sample_video_url' => 'nullable|string|max:500',
             'thumbnail' => 'nullable|image|max:10240',
             'virtual_background_url' => 'nullable|string|max:500',

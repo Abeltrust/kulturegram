@@ -30,8 +30,13 @@ class CulturalClassTranscriptionService
     public function processMedia(UploadedFile|string $media, ?string $targetLanguage = 'Hausa', ?string $culturalFocus = null): array
     {
         // 1. Transcribe audio/video
-        $transcribeRes = $this->transcribeService->transcribe($media, $targetLanguage);
-        $rawTranscript = trim((string) ($transcribeRes['transcript'] ?? ''));
+        try {
+            $transcribeRes = $this->transcribeService->transcribe($media, $targetLanguage);
+            $rawTranscript = trim((string) ($transcribeRes['transcript'] ?? ''));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("CulturalClassTranscriptionService::processMedia transcription failed: " . $e->getMessage());
+            $rawTranscript = '';
+        }
 
         // If transcription produced empty (e.g. mock or local video without speech track), provide meaningful fallback context
         if (empty($rawTranscript)) {

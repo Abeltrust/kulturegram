@@ -3,6 +3,123 @@
 @section('title', 'Teach a Cultural Class - Educational Studio')
 
 @section('content')
+<script>
+    // Ensure classStudio is globally defined before Alpine evaluates x-data
+    window.classStudio = function(config) {
+        return {
+            classTitle: '{{ addslashes(old('title', '')) }}',
+            targetLanguage: '{{ addslashes(old('target_language', 'Hausa')) }}',
+            culturalFocus: '{{ addslashes(old('cultural_focus', 'Hausa Cultural Greetings & Etiquette')) }}',
+            priceType: '{{ addslashes(old('price_type', 'free')) }}',
+            priceAmount: '{{ addslashes(old('price', '4.99')) }}',
+            sampleVideoUrl: '{{ addslashes(old('sample_video_url', '')) }}',
+            draftTranscript: '{{ addslashes(old('raw_transcript', '')) }}',
+            selectedBackgroundUrl: '{{ addslashes(old('virtual_background_url', '')) }}',
+            customBackdropPrompt: '',
+            isGeneratingSubtitles: false,
+            isGeneratingBackdrop: false,
+            isSubmitting: false,
+            generatedSubtitles: [],
+            generatedVocabulary: [],
+            mediaFile: null,
+            videoPreviewUrl: null,
+            fileSizeMb: null,
+            isOverLimit: false,
+
+            handleFileSelected(event) {
+                if (event.target.files && event.target.files[0]) {
+                    const file = event.target.files[0];
+                    this.mediaFile = file;
+                    const mb = file.size / (1024 * 1024);
+                    this.fileSizeMb = mb.toFixed(1);
+                    this.isOverLimit = mb > 40;
+
+                    if (file.type.startsWith('video/')) {
+                        try {
+                            this.videoPreviewUrl = URL.createObjectURL(file);
+                        } catch(e) {
+                            this.videoPreviewUrl = null;
+                        }
+                    } else {
+                        this.videoPreviewUrl = null;
+                    }
+                }
+            },
+
+            async generateAiSubtitles() {
+                this.isGeneratingSubtitles = true;
+                try {
+                    const formData = new FormData();
+                    formData.append('target_language', this.targetLanguage);
+                    formData.append('cultural_focus', this.culturalFocus);
+                    if (this.draftTranscript) {
+                        formData.append('transcript', this.draftTranscript);
+                    }
+                    if (this.mediaFile) {
+                        formData.append('media', this.mediaFile);
+                    }
+
+                    const response = await fetch(config.generateSubtitlesUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': config.csrfToken,
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        this.generatedSubtitles = data.subtitles || [];
+                        this.generatedVocabulary = data.vocabulary || [];
+                        if (data.transcript && !this.draftTranscript) {
+                            this.draftTranscript = data.transcript;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error generating AI subtitles:', e);
+                } finally {
+                    this.isGeneratingSubtitles = false;
+                    this.$nextTick(() => {
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
+                    });
+                }
+            },
+
+            async generateCustomBackdrop() {
+                if (!this.customBackdropPrompt) return;
+                this.isGeneratingBackdrop = true;
+
+                try {
+                    const response = await fetch(config.generateBackgroundUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': config.csrfToken,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            cultural_theme: this.customBackdropPrompt
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (data.success && data.image_url) {
+                        this.selectedBackgroundUrl = data.image_url;
+                    }
+                } catch (e) {
+                    console.error('Error generating studio background:', e);
+                } finally {
+                    this.isGeneratingBackdrop = false;
+                    this.$nextTick(() => {
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
+                    });
+                }
+            }
+        };
+    };
+</script>
+
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12" 
      x-data="classStudio({
          generateSubtitlesUrl: '{{ route('education.classes.ai-transcribe') }}',
@@ -47,8 +164,11 @@
 
     @if ($errors->any())
         <div class="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs sm:text-sm">
-            <div class="font-bold mb-1">Please check the required fields:</div>
-            <ul class="list-disc list-inside space-y-0.5">
+            <div class="font-bold mb-1 flex items-center gap-1.5">
+                <i data-lucide="alert-triangle" class="w-4 h-4 text-red-500"></i>
+                <span>Please check the following before publishing:</span>
+            </div>
+            <ul class="list-disc list-inside space-y-0.5 mt-1">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -57,7 +177,7 @@
     @endif
 
     {{-- Main Studio Form --}}
-    <form method="POST" action="{{ route('education.classes.store') }}" enctype="multipart/form-data" class="space-y-8">
+    <form method="POST" action="{{ route('education.classes.store') }}" enctype="multipart/form-data" @submit="isSubmitting = true" class="space-y-8">
         @csrf
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -79,8 +199,10 @@
                         </label>
                         <input type="text" name="title" x-model="classTitle" required
                                placeholder="e.g. Hausa Everyday Greetings & Market Etiquette"
-                               value="{{ old('title') }}"
                                class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-4 py-3 text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none">
+                        @error('title')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     {{-- Cultural Focus & Target Language --}}
@@ -92,11 +214,12 @@
                             <select name="target_language" x-model="targetLanguage" required
                                     class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-3.5 py-3 text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none">
                                 @foreach ($commonLanguages as $lang)
-                                    <option value="{{ $lang }}" {{ old('target_language', 'Hausa') === $lang ? 'selected' : '' }}>
-                                        {{ $lang }}
-                                    </option>
+                                    <option value="{{ $lang }}">{{ $lang }}</option>
                                 @endforeach
                             </select>
+                            @error('target_language')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <div>
@@ -105,8 +228,10 @@
                             </label>
                             <input type="text" name="cultural_focus" x-model="culturalFocus" required
                                    placeholder="e.g. Hausa Northern Heritage & Respect"
-                                   value="{{ old('cultural_focus', 'Hausa Cultural Greetings & Etiquette') }}"
                                    class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-4 py-3 text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none">
+                            @error('cultural_focus')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
 
@@ -201,14 +326,34 @@
                         <label class="block text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5">
                             Upload Video or Audio File
                         </label>
-                        <input type="file" name="video" accept="video/*,audio/*" @change="handleFileSelected($event)"
+                        <input type="file" name="video" id="video-file-input" accept="video/*,audio/*" @change="handleFileSelected($event)"
                                class="w-full text-xs text-stone-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-white hover:file:bg-amber-600 transition cursor-pointer">
-                        <p class="text-[11px] text-stone-400 mt-1">Supports MP4, WebM, MOV, MP3, WAV up to 100MB.</p>
+                        
+                        {{-- File size and limit notice --}}
+                        <div class="flex items-center justify-between text-[11px] text-stone-400 mt-1.5">
+                            <span>Supports MP4, WebM, MOV, MP3, WAV.</span>
+                            <span x-show="fileSizeMb" class="font-bold text-amber-400">
+                                Selected: <span x-text="fileSizeMb"></span> MB
+                            </span>
+                        </div>
+
+                        {{-- Over Limit Alert --}}
+                        <div x-show="isOverLimit" x-transition class="mt-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs">
+                            <span class="font-bold">⚠️ Large File Notice:</span> The selected file is <span x-text="fileSizeMb"></span>MB. For files over 40MB, please provide a video link below or upload a compressed clip under 40MB.
+                        </div>
+
+                        {{-- Live Video Preview --}}
+                        <div x-show="videoPreviewUrl" x-transition class="mt-4 rounded-2xl overflow-hidden bg-black border border-stone-800 aspect-video relative">
+                            <video :src="videoPreviewUrl" controls class="w-full h-full object-contain"></video>
+                        </div>
+                        @error('video')
+                            <p class="text-red-500 text-xs mt-1.5">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div class="relative flex py-1 items-center">
                         <div class="flex-grow border-t border-stone-200 dark:border-stone-800"></div>
-                        <span class="flex-shrink mx-4 text-[10px] font-black uppercase tracking-wider text-stone-400">Or use sample video URL</span>
+                        <span class="flex-shrink mx-4 text-[10px] font-black uppercase tracking-wider text-stone-400">Or use video URL</span>
                         <div class="flex-grow border-t border-stone-200 dark:border-stone-800"></div>
                     </div>
 
@@ -366,10 +511,17 @@
 
                 {{-- Submit Action Card --}}
                 <div class="bg-white dark:bg-stone-900 rounded-3xl p-6 border border-stone-200 dark:border-stone-800 shadow-sm space-y-3">
-                    <button type="submit" 
-                            class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-black text-sm uppercase tracking-wider shadow-xl shadow-amber-500/25 transition-all transform hover:scale-[1.01] flex items-center justify-center gap-2">
-                        <i data-lucide="upload-cloud" class="w-5 h-5"></i>
-                        <span>Publish Cultural Class</span>
+                    <button type="submit" id="publish-cultural-class-btn"
+                            :disabled="isSubmitting || isOverLimit"
+                            class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 text-white font-black text-sm uppercase tracking-wider shadow-xl shadow-amber-500/25 transition-all transform hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer">
+                        <span x-show="!isSubmitting" class="flex items-center gap-2">
+                            <i data-lucide="upload-cloud" class="w-5 h-5"></i>
+                            <span>Publish Cultural Class</span>
+                        </span>
+                        <span x-show="isSubmitting" class="flex items-center gap-2">
+                            <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                            <span>Publishing Cultural Class...</span>
+                        </span>
                     </button>
                     <p class="text-[11px] text-center text-stone-400">
                         Your lesson will be published to the Educational Hub with instant search, interactive subtitles, and enrolled learner tracking.
@@ -386,102 +538,6 @@
 
 @push('scripts')
 <script>
-    function classStudio(config) {
-        return {
-            classTitle: '',
-            targetLanguage: 'Hausa',
-            culturalFocus: 'Hausa Cultural Greetings & Etiquette',
-            priceType: 'free',
-            priceAmount: '4.99',
-            sampleVideoUrl: '',
-            draftTranscript: '',
-            selectedBackgroundUrl: '',
-            customBackdropPrompt: '',
-            isGeneratingSubtitles: false,
-            isGeneratingBackdrop: false,
-            generatedSubtitles: [],
-            generatedVocabulary: [],
-            mediaFile: null,
-
-            handleFileSelected(event) {
-                if (event.target.files && event.target.files[0]) {
-                    this.mediaFile = event.target.files[0];
-                }
-            },
-
-            async generateAiSubtitles() {
-                this.isGeneratingSubtitles = true;
-                try {
-                    const formData = new FormData();
-                    formData.append('target_language', this.targetLanguage);
-                    formData.append('cultural_focus', this.culturalFocus);
-                    if (this.draftTranscript) {
-                        formData.append('transcript', this.draftTranscript);
-                    }
-                    if (this.mediaFile) {
-                        formData.append('media', this.mediaFile);
-                    }
-
-                    const response = await fetch(config.generateSubtitlesUrl, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': config.csrfToken,
-                            'Accept': 'application/json'
-                        },
-                        body: formData
-                    });
-
-                    const data = await response.json();
-                    if (data.success) {
-                        this.generatedSubtitles = data.subtitles || [];
-                        this.generatedVocabulary = data.vocabulary || [];
-                        if (data.transcript && !this.draftTranscript) {
-                            this.draftTranscript = data.transcript;
-                        }
-                    }
-                } catch (e) {
-                    console.error('Error generating AI subtitles:', e);
-                } finally {
-                    this.isGeneratingSubtitles = false;
-                    this.$nextTick(() => {
-                        if (typeof lucide !== 'undefined') lucide.createIcons();
-                    });
-                }
-            },
-
-            async generateCustomBackdrop() {
-                if (!this.customBackdropPrompt) return;
-                this.isGeneratingBackdrop = true;
-
-                try {
-                    const response = await fetch(config.generateBackgroundUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': config.csrfToken,
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            cultural_theme: this.customBackdropPrompt
-                        })
-                    });
-
-                    const data = await response.json();
-                    if (data.success && data.image_url) {
-                        this.selectedBackgroundUrl = data.image_url;
-                    }
-                } catch (e) {
-                    console.error('Error generating studio background:', e);
-                } finally {
-                    this.isGeneratingBackdrop = false;
-                    this.$nextTick(() => {
-                        if (typeof lucide !== 'undefined') lucide.createIcons();
-                    });
-                }
-            }
-        };
-    }
-
     document.addEventListener("DOMContentLoaded", () => {
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();

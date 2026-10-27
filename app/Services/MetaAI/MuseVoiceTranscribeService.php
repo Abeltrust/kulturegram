@@ -11,8 +11,8 @@ class MuseVoiceTranscribeService
     protected MetaModelApiClient $client;
     protected string $model;
 
-    public const ALLOWED_EXTENSIONS = ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'webm'];
-    public const MAX_FILE_SIZE_KB = 25600; // 25 MB
+    public const ALLOWED_EXTENSIONS = ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'webm', 'mp4', 'mov', 'avi', 'm4v', 'mkv', 'mpeg', 'mpga'];
+    public const MAX_FILE_SIZE_KB = 102400; // 100 MB
 
     public function __construct(MetaModelApiClient $client)
     {
