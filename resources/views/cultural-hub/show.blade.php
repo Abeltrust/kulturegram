@@ -159,18 +159,20 @@
                         @endif
                     </div>
 
-                    {{-- Endangerment / Safeguarding Level Gauge --}}
-                    @php
-                        $level = strtolower($culture->endangerment_level ?? 'vulnerable');
-                    @endphp
-                    <div class="px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider border flex items-center gap-1.5
-                        {{ str_contains($level, 'critical') ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800' : 
-                           (str_contains($level, 'endangered') ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800' : 
-                           'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800') }}">
-                        <span class="w-2 h-2 rounded-full animate-ping
-                            {{ str_contains($level, 'critical') ? 'bg-rose-500' : (str_contains($level, 'endangered') ? 'bg-amber-500' : 'bg-emerald-500') }}"></span>
-                        <span>{{ $culture->endangerment_level ?? 'Living Tradition' }}</span>
-                    </div>
+                    {{-- Endangerment / Safeguarding Level Gauge (Only shown if specifically recorded) --}}
+                    @if($culture->endangerment_level && strtolower($culture->endangerment_level) !== 'living tradition')
+                        @php
+                            $level = strtolower($culture->endangerment_level);
+                        @endphp
+                        <div class="px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider border flex items-center gap-1.5
+                            {{ str_contains($level, 'critical') ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800' : 
+                               (str_contains($level, 'endangered') ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800' : 
+                               'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800') }}">
+                            <span class="w-2 h-2 rounded-full animate-ping
+                                {{ str_contains($level, 'critical') ? 'bg-rose-500' : (str_contains($level, 'endangered') ? 'bg-amber-500' : 'bg-emerald-500') }}"></span>
+                            <span>{{ $culture->endangerment_level }}</span>
+                        </div>
+                    @endif
                 </div>
 
                 {{-- Geographic and Cultural Coordinates --}}
@@ -887,7 +889,7 @@
                     <div class="bg-white dark:bg-[#131218] border border-stone-200 dark:border-stone-800/80 rounded-3xl p-6 shadow-sm space-y-4">
                         <div class="flex items-center justify-between">
                             <h3 class="font-heritage text-base font-bold text-stone-900 dark:text-stone-100">
-                                Sibling Living Traditions
+                                Related Cultural Traditions
                             </h3>
                             <span class="text-[10px] text-amber-600 font-bold uppercase">Explore</span>
                         </div>
