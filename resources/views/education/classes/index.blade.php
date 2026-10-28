@@ -10,7 +10,7 @@
         <div class="flex items-center space-x-2 text-xs sm:text-sm text-stone-500 dark:text-stone-400">
             <a href="{{ route('education.index') }}" class="hover:text-amber-500 transition">Educational Hub</a>
             <span>/</span>
-            <span class="text-stone-800 dark:text-stone-100 font-semibold">Cultural Classes & Language Studio</span>
+            <span class="page-title text-amber-500 font-semibold">Cultural Classes & Language Studio</span>
         </div>
 
         @auth
@@ -38,7 +38,7 @@
                 <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
                 <span>AI Subtitles & Bilingual Cultural Studio</span>
             </div>
-            <h1 class="text-3xl sm:text-5xl font-black text-white leading-tight tracking-tight mb-4">
+            <h1 class="page-title text-3xl sm:text-5xl font-black text-amber-500 leading-tight tracking-tight mb-4">
                 Learn Heritage Languages, <span class="bg-gradient-to-r from-amber-400 via-orange-400 to-amber-200 bg-clip-text text-transparent italic font-serif">Word by Word</span>
             </h1>
             <p class="text-stone-300 text-sm sm:text-base leading-relaxed mb-6 max-w-2xl">
@@ -132,8 +132,7 @@
                         @if ($item->resolvedThumbnailUrl())
                             <img src="{{ $item->resolvedThumbnailUrl() }}" 
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                                 alt="{{ $item->title }}"
-                                 loading="lazy">
+                                 alt="{{ $item->title }}">
                         @else
                             <div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-stone-800 to-stone-950 p-6 text-center">
                                 <i data-lucide="languages" class="w-10 h-10 text-amber-500/60 mb-2"></i>

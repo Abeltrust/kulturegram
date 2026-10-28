@@ -2,7 +2,7 @@
     @forelse ($data as $item)
         @if ($tab === 'stories')
             <div class="bg-white dark:bg-stone-900 rounded-xl sm:rounded-2xl shadow-sm overflow-hidden border border-stone-200 dark:border-stone-800 transition hover:shadow-md">
-                <img src="{{ Storage::url($item->image) }}" class="w-full h-36 sm:h-44 md:h-48 object-cover" loading="lazy">
+                <img src="{{ Storage::url($item->image) }}" class="w-full h-36 sm:h-44 md:h-48 object-cover">
                 <div class="p-3 sm:p-4">
                     <span
                         class="inline-block text-[10px] sm:text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-500 px-2 py-0.5 sm:py-1 rounded-full mb-2">
@@ -52,8 +52,7 @@
                 <a href="{{ route('profile.user', $item->id) }}"
                     class="flex items-center space-x-3 mb-3 hover:bg-stone-50 dark:hover:bg-stone-800 p-1 -m-1 rounded-lg transition">
                     <img src="{{ $item->profile_photo_url }}"
-                        class="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border border-stone-200 dark:border-stone-800"
-                        loading="lazy">
+                        class="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border border-stone-200 dark:border-stone-800">
                     <div class="overflow-hidden flex-1">
                         <h3 class="font-semibold text-stone-800 dark:text-stone-100 truncate text-sm sm:text-base">{{ $item->name }}</h3>
                         <p class="text-xs sm:text-sm text-stone-500 truncate">{{ $item->bio ?? 'No bio available' }}</p>
@@ -98,7 +97,7 @@
         @elseif ($tab === 'places')
             <div class="bg-white dark:bg-stone-900 rounded-xl sm:rounded-2xl shadow-sm border border-stone-200 dark:border-stone-800 overflow-hidden transition hover:shadow-md hover:border-amber-500/40">
                 @if($item->image)
-                    <img src="{{ Storage::url($item->image) }}" class="w-full h-36 object-cover" loading="lazy">
+                    <img src="{{ Storage::url($item->image) }}" class="w-full h-36 object-cover">
                 @endif
                 <div class="p-3 sm:p-4">
                     <div class="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 font-bold mb-1">

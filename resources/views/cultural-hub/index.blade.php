@@ -146,8 +146,7 @@
                                 @if($culture->image)
                                     <img src="{{ Storage::url($culture->image) }}" 
                                          alt="{{ $culture->name }}"
-                                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                         loading="lazy">
+                                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center bg-stone-100 dark:bg-stone-900">
                                         <i data-lucide="landmark" class="w-12 h-12 text-stone-300 dark:text-stone-700"></i>

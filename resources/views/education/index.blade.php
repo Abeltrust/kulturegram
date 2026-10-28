@@ -18,12 +18,11 @@
             {{-- We could use a specific education background image here if available --}}
             <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&q=80&w=2000" 
                  class="w-full h-full object-cover" 
-                 alt="Hub Background"
-                 loading="lazy">
+                 alt="Hub Background">
         </div>
         
         <div class="relative z-20 px-8 py-16 md:py-24 max-w-2xl">
-            <h1 class="text-4xl md:text-6xl font-black text-white leading-tight mb-4 tracking-tight">
+            <h1 class="page-title text-4xl md:text-6xl font-black text-amber-500 leading-tight mb-4 tracking-tight">
                 Learn, Teach & <span class="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent italic font-serif">Celebrate Culture</span>
             </h1>
             <p class="text-stone-300 text-lg md:text-xl leading-relaxed mb-8">
@@ -189,8 +188,7 @@
                             @if($cls->resolvedThumbnailUrl())
                                 <img src="{{ $cls->resolvedThumbnailUrl() }}" 
                                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                                     alt="{{ $cls->title }}"
-                                     loading="lazy">
+                                     alt="{{ $cls->title }}">
                             @else
                                 <div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-stone-800 to-stone-950 p-6 text-center">
                                     <i data-lucide="languages" class="w-10 h-10 text-amber-500/60 mb-2"></i>
@@ -314,8 +312,7 @@
                                 @if($event->image)
                                     <img src="{{ asset('storage/' . $event->image) }}" 
                                          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                                         alt="{{ $event->title }}"
-                                         loading="lazy">
+                                         alt="{{ $event->title }}">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center text-stone-300">
                                         <i data-lucide="image" class="w-12 h-12"></i>
@@ -364,8 +361,7 @@
                                     <div class="flex items-center gap-2">
                                         <img src="{{ $event->organizer->profile_photo_url }}" 
                                              class="w-7 h-7 rounded-full border border-stone-100 dark:border-stone-800" 
-                                             alt="{{ $event->organizer->name }}"
-                                             loading="lazy">
+                                             alt="{{ $event->organizer->name }}">
                                         <span class="text-xs font-bold text-stone-700 dark:text-stone-300">{{ $event->organizer->name }}</span>
                                     </div>
                                         <a href="{{ route('events.show', $event) }}" class="text-sm font-black uppercase tracking-widest text-amber-600 dark:text-amber-500 hover:text-orange-600 transition flex items-center gap-1">

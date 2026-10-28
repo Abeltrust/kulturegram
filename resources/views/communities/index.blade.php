@@ -185,7 +185,7 @@
                 @if($trending->isNotEmpty())
                     <div class="space-y-8">
                         <div class="flex items-center space-x-4">
-                            <h2 class="text-xl sm:text-2xl font-bold text-stone-800 dark:text-white uppercase tracking-tighter">Recommended For You</h2>
+                            <h2 class="text-xl sm:text-2xl font-bold page-title text-amber-500 uppercase tracking-tighter">Recommended For You</h2>
                             <div class="h-1 flex-1 bg-orange-500/20 rounded-full"></div>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

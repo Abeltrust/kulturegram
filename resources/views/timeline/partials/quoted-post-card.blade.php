@@ -33,7 +33,7 @@
 
         @if($origImageSrc && !$origVideoSrc && !$origYoutubeId)
             <div class="border-t border-stone-200/70 dark:border-stone-800 bg-black/5 dark:bg-black/40 flex items-center justify-center max-h-[420px] overflow-hidden">
-                <img src="{{ $origImageSrc }}" alt="Shared story image" class="w-auto h-auto max-w-full max-h-[400px] object-contain mx-auto" loading="lazy">
+                <img src="{{ $origImageSrc }}" alt="Shared story image" class="w-auto h-auto max-w-full max-h-[400px] object-contain mx-auto">
             </div>
         @endif
 

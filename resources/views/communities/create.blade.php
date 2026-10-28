@@ -2,7 +2,7 @@
 
 @section('content')
   <div class="max-w-3xl mx-auto bg-white dark:bg-stone-900 border dark:border-stone-800 shadow-lg rounded-2xl p-8 mt-10">
-    <h2 class="text-3xl font-bold mb-8 text-gray-800 dark:text-stone-100">Create Community</h2>
+    <h1 class="page-title text-2xl sm:text-3xl font-bold mb-8 text-amber-500">Create Community</h1>
 
     <form action="{{ route('communities.store') }}" method="POST" enctype="multipart/form-data">
       @csrf

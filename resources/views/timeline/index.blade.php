@@ -72,7 +72,7 @@
             <div class="mb-8">
                 <div class="flex items-center justify-between mb-4">
                     <div>
-                        <h2 class="text-xl sm:text-2xl font-bold text-stone-800 dark:text-white mb-1">Your Timeline</h2>
+                        <h2 class="text-xl sm:text-2xl font-bold page-title text-amber-500 mb-1">Your Timeline</h2>
                         <p class="text-stone-600 dark:text-stone-400 text-sm sm:text-base">Stories unfolding in real time, just
                             as life happens.</p>
                     </div>
@@ -134,8 +134,7 @@
                                     <a href="{{ route('profile.user', $post->user) }}" class="flex-shrink-0 mt-0.5">
                                         <img src="{{ $post->user->profile_photo_url }}"
                                             alt="{{ $post->user->name }}"
-                                            class="w-10 h-10 rounded-full object-cover border border-stone-100 dark:border-stone-800 shadow-sm"
-                                            loading="lazy">
+                                            class="w-10 h-10 rounded-full object-cover border border-stone-100 dark:border-stone-800 shadow-sm">
                                     </a>
 
                                     <!-- User & Post Meta Details -->
@@ -337,8 +336,7 @@
                                         {{-- Main Sharp Image: Keeps true aspect ratio (portrait or landscape) without cropping --}}
                                         <img src="{{ $postImageSrc }}"
                                             alt="Story image"
-                                            class="relative z-10 w-auto h-auto max-w-full max-h-[680px] object-contain mx-auto transition-transform duration-300 group-hover:scale-[1.01]"
-                                            loading="lazy">
+                                            class="relative z-10 w-auto h-auto max-w-full max-h-[680px] object-contain mx-auto transition-transform duration-300 group-hover:scale-[1.01]">
                                             
                                         {{-- View Full / Expand Indicator on Hover --}}
                                         <span class="absolute bottom-3 right-3 z-20 px-2.5 py-1 rounded-lg bg-black/65 backdrop-blur-md text-white text-[11px] font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 pointer-events-none">

@@ -72,8 +72,7 @@
                         <div class="flex items-start justify-between gap-3 mb-3">
                             <div class="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
                                 <img src="{{ $post->user->profile_photo_url }}" alt="{{ $post->user->name }}"
-                                    class="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover flex-shrink-0 mt-0.5"
-                                    loading="lazy">
+                                    class="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover flex-shrink-0 mt-0.5">
                                 <div class="min-w-0 flex-1">
                                     <p class="font-semibold text-sm sm:text-base text-stone-800 dark:text-stone-100 truncate">
                                         {{ $post->user->name }}</p>
@@ -129,8 +128,7 @@
                                     <div class="absolute inset-0 bg-cover bg-center filter blur-xl opacity-25 dark:opacity-20 scale-110 pointer-events-none"
                                          style="background-image: url('{{ asset('storage/' . $post->image) }}');"></div>
                                     <img src="{{ asset('storage/' . $post->image) }}"
-                                        class="relative z-10 w-auto h-auto max-w-full max-h-[34rem] object-contain mx-auto transition-transform duration-300 group-hover:scale-[1.01]" alt="post image"
-                                        loading="lazy">
+                                        class="relative z-10 w-auto h-auto max-w-full max-h-[34rem] object-contain mx-auto transition-transform duration-300 group-hover:scale-[1.01]" alt="post image">
                                     <span class="absolute bottom-3 right-3 z-20 px-2.5 py-1 rounded-lg bg-black/65 backdrop-blur-md text-white text-[11px] font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 pointer-events-none">
                                         <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
                                         <span>View full</span>
@@ -329,8 +327,7 @@
                 {{-- Community Image --}}
                 <div class="relative h-56 sm:h-64 lg:h-72 rounded-t-2xl overflow-hidden bg-stone-100 dark:bg-stone-800">
                     <img src="{{ $community->image ? asset('storage/' . $community->image) : asset('images/community-default.jpg') }}"
-                        class="w-full h-full object-cover" alt="{{ $community->name }}"
-                        loading="lazy">
+                        class="w-full h-full object-cover" alt="{{ $community->name }}">
                 </div>
 
                 {{-- Community Info --}}

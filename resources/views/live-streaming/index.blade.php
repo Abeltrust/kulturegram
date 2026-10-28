@@ -5,7 +5,7 @@
     <div class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-stone-100">Live Events</h1>
+                <h1 class="text-2xl sm:text-3xl font-bold page-title text-amber-500">Live Events</h1>
                 <p class="text-sm sm:text-base text-gray-600 dark:text-stone-400">Host and discover real-time cultural
                     experiences.</p>
             </div>

@@ -7,7 +7,7 @@
         <!-- Header -->
         <div class="mb-4 sm:mb-6 text-center md:text-left flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-                <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-stone-800 dark:text-white">Discover</h1>
+                <h1 class="text-xl sm:text-2xl md:text-3xl font-bold page-title text-amber-500">Discover</h1>
                 <p class="text-stone-50 dark:text-stone-400 text-xs sm:text-sm md:text-base">
                     Explore stories, cultures, people, and places from around the world.
                 </p>

@@ -32,7 +32,7 @@
                             </span>
                             <span class="text-xs text-stone-500">Voluntary cultural interest matching</span>
                         </div>
-                        <h2 class="text-xl sm:text-2xl font-black text-stone-900 dark:text-stone-100 mt-1">Recommended Cultural Gatherings</h2>
+                        <h2 class="text-xl sm:text-2xl font-black page-title text-amber-500 mt-1">Recommended Cultural Gatherings</h2>
                     </div>
                     <a href="{{ route('events.create') }}" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow transition flex items-center gap-1.5 w-fit">
                         <i data-lucide="plus" class="w-4 h-4"></i> Create Event

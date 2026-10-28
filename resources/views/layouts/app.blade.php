@@ -23,6 +23,49 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     
     <style>
+        /* Consistent Header & Page Title Colors across Mobile & Desktop (System Amber, No Hover) */
+        #kulturegram-brand-title,
+        .page-title,
+        .page-header-title,
+        h1.page-title,
+        h2.page-title {
+            color: #f59e0b !important; /* System Amber (amber-500) */
+            text-decoration: none !important;
+            transition: none !important;
+            -webkit-tap-highlight-color: transparent !important;
+        }
+        .dark #kulturegram-brand-title,
+        .dark .page-title,
+        .dark .page-header-title,
+        .dark h1.page-title,
+        .dark h2.page-title {
+            color: #f59e0b !important;
+        }
+
+        #kulturegram-brand-title:hover,
+        #kulturegram-brand-title:focus,
+        #kulturegram-brand-title:active,
+        .page-title:hover,
+        .page-title:focus,
+        .page-title:active,
+        .page-header-title:hover,
+        .page-header-title:focus,
+        .page-header-title:active {
+            color: #f59e0b !important;
+            text-decoration: none !important;
+        }
+        .dark #kulturegram-brand-title:hover,
+        .dark #kulturegram-brand-title:focus,
+        .dark #kulturegram-brand-title:active,
+        .dark .page-title:hover,
+        .dark .page-title:focus,
+        .dark .page-title:active,
+        .dark .page-header-title:hover,
+        .dark .page-header-title:focus,
+        .dark .page-header-title:active {
+            color: #f59e0b !important;
+            text-decoration: none !important;
+        }
         [x-cloak] { display: none !important; }
         html, body {
             max-width: 100%;
@@ -204,36 +247,7 @@
         }
     </script>
 </head>
-    <body class="h-full bg-stone-50 dark:bg-stone-900 antialiased text-stone-800 dark:text-gray-100 overflow-x-hidden w-full max-w-full"
-          @php
-              $skeletonRoutes = ['timeline.index', 'cultural-hub.index', 'discover.index', 'education.index', 'communities.index', 'events.index'];
-              $showSkeleton = collect($skeletonRoutes)->filter(fn($route) => request()->routeIs($route))->isNotEmpty();
-          @endphp
-          x-data="{ pageLoading: false, isMainPage: {{ $showSkeleton ? 'true' : 'false' }} }" 
-          x-init="
-            if (isMainPage) {
-                // Only show skeleton on genuinely poor connections.
-                // Network Information API: effectiveType can be 'slow-2g', '2g', '3g', '4g'
-                const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-                const isSlowNetwork = conn && (
-                    conn.saveData === true ||
-                    conn.effectiveType === 'slow-2g' ||
-                    conn.effectiveType === '2g'
-                );
-
-                if (isSlowNetwork) {
-                    pageLoading = true;
-                    // Dismiss as soon as the HTML structure is ready (not waiting for images)
-                    if (document.readyState === 'loading') {
-                        document.addEventListener('DOMContentLoaded', () => pageLoading = false);
-                    } else {
-                        pageLoading = false;
-                    }
-                }
-            }
-            // Always instantly clear on bfcache restore (back/forward navigation)
-            window.addEventListener('pageshow', () => pageLoading = false);
-          ">
+    <body class="h-full bg-stone-50 dark:bg-stone-900 antialiased text-stone-800 dark:text-gray-100 overflow-x-hidden w-full max-w-full">
     <!-- Navigation Progress Bar (appears instantly on link click) -->
     <div id="nav-progress"></div>
 
@@ -245,9 +259,7 @@
                <div class="w-[38px] h-[38px] bg-orange-500 shadow-md shadow-orange-500/25 border-t border-white/30 rounded-xl flex items-center justify-center shrink-0" style="width: 38px; height: 38px; min-width: 38px; min-height: 38px;">
                     <i data-lucide="book-open" class="w-5 h-5 text-white"></i>
                 </div>
-                <a href="{{ route('timeline.index') }}" class="text-[20px] sm:text-xl font-black text-stone-900 dark:text-white hover:text-orange-500 tracking-tight transition-colors duration-200">
-                    Kulturegram
-                </a>
+                <a href="{{ route('timeline.index') }}" id="kulturegram-brand-title" class="page-title text-[20px] sm:text-xl font-black text-amber-500 tracking-tight select-none">Kulturegram</a>
             </div>
 
             <!-- Center: Search Bar (Hidden on Mobile) -->
@@ -408,33 +420,7 @@
         <!-- Main Content -->
         <main class="flex-1 w-full max-w-full min-w-0 overflow-x-hidden pt-[60px] sm:pt-16 md:ml-20 {{ (request()->routeIs('messages.*')) ? 'pb-0' : 'pb-16' }} md:pb-0 min-h-screen relative">
             
-            <!-- Global Skeleton Loader -->
-            <div x-show="pageLoading" 
-                 x-transition.opacity.duration.200ms
-                 class="absolute inset-0 z-40 bg-stone-50 dark:bg-stone-900 p-4 sm:p-6 lg:p-8">
-                <div class="max-w-7xl mx-auto animate-pulse space-y-8">
-                    <!-- Header Skeleton -->
-                    <div class="flex items-center justify-between">
-                        <div class="w-1/3 lg:w-1/4 h-10 bg-stone-200 dark:bg-stone-800 rounded-xl"></div>
-                        <div class="w-1/4 h-10 bg-stone-200 dark:bg-stone-800 rounded-xl hidden sm:block"></div>
-                    </div>
-                    
-                    <!-- Content Skeleton -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="h-72 bg-stone-200 dark:bg-stone-800 rounded-3xl"></div>
-                        <div class="h-72 bg-stone-200 dark:bg-stone-800 rounded-3xl"></div>
-                        <div class="h-72 bg-stone-200 dark:bg-stone-800 rounded-3xl hidden lg:block"></div>
-                        <div class="h-72 bg-stone-200 dark:bg-stone-800 rounded-3xl hidden lg:block"></div>
-                        <div class="h-72 bg-stone-200 dark:bg-stone-800 rounded-3xl hidden lg:block"></div>
-                        <div class="h-72 bg-stone-200 dark:bg-stone-800 rounded-3xl hidden lg:block"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Page Content -->
-            <div x-show="!pageLoading" x-cloak x-transition.opacity.duration.300ms>
-                @yield('content')
-            </div>
+            @yield('content')
         </main>
     </div>
 
@@ -1293,66 +1279,54 @@
     </script>
     
     <script>
-        // ─── Navigation Progress Bar ────────────────────────────────────────────
+        // ─── Fast Navigation Progress Bar ────────────────────────────────────────────
         (function() {
             const bar = document.getElementById('nav-progress');
+            if (!bar) return;
             let timer = null;
-            let width = 0;
 
             function start() {
                 clearTimeout(timer);
-                width = 0;
-                bar.style.width = '0%';
+                bar.style.transition = 'width 0.15s ease, opacity 0.15s ease';
+                bar.style.width = '45%';
                 bar.style.opacity = '1';
                 bar.classList.add('active');
-                // Animate to ~80% quickly, then slow down (simulate loading)
-                step();
-            }
-
-            function step() {
-                if (width < 70) {
-                    width += Math.random() * 12 + 4;
-                } else if (width < 90) {
-                    width += Math.random() * 2 + 0.5;
-                } else {
-                    return; // Hold at ~90% until page finishes
-                }
-                if (width > 90) width = 90;
-                bar.style.width = width + '%';
-                timer = setTimeout(step, 250);
+                timer = setTimeout(() => {
+                    bar.style.width = '85%';
+                }, 80);
             }
 
             function finish() {
                 clearTimeout(timer);
-                bar.style.transition = 'width 0.2s ease, opacity 0.4s ease 0.2s';
+                bar.style.transition = 'width 0.15s ease, opacity 0.2s ease';
                 bar.style.width = '100%';
                 setTimeout(() => {
                     bar.style.opacity = '0';
                     setTimeout(() => {
                         bar.style.width = '0%';
-                        bar.style.transition = 'width 0.4s ease, opacity 0.4s ease';
-                    }, 400);
-                }, 200);
+                        bar.classList.remove('active');
+                    }, 200);
+                }, 100);
             }
 
-            // Fire on every internal link click
+            // Fire on internal link clicks
             document.addEventListener('click', function(e) {
                 const link = e.target.closest('a');
                 if (!link) return;
                 const href = link.getAttribute('href');
                 if (!href || href.startsWith('#') || href.startsWith('javascript') ||
                     href.startsWith('mailto') || link.getAttribute('target') === '_blank') return;
-                // Only same-origin navigations
                 try {
                     const url = new URL(href, window.location.origin);
-                    if (url.origin === window.location.origin) start();
+                    if (url.origin === window.location.origin && url.pathname !== window.location.pathname) {
+                        start();
+                    }
                 } catch(ex) {}
             });
 
-            // Fire on form submissions too
+            // Fire on form submissions
             document.addEventListener('submit', function() { start(); });
 
-            // Complete when the new page is ready
             window.addEventListener('DOMContentLoaded', finish);
             window.addEventListener('pageshow', finish);
         })();

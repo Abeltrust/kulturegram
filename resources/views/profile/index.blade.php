@@ -798,8 +798,7 @@
                                          style="background-image: url('{{ $profilePostImageSrc }}');"></div>
                                     <img src="{{ $profilePostImageSrc }}" 
                                          alt="Story photo"
-                                         class="relative z-10 w-auto h-auto max-w-full max-h-[650px] object-contain rounded-xl sm:rounded-2xl mx-auto transition-transform duration-300 group-hover:scale-[1.01]" 
-                                         loading="lazy">
+                                         class="relative z-10 w-auto h-auto max-w-full max-h-[650px] object-contain rounded-xl sm:rounded-2xl mx-auto transition-transform duration-300 group-hover:scale-[1.01]">
                                     <span class="absolute bottom-3 right-3 z-20 px-2.5 py-1 rounded-lg bg-black/65 backdrop-blur-md text-white text-[11px] font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 pointer-events-none">
                                         <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
                                         <span>View full</span>

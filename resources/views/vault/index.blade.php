@@ -6,7 +6,7 @@
     {{-- Page Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-5 sm:mb-6 space-y-3 sm:space-y-0 text-center sm:text-left">
         <div>
-            <h1 class="text-lg sm:text-2xl font-bold text-gray-800 dark:text-gray-100">Personal Vault</h1>
+            <h1 class="text-lg sm:text-2xl font-bold page-title text-amber-500">Personal Vault</h1>
             <p class="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">Your private collection of memories and important moments.</p>
         </div>
 

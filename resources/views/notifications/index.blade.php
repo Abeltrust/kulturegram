@@ -4,7 +4,7 @@
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <!-- HEADER -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-            <h1 class="text-lg sm:text-xl font-bold text-gray-800 dark:text-stone-100">Notifications</h1>
+            <h1 class="text-lg sm:text-xl font-bold page-title text-amber-500">Notifications</h1>
             <button onclick="markAllAsRead()" class="text-sm sm:text-base text-amber-500 hover:underline">
                 Mark all as read
             </button>

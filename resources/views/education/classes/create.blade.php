@@ -445,7 +445,7 @@
                     <i data-lucide="video" class="w-3.5 h-3.5"></i>
                     <span>Cultural Video Studio</span>
                 </div>
-                <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                <h1 class="page-title text-2xl sm:text-3xl font-black text-amber-500 tracking-tight">
                     Publish a Cultural Heritage Class
                 </h1>
                 <p class="text-stone-400 text-xs sm:text-sm mt-1 max-w-xl">
