@@ -4,62 +4,260 @@
 
 @section('content')
 <script>
-    // Ensure classStudio is globally defined before Alpine evaluates x-data
     window.classStudio = function(config) {
         return {
-            classTitle: '{{ addslashes(old('title', '')) }}',
-            targetLanguage: '{{ addslashes(old('target_language', 'Hausa')) }}',
-            culturalFocus: '{{ addslashes(old('cultural_focus', 'Hausa Cultural Greetings & Etiquette')) }}',
-            priceType: '{{ addslashes(old('price_type', 'free')) }}',
-            priceAmount: '{{ addslashes(old('price', '4.99')) }}',
-            sampleVideoUrl: '{{ addslashes(old('sample_video_url', '')) }}',
-            draftTranscript: '{{ addslashes(old('raw_transcript', '')) }}',
-            selectedBackgroundUrl: '{{ addslashes(old('virtual_background_url', '')) }}',
+            classTitle: @json(old('title', '')),
+            targetLanguage: @json(old('target_language', 'Hausa')),
+            culturalFocus: @json(old('cultural_focus', '')),
+            priceType: @json(old('price_type', 'free')),
+            priceAmount: @json(old('price', '5.00')),
+            sampleVideoUrl: @json(old('sample_video_url', '')),
+            selectedBackgroundUrl: @json(old('virtual_background_url', '')),
             customBackdropPrompt: '',
-            isGeneratingSubtitles: false,
             isGeneratingBackdrop: false,
             isSubmitting: false,
-            generatedSubtitles: [],
-            generatedVocabulary: [],
+            uploadProgress: 0,
+            uploadStatusText: '',
+            backdropStatusNotice: null,
+            isConfigured: config.isConfigured || false,
+            maskedKey: config.maskedKey || '',
+
+            videoMode: 'upload', // 'upload' | 'record' | 'url'
             mediaFile: null,
+            tempVideoPath: '',
             videoPreviewUrl: null,
+            videoDuration: 0,
             fileSizeMb: null,
-            isOverLimit: false,
+
+            // Direct in-browser camera recording state
+            isCameraActive: false,
+            isRecording: false,
+            recordingSeconds: 0,
+            recordingTimer: null,
+            mediaStream: null,
+            mediaRecorder: null,
+            recordedChunks: [],
+            recordedSegments: [],
+            speechRecognizer: null,
+            cameraError: null,
+
+            clearSelectedFile() {
+                this.mediaFile = null;
+                this.tempVideoPath = '';
+                this.fileSizeMb = null;
+                this.videoDuration = 0;
+                this.recordedSegments = [];
+                if (this.videoPreviewUrl) {
+                    try { URL.revokeObjectURL(this.videoPreviewUrl); } catch (e) {}
+                    this.videoPreviewUrl = null;
+                }
+                const input = document.getElementById('video-file-input');
+                if (input) input.value = '';
+            },
 
             handleFileSelected(event) {
                 if (event.target.files && event.target.files[0]) {
                     const file = event.target.files[0];
                     this.mediaFile = file;
+                    this.tempVideoPath = '';
+                    this.recordedSegments = [];
                     const mb = file.size / (1024 * 1024);
                     this.fileSizeMb = mb.toFixed(1);
-                    this.isOverLimit = mb > 40;
 
-                    if (file.type.startsWith('video/')) {
-                        try {
-                            this.videoPreviewUrl = URL.createObjectURL(file);
-                        } catch(e) {
-                            this.videoPreviewUrl = null;
-                        }
-                    } else {
+                    if (this.videoPreviewUrl) {
+                        try { URL.revokeObjectURL(this.videoPreviewUrl); } catch (e) {}
+                    }
+                    try {
+                        this.videoPreviewUrl = URL.createObjectURL(file);
+                    } catch (e) {
                         this.videoPreviewUrl = null;
                     }
+                } else {
+                    this.clearSelectedFile();
                 }
             },
 
-            async generateAiSubtitles() {
-                this.isGeneratingSubtitles = true;
-                try {
-                    const formData = new FormData();
-                    formData.append('target_language', this.targetLanguage);
-                    formData.append('cultural_focus', this.culturalFocus);
-                    if (this.draftTranscript) {
-                        formData.append('transcript', this.draftTranscript);
-                    }
-                    if (this.mediaFile) {
-                        formData.append('media', this.mediaFile);
-                    }
+            onPreviewMetadataLoaded(event) {
+                const vid = event.target;
+                if (vid && vid.duration && isFinite(vid.duration)) {
+                    this.videoDuration = Math.round(vid.duration * 10) / 10;
+                }
+            },
 
-                    const response = await fetch(config.generateSubtitlesUrl, {
+            formatTimer(sec) {
+                const s = Math.floor(sec || 0);
+                const m = Math.floor(s / 60);
+                const r = s % 60;
+                return String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0');
+            },
+
+            async startCamera() {
+                this.cameraError = null;
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    this.cameraError = 'Camera access is not supported in this browser.';
+                    return;
+                }
+                try {
+                    this.mediaStream = await navigator.mediaDevices.getUserMedia({
+                        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+                        audio: true
+                    });
+                    this.isCameraActive = true;
+                    this.$nextTick(() => {
+                        const liveVideo = document.getElementById('studio-camera-live');
+                        if (liveVideo) {
+                            liveVideo.srcObject = this.mediaStream;
+                            liveVideo.play().catch(() => {});
+                        }
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
+                    });
+                } catch (err) {
+                    this.cameraError = 'Could not access camera/microphone: ' + (err.message || 'Permission denied');
+                }
+            },
+
+            stopCameraStream() {
+                if (this.speechRecognizer) {
+                    try { this.speechRecognizer.stop(); } catch (e) {}
+                    this.speechRecognizer = null;
+                }
+                if (this.recordingTimer) {
+                    clearInterval(this.recordingTimer);
+                    this.recordingTimer = null;
+                }
+                if (this.mediaStream) {
+                    this.mediaStream.getTracks().forEach(track => track.stop());
+                    this.mediaStream = null;
+                }
+                this.isCameraActive = false;
+                this.isRecording = false;
+            },
+
+            async startRecording() {
+                if (!this.mediaStream) {
+                    await this.startCamera();
+                    if (!this.mediaStream) return;
+                }
+
+                this.clearSelectedFile();
+                this.recordedChunks = [];
+                this.recordedSegments = [];
+                this.recordingSeconds = 0;
+
+                const mimeTypes = [
+                    'video/webm;codecs=vp9,opus',
+                    'video/webm;codecs=vp8,opus',
+                    'video/webm',
+                    'video/mp4'
+                ];
+                let selectedMime = '';
+                for (const mime of mimeTypes) {
+                    if (window.MediaRecorder && MediaRecorder.isTypeSupported(mime)) {
+                        selectedMime = mime;
+                        break;
+                    }
+                }
+
+                try {
+                    this.mediaRecorder = selectedMime
+                        ? new MediaRecorder(this.mediaStream, { mimeType: selectedMime })
+                        : new MediaRecorder(this.mediaStream);
+                } catch (e) {
+                    this.cameraError = 'Could not initialize video recorder: ' + e.message;
+                    return;
+                }
+
+                this.mediaRecorder.ondataavailable = (event) => {
+                    if (event.data && event.data.size > 0) {
+                        this.recordedChunks.push(event.data);
+                    }
+                };
+
+                this.mediaRecorder.onstop = () => {
+                    const ext = selectedMime.includes('mp4') ? 'mp4' : 'webm';
+                    const blob = new Blob(this.recordedChunks, { type: selectedMime || 'video/webm' });
+                    const file = new File([blob], `recorded_lesson_${Date.now()}.${ext}`, {
+                        type: selectedMime || 'video/webm'
+                    });
+
+                    this.mediaFile = file;
+                    this.fileSizeMb = (file.size / (1024 * 1024)).toFixed(1);
+                    this.videoDuration = this.recordingSeconds;
+                    this.videoPreviewUrl = URL.createObjectURL(blob);
+
+                    // Attach to file input if small enough for standard submit
+                    try {
+                        const dt = new DataTransfer();
+                        dt.items.add(file);
+                        const input = document.getElementById('video-file-input');
+                        if (input) input.files = dt.files;
+                    } catch (e) {}
+
+                    this.stopCameraStream();
+                };
+
+                // Start live speech recognition while recording so spoken phrases are captured with timestamps
+                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (SpeechRec) {
+                    try {
+                        const rec = new SpeechRec();
+                        rec.continuous = true;
+                        rec.interimResults = false;
+                        rec.lang = 'en-US';
+                        let lastStart = 0;
+                        rec.onresult = (ev) => {
+                            for (let i = ev.resultIndex; i < ev.results.length; i++) {
+                                if (ev.results[i].isFinal) {
+                                    const text = ev.results[i][0].transcript.trim();
+                                    if (text) {
+                                        const endSec = Math.max(lastStart + 2, this.recordingSeconds);
+                                        this.recordedSegments.push({
+                                            start: lastStart,
+                                            end: endSec,
+                                            text: text
+                                        });
+                                        lastStart = endSec;
+                                    }
+                                }
+                            }
+                        };
+                        rec.start();
+                        this.speechRecognizer = rec;
+                    } catch (e) {}
+                }
+
+                this.mediaRecorder.start(1000);
+                this.isRecording = true;
+                this.recordingTimer = setInterval(() => {
+                    this.recordingSeconds++;
+                }, 1000);
+            },
+
+            stopRecording() {
+                if (this.mediaRecorder && this.isRecording) {
+                    this.mediaRecorder.stop();
+                }
+            },
+
+            async uploadFileInChunks(file) {
+                const chunkSize = 5 * 1024 * 1024; // 5MB per chunk (well below 40MB PHP limit)
+                const totalChunks = Math.max(1, Math.ceil(file.size / chunkSize));
+                const uploadId = 'cls_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+                const ext = (file.name.split('.').pop() || 'mp4').toLowerCase();
+
+                for (let idx = 0; idx < totalChunks; idx++) {
+                    const start = idx * chunkSize;
+                    const end = Math.min(file.size, start + chunkSize);
+                    const chunkBlob = file.slice(start, end);
+
+                    const formData = new FormData();
+                    formData.append('chunk', chunkBlob, `chunk_${idx}.${ext}`);
+                    formData.append('upload_id', uploadId);
+                    formData.append('chunk_index', idx);
+                    formData.append('total_chunks', totalChunks);
+                    formData.append('extension', ext);
+
+                    const res = await fetch(config.uploadChunkUrl, {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': config.csrfToken,
@@ -68,27 +266,79 @@
                         body: formData
                     });
 
-                    const data = await response.json();
-                    if (data.success) {
-                        this.generatedSubtitles = data.subtitles || [];
-                        this.generatedVocabulary = data.vocabulary || [];
-                        if (data.transcript && !this.draftTranscript) {
-                            this.draftTranscript = data.transcript;
-                        }
+                    if (!res.ok) {
+                        throw new Error('Chunk upload failed with status ' + res.status);
                     }
-                } catch (e) {
-                    console.error('Error generating AI subtitles:', e);
-                } finally {
-                    this.isGeneratingSubtitles = false;
-                    this.$nextTick(() => {
-                        if (typeof lucide !== 'undefined') lucide.createIcons();
-                    });
+
+                    const data = await res.json();
+                    this.uploadProgress = Math.round(((idx + 1) / totalChunks) * 100);
+                    this.uploadStatusText = `Uploading video (${this.uploadProgress}%)...`;
+
+                    if (data.completed && data.temp_video_path) {
+                        this.tempVideoPath = data.temp_video_path;
+                    }
                 }
             },
 
+            async handleSubmit(event) {
+                if (this.isSubmitting) {
+                    event.preventDefault();
+                    return false;
+                }
+
+                if (!this.classTitle || !this.classTitle.trim()) {
+                    event.preventDefault();
+                    alert('Please enter a Class Title.');
+                    return false;
+                }
+
+                if (!this.mediaFile && !this.tempVideoPath && (!this.sampleVideoUrl || !this.sampleVideoUrl.trim())) {
+                    event.preventDefault();
+                    alert('Please upload a video file, record a video directly on the platform, or provide a video URL.');
+                    return false;
+                }
+
+                // For files larger than 5MB, upload in 5MB chunks first so PHP post_max_size is never exceeded
+                if (this.mediaFile && !this.tempVideoPath && this.mediaFile.size > 5 * 1024 * 1024) {
+                    event.preventDefault();
+                    this.isSubmitting = true;
+                    this.uploadProgress = 1;
+                    this.uploadStatusText = 'Uploading video (1%)...';
+
+                    try {
+                        await this.uploadFileInChunks(this.mediaFile);
+                        this.uploadStatusText = 'Publishing class...';
+                        // Clear raw file input so the final form POST only sends the lightweight temp_video_path
+                        const input = document.getElementById('video-file-input');
+                        if (input) input.value = '';
+
+                        this.$nextTick(() => {
+                            event.target.submit();
+                        });
+                    } catch (err) {
+                        console.error('Video upload error:', err);
+                        this.isSubmitting = false;
+                        this.uploadStatusText = '';
+                        alert('Could not upload the video file. Please try again.');
+                    }
+                    return false;
+                }
+
+                setTimeout(() => {
+                    this.isSubmitting = true;
+                    this.uploadStatusText = 'Publishing class...';
+                }, 30);
+
+                return true;
+            },
+
             async generateCustomBackdrop() {
-                if (!this.customBackdropPrompt) return;
+                if (!this.customBackdropPrompt) {
+                    alert('Please enter a cultural backdrop prompt (e.g., Traditional Zaria mud relief wall).');
+                    return;
+                }
                 this.isGeneratingBackdrop = true;
+                this.backdropStatusNotice = null;
 
                 try {
                     const response = await fetch(config.generateBackgroundUrl, {
@@ -106,9 +356,22 @@
                     const data = await response.json();
                     if (data.success && data.image_url) {
                         this.selectedBackgroundUrl = data.image_url;
+                        this.backdropStatusNotice = {
+                            type: 'success',
+                            text: 'Generated AI cultural studio backdrop and set as active.'
+                        };
+                    } else {
+                        this.backdropStatusNotice = {
+                            type: 'error',
+                            text: data.error || data.message || 'Could not generate backdrop. Please try another heritage theme.'
+                        };
                     }
                 } catch (e) {
                     console.error('Error generating studio background:', e);
+                    this.backdropStatusNotice = {
+                        type: 'error',
+                        text: 'Connection error while communicating with Meta Muse Image generator.'
+                    };
                 } finally {
                     this.isGeneratingBackdrop = false;
                     this.$nextTick(() => {
@@ -120,11 +383,13 @@
     };
 </script>
 
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12" 
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12"
      x-data="classStudio({
-         generateSubtitlesUrl: '{{ route('education.classes.ai-transcribe') }}',
-         generateBackgroundUrl: '{{ route('education.classes.ai-studio-background') }}',
-         csrfToken: '{{ csrf_token() }}'
+         uploadChunkUrl: '{{ route('education.classes.upload-chunk', [], false) }}',
+         generateBackgroundUrl: '{{ route('education.classes.ai-studio-background', [], false) }}',
+         csrfToken: '{{ csrf_token() }}',
+         isConfigured: {{ ($isConfigured ?? false) ? 'true' : 'false' }},
+         maskedKey: '{{ $maskedKey ?? '' }}'
      })">
 
     {{-- Breadcrumb --}}
@@ -133,7 +398,7 @@
         <span>/</span>
         <a href="{{ route('education.classes.index') }}" class="hover:text-amber-500 transition">Cultural Classes</a>
         <span>/</span>
-        <span class="text-stone-800 dark:text-stone-100 font-semibold">Creator Studio</span>
+        <span class="text-stone-800 dark:text-stone-100 font-semibold">Publish Video Class</span>
     </div>
 
     {{-- Header Banner --}}
@@ -144,19 +409,21 @@
             <div>
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold mb-2">
                     <i data-lucide="video" class="w-3.5 h-3.5"></i>
-                    <span>AI Cultural Studio & Bilingual Subtitles</span>
+                    <span>Cultural Video Studio</span>
                 </div>
                 <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                    Teach a Cultural Heritage Class
+                    Publish a Cultural Heritage Class
                 </h1>
                 <p class="text-stone-400 text-xs sm:text-sm mt-1 max-w-xl">
-                    Share language lessons, cultural etiquette, or traditional wisdom. AI automatically generates synchronized subtitles, dual-language vocabulary flashcards, and virtual heritage backgrounds.
+                    Upload a lesson video or record directly from your camera. Synchronized subtitles and vocabulary are transcribed from your video when viewing.
                 </p>
             </div>
 
-            <div class="flex items-center gap-3">
-                <span class="text-xs font-bold px-3 py-1.5 rounded-xl bg-stone-800 text-stone-300 border border-stone-700/80">
-                    Free or Paid Monetization
+            <div class="flex flex-wrap items-center gap-2.5">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold shadow-xs"
+                      :class="isConfigured ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-amber-500/10 border-amber-500/30 text-amber-400'">
+                    <i data-lucide="cpu" class="w-3.5 h-3.5"></i>
+                    <span x-text="isConfigured ? 'Meta AI Connected' : 'Offline Mode'"></span>
                 </span>
             </div>
         </div>
@@ -177,15 +444,149 @@
     @endif
 
     {{-- Main Studio Form --}}
-    <form method="POST" action="{{ route('education.classes.store') }}" enctype="multipart/form-data" @submit="isSubmitting = true" class="space-y-8">
+    <form method="POST" action="{{ route('education.classes.store') }}" enctype="multipart/form-data" @submit="handleSubmit($event)" novalidate class="space-y-8">
         @csrf
+        <input type="hidden" name="temp_video_path" :value="tempVideoPath">
+        <input type="hidden" name="video_duration" :value="videoDuration">
+        <input type="hidden" name="segments_json" :value="recordedSegments.length > 0 ? JSON.stringify(recordedSegments) : ''">
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
-            {{-- Left Column: Class Information & Pricing (7 cols) --}}
+
+            {{-- Left Column: Video Upload / Direct Camera Recording & Class Info (7 cols) --}}
             <div class="lg:col-span-7 space-y-6">
-                
-                {{-- Basic Information Card --}}
+
+                {{-- Video Upload or Direct Recording Card --}}
+                <div class="bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-8 border border-stone-200 dark:border-stone-800 shadow-sm space-y-5">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <h2 class="text-base sm:text-lg font-black text-stone-800 dark:text-stone-100 flex items-center gap-2">
+                            <i data-lucide="film" class="w-5 h-5 text-amber-500"></i>
+                            <span>Lesson Video</span>
+                        </h2>
+
+                        {{-- Mode Switcher Tabs --}}
+                        <div class="inline-flex rounded-xl bg-stone-100 dark:bg-stone-950 p-1 border border-stone-200 dark:border-stone-800">
+                            <button type="button"
+                                    @click="stopCameraStream(); videoMode = 'upload'"
+                                    class="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                                    :class="videoMode === 'upload' ? 'bg-amber-500 text-white shadow-xs' : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'">
+                                <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                                <span>Upload File</span>
+                            </button>
+                            <button type="button"
+                                    @click="videoMode = 'record'; startCamera()"
+                                    class="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                                    :class="videoMode === 'record' ? 'bg-amber-500 text-white shadow-xs' : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'">
+                                <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+                                <span>Record Video</span>
+                            </button>
+                            <button type="button"
+                                    @click="stopCameraStream(); videoMode = 'url'"
+                                    class="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                                    :class="videoMode === 'url' ? 'bg-amber-500 text-white shadow-xs' : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'">
+                                <i data-lucide="link" class="w-3.5 h-3.5"></i>
+                                <span>Video URL</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Tab 1: Upload Video File --}}
+                    <div x-show="videoMode === 'upload'" class="space-y-3">
+                        <label class="block text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300">
+                            Select Video or Audio File *
+                        </label>
+                        <input type="file" name="video" id="video-file-input" accept="video/*,audio/*" @change="handleFileSelected($event)"
+                               class="w-full text-xs text-stone-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-white hover:file:bg-amber-600 transition cursor-pointer">
+                        <div class="flex items-center justify-between text-[11px] text-stone-400">
+                            <span>Supports MP4, WebM, MOV, MP3, WAV (up to 100MB via chunked upload).</span>
+                            <span x-show="fileSizeMb" class="font-bold text-amber-500">
+                                Selected: <span x-text="fileSizeMb"></span> MB
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- Tab 2: Record Video Directly on Platform --}}
+                    <div x-show="videoMode === 'record'" class="space-y-4">
+                        <div x-show="cameraError" class="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+                            <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
+                            <span x-text="cameraError"></span>
+                        </div>
+
+                        <div x-show="isCameraActive" class="relative rounded-2xl overflow-hidden bg-stone-950 border border-stone-800 aspect-video">
+                            <video id="studio-camera-live" muted playsinline class="w-full h-full object-contain"></video>
+
+                            <div x-show="isRecording" class="absolute top-3 left-3 px-3 py-1 rounded-full bg-red-600 text-white text-xs font-bold flex items-center gap-2 shadow-lg">
+                                <span class="w-2 h-2 rounded-full bg-white animate-ping"></span>
+                                <span>REC</span>
+                                <span class="font-mono" x-text="formatTimer(recordingSeconds)"></span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-3">
+                            <button type="button"
+                                    x-show="!isRecording"
+                                    @click="startRecording()"
+                                    class="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-2 shadow-md transition cursor-pointer">
+                                <i data-lucide="circle-dot" class="w-4 h-4"></i>
+                                <span>Start Recording</span>
+                            </button>
+
+                            <button type="button"
+                                    x-show="isRecording"
+                                    @click="stopRecording()"
+                                    class="px-4 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-white text-xs font-bold flex items-center gap-2 shadow-md transition cursor-pointer">
+                                <i data-lucide="square" class="w-4 h-4"></i>
+                                <span>Stop & Save Recording</span>
+                            </button>
+
+                            <button type="button"
+                                    x-show="!isCameraActive && !isRecording"
+                                    @click="startCamera()"
+                                    class="px-4 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 text-stone-700 dark:text-stone-200 text-xs font-bold flex items-center gap-2 transition cursor-pointer">
+                                <i data-lucide="camera" class="w-4 h-4"></i>
+                                <span>Open Camera</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Tab 3: External Video URL --}}
+                    <div x-show="videoMode === 'url'" class="space-y-2">
+                        <label class="block text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300">
+                            Direct Video URL
+                        </label>
+                        <input type="text" name="sample_video_url" x-model="sampleVideoUrl"
+                               placeholder="https://example.com/cultural_lesson.mp4"
+                               class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-4 py-2.5 text-xs sm:text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none">
+                    </div>
+
+                    {{-- Selected / Recorded Video Preview & Pill --}}
+                    <div x-show="mediaFile" x-transition class="space-y-3 pt-2">
+                        <div class="flex items-center justify-between text-xs p-2.5 bg-stone-100 dark:bg-stone-800/80 rounded-xl border border-stone-200 dark:border-stone-700">
+                            <div class="flex items-center gap-2 text-stone-700 dark:text-stone-200 truncate">
+                                <i data-lucide="file-video" class="w-4 h-4 text-amber-500 shrink-0"></i>
+                                <span class="font-semibold truncate" x-text="mediaFile ? mediaFile.name : ''"></span>
+                                <span class="text-stone-400 text-[11px]" x-text="'(' + fileSizeMb + ' MB)'"></span>
+                            </div>
+                            <button type="button" @click="clearSelectedFile()" class="text-xs text-red-500 hover:text-red-700 dark:text-red-400 font-bold px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 transition shrink-0 flex items-center gap-1 cursor-pointer">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                                <span>Remove</span>
+                            </button>
+                        </div>
+
+                        <div x-show="videoPreviewUrl" class="rounded-2xl overflow-hidden bg-black border border-stone-800 aspect-video relative">
+                            <video id="studio-preview-video"
+                                   :src="videoPreviewUrl"
+                                   controls
+                                   @loadedmetadata="onPreviewMetadataLoaded($event)"
+                                   class="w-full h-full object-contain"></video>
+                        </div>
+                    </div>
+
+                    @error('video')
+                        <p class="text-red-500 text-xs mt-1.5">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Basic Class Information Card --}}
                 <div class="bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-8 border border-stone-200 dark:border-stone-800 shadow-sm space-y-5">
                     <h2 class="text-base sm:text-lg font-black text-stone-800 dark:text-stone-100 flex items-center gap-2">
                         <i data-lucide="book-open" class="w-5 h-5 text-amber-500"></i>
@@ -198,7 +599,7 @@
                             Class Title *
                         </label>
                         <input type="text" name="title" x-model="classTitle" required
-                               placeholder="e.g. Hausa Everyday Greetings & Market Etiquette"
+                               placeholder="Enter your lesson title (e.g. Hausa Greetings)"
                                class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-4 py-3 text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none">
                         @error('title')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -217,21 +618,15 @@
                                     <option value="{{ $lang }}">{{ $lang }}</option>
                                 @endforeach
                             </select>
-                            @error('target_language')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <div>
                             <label class="block text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5">
-                                Cultural Focus *
+                                Cultural Focus (Optional)
                             </label>
-                            <input type="text" name="cultural_focus" x-model="culturalFocus" required
-                                   placeholder="e.g. Hausa Northern Heritage & Respect"
+                            <input type="text" name="cultural_focus" x-model="culturalFocus"
+                                   placeholder="e.g. Conversational Greetings"
                                    class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-4 py-3 text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none">
-                            @error('cultural_focus')
-                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
                         </div>
                     </div>
 
@@ -260,220 +655,84 @@
 
                     <div>
                         <label class="block text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5">
-                            Lesson Description & Background Notes
+                            Lesson Description (Optional)
                         </label>
-                        <textarea name="description" rows="3"
-                                  placeholder="Describe what learners will discover in this class..."
-                                  class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 p-4 text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none leading-relaxed">{{ old('description') }}</textarea>
-                    </div>
-                </div>
-
-                {{-- Access & Pricing Card --}}
-                <div class="bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-8 border border-stone-200 dark:border-stone-800 shadow-sm space-y-4">
-                    <h2 class="text-base sm:text-lg font-black text-stone-800 dark:text-stone-100 flex items-center gap-2">
-                        <i data-lucide="tag" class="w-5 h-5 text-amber-500"></i>
-                        <span>Access & Monetization</span>
-                    </h2>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {{-- Free Tier Option --}}
-                        <label class="relative flex flex-col p-4 rounded-2xl border-2 cursor-pointer transition-all"
-                               :class="priceType === 'free' ? 'border-emerald-500 bg-emerald-500/5' : 'border-stone-200 dark:border-stone-800 hover:border-stone-300'">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="font-black text-sm text-stone-800 dark:text-stone-100">Free Heritage Class</span>
-                                <input type="radio" name="price_type" value="free" x-model="priceType" class="text-emerald-500 focus:ring-emerald-500">
-                            </div>
-                            <p class="text-xs text-stone-500 dark:text-stone-400">
-                                Open to all community members and cultural enthusiasts worldwide.
-                            </p>
-                        </label>
-
-                        {{-- Paid Tier Option --}}
-                        <label class="relative flex flex-col p-4 rounded-2xl border-2 cursor-pointer transition-all"
-                               :class="priceType === 'paid' ? 'border-amber-500 bg-amber-500/5' : 'border-stone-200 dark:border-stone-800 hover:border-stone-300'">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="font-black text-sm text-stone-800 dark:text-stone-100">Paid Masterclass</span>
-                                <input type="radio" name="price_type" value="paid" x-model="priceType" class="text-amber-500 focus:ring-amber-500">
-                            </div>
-                            <p class="text-xs text-stone-500 dark:text-stone-400">
-                                Learners purchase access. 45-second preview trailer is shown for free.
-                            </p>
-                        </label>
-                    </div>
-
-                    {{-- Price Amount Input --}}
-                    <div x-show="priceType === 'paid'" x-transition class="pt-2">
-                        <label class="block text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5">
-                            Class Enrollment Price ($ USD)
-                        </label>
-                        <div class="relative max-w-xs">
-                            <span class="absolute left-3.5 top-3 text-stone-400 font-bold">$</span>
-                            <input type="number" step="0.50" min="1.00" name="price" x-model="priceAmount"
-                                   placeholder="9.99"
-                                   class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 pl-8 pr-4 py-2.5 text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none font-bold">
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Video Media Card --}}
-                <div class="bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-8 border border-stone-200 dark:border-stone-800 shadow-sm space-y-4">
-                    <h2 class="text-base sm:text-lg font-black text-stone-800 dark:text-stone-100 flex items-center gap-2">
-                        <i data-lucide="film" class="w-5 h-5 text-amber-500"></i>
-                        <span>Video / Audio Lesson File</span>
-                    </h2>
-
-                    <div>
-                        <label class="block text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5">
-                            Upload Video or Audio File
-                        </label>
-                        <input type="file" name="video" id="video-file-input" accept="video/*,audio/*" @change="handleFileSelected($event)"
-                               class="w-full text-xs text-stone-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-white hover:file:bg-amber-600 transition cursor-pointer">
-                        
-                        {{-- File size and limit notice --}}
-                        <div class="flex items-center justify-between text-[11px] text-stone-400 mt-1.5">
-                            <span>Supports MP4, WebM, MOV, MP3, WAV.</span>
-                            <span x-show="fileSizeMb" class="font-bold text-amber-400">
-                                Selected: <span x-text="fileSizeMb"></span> MB
-                            </span>
-                        </div>
-
-                        {{-- Over Limit Alert --}}
-                        <div x-show="isOverLimit" x-transition class="mt-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs">
-                            <span class="font-bold">⚠️ Large File Notice:</span> The selected file is <span x-text="fileSizeMb"></span>MB. For files over 40MB, please provide a video link below or upload a compressed clip under 40MB.
-                        </div>
-
-                        {{-- Live Video Preview --}}
-                        <div x-show="videoPreviewUrl" x-transition class="mt-4 rounded-2xl overflow-hidden bg-black border border-stone-800 aspect-video relative">
-                            <video :src="videoPreviewUrl" controls class="w-full h-full object-contain"></video>
-                        </div>
-                        @error('video')
-                            <p class="text-red-500 text-xs mt-1.5">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div class="relative flex py-1 items-center">
-                        <div class="flex-grow border-t border-stone-200 dark:border-stone-800"></div>
-                        <span class="flex-shrink mx-4 text-[10px] font-black uppercase tracking-wider text-stone-400">Or use video URL</span>
-                        <div class="flex-grow border-t border-stone-200 dark:border-stone-800"></div>
-                    </div>
-
-                    <div>
-                        <input type="text" name="sample_video_url" x-model="sampleVideoUrl"
-                               placeholder="https://example.com/cultural_lesson.mp4"
-                               class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-4 py-2.5 text-xs sm:text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none">
-                    </div>
-
-                    {{-- Social Cross-Posting Option --}}
-                    <div class="pt-4 border-t border-stone-100 dark:border-stone-800">
-                        <label class="flex items-start gap-3 cursor-pointer select-none">
-                            <input type="checkbox" name="share_to_timeline" value="1" checked
-                                   class="rounded text-amber-500 focus:ring-amber-500 mt-1">
-                            <div>
-                                <span class="text-xs sm:text-sm font-bold text-stone-800 dark:text-stone-200 block">
-                                    Share interactive preview teaser to my Timeline feed
-                                </span>
-                                <span class="text-xs text-stone-500 dark:text-stone-400 block">
-                                    Normal people scrolling your feed will see a preview card and can tap directly into the Educational Hub to learn.
-                                </span>
-                            </div>
-                        </label>
+                        <textarea name="description" rows="2"
+                                  placeholder="Briefly describe what learners will learn in this video..."
+                                  class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 p-3.5 text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none leading-relaxed">{{ old('description') }}</textarea>
                     </div>
                 </div>
 
             </div>
 
-            {{-- Right Column: AI Subtitles Studio & Cultural Virtual Backdrops (5 cols) --}}
+            {{-- Right Column: Pricing, Backdrop & Publish Action (5 cols) --}}
             <div class="lg:col-span-5 space-y-6">
 
-                {{-- AI Transcription & Bilingual Subtitles Generator --}}
-                <div class="bg-gradient-to-br from-amber-500/5 via-stone-900/50 to-stone-900 rounded-3xl p-6 sm:p-7 border border-amber-500/30 shadow-md space-y-4">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-sm sm:text-base font-black text-stone-800 dark:text-stone-100 flex items-center gap-2">
-                            <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
-                            <span>AI Subtitles & Phrase Extraction</span>
-                        </h3>
-                        <span class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                            Smart Sync
-                        </span>
-                    </div>
+                {{-- Access & Pricing Card --}}
+                <div class="bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-7 border border-stone-200 dark:border-stone-800 shadow-sm space-y-4">
+                    <h2 class="text-sm sm:text-base font-black text-stone-800 dark:text-stone-100 flex items-center gap-2">
+                        <i data-lucide="tag" class="w-4 h-4 text-amber-500"></i>
+                        <span>Access & Monetization</span>
+                    </h2>
 
-                    <p class="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
-                        When teaching, AI transcribes the video, detects bilingual moments (e.g., <em>"In Hausa this is called..."</em>), and builds interactive timestamped subtitles.
-                    </p>
-
-                    <div>
-                        <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">
-                            Lesson Script or Spoken Highlights (Optional)
+                    <div class="grid grid-cols-1 gap-3">
+                        <label class="relative flex flex-col p-3.5 rounded-2xl border-2 cursor-pointer transition-all"
+                               :class="priceType === 'free' ? 'border-emerald-500 bg-emerald-500/5' : 'border-stone-200 dark:border-stone-800 hover:border-stone-300'">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-black text-xs sm:text-sm text-stone-800 dark:text-stone-100">Free Heritage Class</span>
+                                <input type="radio" name="price_type" value="free" x-model="priceType" :checked="priceType === 'free'" checked class="text-emerald-500 focus:ring-emerald-500">
+                            </div>
+                            <p class="text-[11px] text-stone-500 dark:text-stone-400">
+                                Open to all community members and learners.
+                            </p>
                         </label>
-                        <textarea name="raw_transcript" x-model="draftTranscript" rows="4"
-                                  placeholder="Type or paste what is spoken in the video, or let AI transcribe the audio track automatically..."
-                                  class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-950 p-3 text-xs text-stone-800 dark:text-stone-200 focus:ring-2 focus:ring-amber-500 outline-none leading-relaxed"></textarea>
+
+                        <label class="relative flex flex-col p-3.5 rounded-2xl border-2 cursor-pointer transition-all"
+                               :class="priceType === 'paid' ? 'border-amber-500 bg-amber-500/5' : 'border-stone-200 dark:border-stone-800 hover:border-stone-300'">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="font-black text-xs sm:text-sm text-stone-800 dark:text-stone-100">Paid Masterclass</span>
+                                <input type="radio" name="price_type" value="paid" x-model="priceType" :checked="priceType === 'paid'" class="text-amber-500 focus:ring-amber-500">
+                            </div>
+                            <p class="text-[11px] text-stone-500 dark:text-stone-400">
+                                Learners purchase access. 45-second preview is shown for free.
+                            </p>
+                        </label>
                     </div>
 
-                    <button type="button" @click="generateAiSubtitles()" :disabled="isGeneratingSubtitles"
-                            class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2">
-                        <span x-show="!isGeneratingSubtitles" class="flex items-center gap-2">
-                            <i data-lucide="wand-2" class="w-4 h-4"></i>
-                            <span>Test & Preview AI Subtitles</span>
-                        </span>
-                        <span x-show="isGeneratingSubtitles" class="flex items-center gap-2">
-                            <span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                            <span>Transcribing & Extracting Phrases...</span>
-                        </span>
-                    </button>
-
-                    {{-- Live Subtitles Preview Box --}}
-                    <div x-show="generatedSubtitles.length > 0" x-transition class="space-y-3 pt-3 border-t border-stone-800">
-                        <div class="text-xs font-bold text-amber-400 flex items-center justify-between">
-                            <span>Extracted Subtitles (<span x-text="generatedSubtitles.length"></span>)</span>
-                            <span class="text-[10px] text-stone-400">Timestamped</span>
-                        </div>
-
-                        <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
-                            <template x-for="(sub, idx) in generatedSubtitles" :key="idx">
-                                <div class="p-2 rounded-lg bg-stone-950/80 border border-stone-800 text-[11px] text-stone-300">
-                                    <div class="flex items-center justify-between text-[10px] text-amber-400/80 font-mono mb-0.5">
-                                        <span x-text="sub.start + 's - ' + sub.end + 's'"></span>
-                                        <span x-show="sub.target_phrase" class="text-emerald-400 font-bold" x-text="sub.target_phrase"></span>
-                                    </div>
-                                    <div x-text="sub.text"></div>
-                                </div>
-                            </template>
+                    <div x-show="priceType === 'paid'" x-transition class="pt-2">
+                        <label class="block text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5">
+                            Enrollment Price (USD)
+                        </label>
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-2.5 text-stone-400 font-bold">$</span>
+                            <input type="number" step="0.01" min="0" name="price" x-model="priceAmount" :disabled="priceType !== 'paid'"
+                                    placeholder="9.99"
+                                    class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 pl-8 pr-4 py-2 text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none font-bold">
                         </div>
                     </div>
 
-                    {{-- Live Vocabulary Preview Box --}}
-                    <div x-show="generatedVocabulary.length > 0" x-transition class="space-y-2 pt-2 border-t border-stone-800">
-                        <div class="text-xs font-bold text-amber-400">
-                            Extracted Cultural Vocabulary (<span x-text="generatedVocabulary.length"></span>)
-                        </div>
-                        <div class="space-y-1.5">
-                            <template x-for="(voc, idx) in generatedVocabulary" :key="idx">
-                                <div class="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs">
-                                    <div class="font-bold text-amber-300" x-text="voc.target + ' · ' + voc.source"></div>
-                                    <div class="text-[10px] text-stone-400 mt-0.5" x-text="voc.context"></div>
-                                </div>
-                            </template>
-                        </div>
+                    <div class="pt-3 border-t border-stone-100 dark:border-stone-800">
+                        <label class="flex items-start gap-2.5 cursor-pointer select-none">
+                            <input type="checkbox" name="share_to_timeline" value="1" checked
+                                   class="rounded text-amber-500 focus:ring-amber-500 mt-0.5">
+                            <span class="text-xs font-semibold text-stone-700 dark:text-stone-300">
+                                Share class preview to my Timeline feed
+                            </span>
+                        </label>
                     </div>
                 </div>
 
-                {{-- AI Cultural Virtual Studio Backdrops --}}
+                {{-- Virtual Cultural Studio Backdrops --}}
                 <div class="bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-7 border border-stone-200 dark:border-stone-800 shadow-sm space-y-4">
                     <div class="flex items-center justify-between">
                         <h3 class="text-sm sm:text-base font-black text-stone-800 dark:text-stone-100 flex items-center gap-2">
                             <i data-lucide="palette" class="w-4 h-4 text-amber-500"></i>
-                            <span>Virtual Cultural Studio Backdrop</span>
+                            <span>Studio Cover Backdrop (Optional)</span>
                         </h3>
                     </div>
 
-                    <p class="text-xs text-stone-500 dark:text-stone-400">
-                        Enhance your video environment with authentic ancestral backdrops. Select a preset or generate a custom setting with AI.
-                    </p>
-
                     <input type="hidden" name="virtual_background_url" :value="selectedBackgroundUrl">
 
-                    {{-- Presets Grid --}}
                     <div class="grid grid-cols-2 gap-2.5">
                         @foreach ($presets as $preset)
                             <div @click="selectedBackgroundUrl = '{{ $preset['image_url'] }}'"
@@ -483,7 +742,7 @@
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-2">
                                     <span class="text-[10px] font-bold text-white line-clamp-1">{{ $preset['name'] }}</span>
                                 </div>
-                                <div x-show="selectedBackgroundUrl === '{{ $preset['image_url'] }}'" 
+                                <div x-show="selectedBackgroundUrl === '{{ $preset['image_url'] }}'"
                                      class="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px]">
                                     <i data-lucide="check" class="w-3 h-3"></i>
                                 </div>
@@ -491,28 +750,43 @@
                         @endforeach
                     </div>
 
-                    {{-- Custom AI Backdrop Generator --}}
                     <div class="pt-2 border-t border-stone-100 dark:border-stone-800 space-y-2">
                         <label class="block text-xs font-bold text-stone-700 dark:text-stone-300">
-                            Or Generate Custom Heritage Backdrop with AI
+                            Or Generate Custom Backdrop with AI
                         </label>
                         <div class="flex gap-2">
                             <input type="text" x-model="customBackdropPrompt"
-                                   placeholder="e.g. Traditional Zaria mud relief wall with carved mahogany doors"
+                                   placeholder="e.g. Traditional Zaria mud relief wall"
                                    class="flex-1 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-3 py-2 text-xs text-stone-800 dark:text-stone-200 focus:ring-2 focus:ring-amber-500 outline-none">
                             <button type="button" @click="generateCustomBackdrop()" :disabled="isGeneratingBackdrop"
-                                    class="px-3.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50">
+                                    class="px-3.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer">
                                 <span x-show="!isGeneratingBackdrop">Generate</span>
                                 <span x-show="isGeneratingBackdrop" class="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                             </button>
+                        </div>
+
+                        <div x-show="backdropStatusNotice" x-transition class="p-3 rounded-xl text-xs flex items-center gap-2"
+                             :class="backdropStatusNotice?.type === 'success' ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border border-red-500/30 text-red-400'">
+                            <i data-lucide="check-circle-2" class="w-4 h-4 shrink-0"></i>
+                            <span class="font-medium" x-text="backdropStatusNotice?.text"></span>
                         </div>
                     </div>
                 </div>
 
                 {{-- Submit Action Card --}}
                 <div class="bg-white dark:bg-stone-900 rounded-3xl p-6 border border-stone-200 dark:border-stone-800 shadow-sm space-y-3">
+                    <div x-show="isSubmitting && uploadProgress > 0" class="space-y-1.5">
+                        <div class="flex items-center justify-between text-xs font-bold text-amber-500">
+                            <span x-text="uploadStatusText"></span>
+                            <span x-text="uploadProgress + '%'"></span>
+                        </div>
+                        <div class="w-full bg-stone-200 dark:bg-stone-800 rounded-full h-2 overflow-hidden">
+                            <div class="bg-amber-500 h-2 transition-all duration-150" :style="'width: ' + uploadProgress + '%'"></div>
+                        </div>
+                    </div>
+
                     <button type="submit" id="publish-cultural-class-btn"
-                            :disabled="isSubmitting || isOverLimit"
+                            :disabled="isSubmitting"
                             class="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 text-white font-black text-sm uppercase tracking-wider shadow-xl shadow-amber-500/25 transition-all transform hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer">
                         <span x-show="!isSubmitting" class="flex items-center gap-2">
                             <i data-lucide="upload-cloud" class="w-5 h-5"></i>
@@ -520,11 +794,11 @@
                         </span>
                         <span x-show="isSubmitting" class="flex items-center gap-2">
                             <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                            <span>Publishing Cultural Class...</span>
+                            <span x-text="uploadStatusText || 'Publishing Cultural Class...'"></span>
                         </span>
                     </button>
                     <p class="text-[11px] text-center text-stone-400">
-                        Your lesson will be published to the Educational Hub with instant search, interactive subtitles, and enrolled learner tracking.
+                        Subtitles and bilingual vocabulary are transcribed from your video when viewing the lesson.
                     </p>
                 </div>
 

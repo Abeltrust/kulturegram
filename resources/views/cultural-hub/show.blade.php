@@ -250,10 +250,17 @@
             {{-- Authorized Cover Artwork / Photographic Record --}}
             @if($culture->image)
                 <div class="relative bg-stone-100 dark:bg-stone-950 border-t border-stone-200/80 dark:border-stone-800">
-                    <div class="w-full max-h-[480px] flex items-center justify-center overflow-hidden">
+                    <div class="relative w-full min-h-[240px] max-h-[520px] flex items-center justify-center overflow-hidden group cursor-pointer"
+                         onclick="openImageLightbox('{{ Storage::url($culture->image) }}', '{{ addslashes($culture->name) }} - Archival Record')">
+                        <div class="absolute inset-0 bg-cover bg-center filter blur-xl opacity-25 dark:opacity-20 scale-110 pointer-events-none"
+                             style="background-image: url('{{ Storage::url($culture->image) }}');"></div>
                         <img src="{{ Storage::url($culture->image) }}" 
                              alt="{{ $culture->name }}"
-                             class="w-full h-full max-h-[480px] object-cover sm:object-contain object-center">
+                             class="relative z-10 w-auto h-auto max-w-full max-h-[520px] object-contain mx-auto transition-transform duration-300 group-hover:scale-[1.01]">
+                        <span class="absolute bottom-3 right-3 z-20 px-2.5 py-1 rounded-lg bg-black/65 backdrop-blur-md text-white text-[11px] font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 pointer-events-none">
+                            <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                            <span>View full</span>
+                        </span>
                     </div>
                     <div class="px-4 py-2 bg-stone-50/90 dark:bg-stone-900/90 border-t border-stone-200/60 dark:border-stone-800 text-[11px] text-stone-600 dark:text-stone-400 flex flex-wrap items-center justify-between gap-2">
                         <span class="flex items-center gap-1.5 font-medium">
@@ -822,7 +829,16 @@
                     {{-- Primary Image --}}
                     @if($culture->image)
                         <div class="rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900">
-                            <img src="{{ Storage::url($culture->image) }}" alt="{{ $culture->name }}" class="max-h-[380px] w-full object-cover">
+                            <div class="relative overflow-hidden bg-stone-900/5 dark:bg-black/40 flex items-center justify-center min-h-[220px] max-h-[520px] group cursor-pointer"
+                                 onclick="openImageLightbox('{{ Storage::url($culture->image) }}', '{{ addslashes($culture->name) }} - Archival Record')">
+                                <div class="absolute inset-0 bg-cover bg-center filter blur-xl opacity-25 dark:opacity-20 scale-110 pointer-events-none"
+                                     style="background-image: url('{{ Storage::url($culture->image) }}');"></div>
+                                <img src="{{ Storage::url($culture->image) }}" alt="{{ $culture->name }}" class="relative z-10 w-auto h-auto max-w-full max-h-[500px] object-contain mx-auto transition-transform duration-300 group-hover:scale-[1.01]">
+                                <span class="absolute bottom-3 right-3 z-20 px-2.5 py-1 rounded-lg bg-black/65 backdrop-blur-md text-white text-[11px] font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 pointer-events-none">
+                                    <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                                    <span>View full</span>
+                                </span>
+                            </div>
                             <div class="p-3 text-xs flex justify-between items-center text-stone-500">
                                 <span>Primary Archival Photo</span>
                                 <span class="font-mono text-[10px]">{{ $culture->license_type ?? 'Archive Commons' }}</span>
@@ -836,8 +852,12 @@
                             <h3 class="text-xs font-bold uppercase tracking-wider text-stone-500">Supporting Documentation Images</h3>
                             <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                 @foreach($culture->media_files as $file)
-                                    <div class="rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-100 dark:bg-stone-900">
-                                        <img src="{{ Storage::url($file) }}" alt="Supporting cultural media" class="aspect-square w-full object-cover">
+                                    <div class="rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-100 dark:bg-stone-900 group cursor-pointer relative"
+                                         onclick="openImageLightbox('{{ Storage::url($file) }}', 'Supporting cultural media - {{ addslashes($culture->name) }}')">
+                                        <img src="{{ Storage::url($file) }}" alt="Supporting cultural media" class="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                        <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <i data-lucide="maximize-2" class="w-5 h-5 text-white drop-shadow"></i>
+                                        </div>
                                     </div>
                                 @endforeach
                             </div>

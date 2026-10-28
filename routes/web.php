@@ -35,6 +35,9 @@ Route::get('/education/classes/create', [CulturalClassController::class, 'create
 Route::post('/education/classes', [CulturalClassController::class, 'store'])->middleware('auth')->name('education.classes.store');
 Route::post('/education/classes/ai-transcribe', [CulturalClassController::class, 'transcribeAi'])->middleware('auth')->name('education.classes.ai-transcribe');
 Route::post('/education/classes/ai-studio-background', [CulturalClassController::class, 'generateStudioBackground'])->middleware('auth')->name('education.classes.ai-studio-background');
+Route::post('/education/classes/upload-chunk', [CulturalClassController::class, 'uploadChunk'])->middleware('auth')->name('education.classes.upload-chunk');
+Route::get('/education/classes/{class}/audio-wav', [CulturalClassController::class, 'audioWav'])->name('education.classes.audio-wav');
+Route::post('/education/classes/{class}/sync-subtitles', [CulturalClassController::class, 'syncSubtitles'])->name('education.classes.sync-subtitles');
 Route::get('/education/classes/{class}/subtitles.vtt', [CulturalClassController::class, 'subtitlesVtt'])->name('education.classes.subtitles');
 Route::get('/education/classes/{slug}', [CulturalClassController::class, 'show'])->name('education.classes.show');
 Route::post('/education/classes/{class}/enroll', [CulturalClassController::class, 'enroll'])->middleware('auth')->name('education.classes.enroll');

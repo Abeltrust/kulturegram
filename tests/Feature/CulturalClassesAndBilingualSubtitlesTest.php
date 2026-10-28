@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Post;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -29,6 +30,67 @@ class CulturalClassesAndBilingualSubtitlesTest extends TestCase
         $this->student = User::factory()->create([
             'name' => 'Chidi Okeke',
             'email' => 'chidi@example.com',
+        ]);
+
+        Http::fake([
+            'https://api.meta.ai/v1/chat/completions' => Http::response([
+                'choices' => [
+                    [
+                        'message' => [
+                            'content' => json_encode([
+                                'summary' => 'Interactive cultural class exploring greetings and conversational etiquette.',
+                                'key_takeaways' => [
+                                    'Respectful greetings build community bonds',
+                                    'Pronunciation clarity conveys warmth'
+                                ],
+                                'subtitles' => [
+                                    [
+                                        'start' => 0.0,
+                                        'end' => 4.0,
+                                        'text' => 'Hujambo! Welcome to our cultural class.',
+                                        'source_phrase' => 'Hello',
+                                        'target_phrase' => 'Hujambo',
+                                    ],
+                                    [
+                                        'start' => 4.0,
+                                        'end' => 8.5,
+                                        'text' => 'When greeting elders, say Shikamoo with honor.',
+                                        'source_phrase' => 'Respectful elder greeting',
+                                        'target_phrase' => 'Shikamoo',
+                                    ],
+                                ],
+                                'vocabulary' => [
+                                    [
+                                        'source' => 'Hello',
+                                        'target' => 'Hujambo',
+                                        'language' => 'Swahili',
+                                        'pronunciation' => 'Hoo-jahm-boh',
+                                        'context' => 'General polite greeting.',
+                                    ],
+                                    [
+                                        'source' => 'Respectful greeting to elder',
+                                        'target' => 'Shikamoo',
+                                        'language' => 'Swahili',
+                                        'pronunciation' => 'Shee-kah-moh',
+                                        'context' => 'Special deference greeting for elders.',
+                                    ],
+                                ],
+                            ]),
+                        ],
+                    ],
+                ],
+            ], 200),
+            'https://api.meta.ai/v1/audio/transcriptions' => Http::response([
+                'text' => 'Barka da warhaka! Welcome to today cultural class in Hausa.',
+                'language' => 'hausa',
+                'segments' => [],
+            ], 200),
+            'https://api.meta.ai/v1/images/generations' => Http::response([
+                'data' => [
+                    ['url' => 'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&q=80&w=1200'],
+                ],
+            ], 200),
+            '*' => Http::response(['success' => true], 200),
         ]);
     }
 
@@ -142,8 +204,47 @@ class CulturalClassesAndBilingualSubtitlesTest extends TestCase
         $class = CulturalClass::where('title', 'Hausa Advanced Pronunciation')->first();
         $this->assertNotNull($class);
         $this->assertNotNull($class->video_url);
+        $this->assertEmpty($class->timed_subtitles);
+        $this->assertEmpty($class->bilingual_vocabulary);
         Storage::disk('public')->assertExists($class->video_url);
 
+        $response->assertRedirect(route('education.classes.show', $class->slug));
+    }
+
+    public function test_instructor_can_upload_video_in_chunks_and_publish()
+    {
+        Storage::fake('public');
+
+        $chunk = UploadedFile::fake()->create('chunk0.bin', 512, 'application/octet-stream');
+
+        $chunkRes = $this->actingAs($this->instructor)->post(route('education.classes.upload-chunk'), [
+            'chunk' => $chunk,
+            'upload_id' => 'test_chunk_upload_12345',
+            'chunk_index' => 0,
+            'total_chunks' => 1,
+            'filename' => 'recorded_class.webm',
+        ]);
+
+        $chunkRes->assertStatus(200);
+        $chunkRes->assertJson(['success' => true, 'completed' => true]);
+        $tempVideoPath = $chunkRes->json('temp_video_path');
+        $this->assertNotEmpty($tempVideoPath);
+
+        $response = $this->actingAs($this->instructor)->post(route('education.classes.store'), [
+            'title' => 'Recorded Hausa Class',
+            'cultural_focus' => 'Hausa Oral History',
+            'target_language' => 'Hausa',
+            'source_language' => 'English',
+            'level' => 'beginner',
+            'price_type' => 'free',
+            'temp_video_path' => $tempVideoPath,
+            'video_duration' => 55,
+        ]);
+
+        $class = CulturalClass::where('title', 'Recorded Hausa Class')->first();
+        $this->assertNotNull($class);
+        $this->assertNotEmpty($class->video_url);
+        Storage::disk('public')->assertExists($class->video_url);
         $response->assertRedirect(route('education.classes.show', $class->slug));
     }
 
@@ -267,5 +368,45 @@ class CulturalClassesAndBilingualSubtitlesTest extends TestCase
         $bgRes->assertStatus(200);
         $this->assertTrue($bgRes->json('success'));
         $this->assertNotEmpty($bgRes->json('image_url'));
+    }
+
+    public function test_instructor_can_sync_and_edit_subtitles_for_published_video()
+    {
+        $class = CulturalClass::create([
+            'instructor_id' => $this->instructor->id,
+            'title' => 'Hausa Greetings Video Sync',
+            'cultural_focus' => 'Hausa Greetings',
+            'target_language' => 'Hausa',
+            'level' => 'beginner',
+            'price_type' => 'free',
+            'price' => 0.00,
+            'duration_seconds' => 45,
+            'timed_subtitles' => [
+                ['start' => 0.0, 'end' => 4.0, 'text' => 'Old generic subtitle'],
+            ],
+            'is_published' => true,
+        ]);
+
+        $syncRes = $this->actingAs($this->instructor)->postJson(route('education.classes.sync-subtitles', $class), [
+            'transcript' => 'Sannu da zuwa! In this video we learn how to say Ina kwana in Hausa.',
+            'subtitles' => [
+                [
+                    'start' => 0.0,
+                    'end' => 4.5,
+                    'text' => 'Sannu da zuwa! In this video we learn how to say Ina kwana in Hausa.',
+                    'target_phrase' => 'Sannu da zuwa',
+                    'source_phrase' => 'Welcome',
+                ],
+            ],
+            'video_duration' => 52,
+            'regenerate_with_ai' => false,
+        ]);
+
+        $syncRes->assertStatus(200);
+        $syncRes->assertJson(['success' => true]);
+
+        $fresh = $class->fresh();
+        $this->assertEquals(52, $fresh->duration_seconds);
+        $this->assertEquals('Sannu da zuwa! In this video we learn how to say Ina kwana in Hausa.', $fresh->timed_subtitles[0]['text']);
     }
 }

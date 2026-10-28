@@ -310,17 +310,29 @@
                                 @endif
 
                                 @if($post->image)
-                                    <div class="-mx-4 sm:-mx-6 mt-4 overflow-hidden bg-stone-100 dark:bg-stone-800/50 border-y border-stone-100 dark:border-stone-800">
+                                    <div class="-mx-4 sm:-mx-6 mt-4 relative overflow-hidden bg-stone-900/5 dark:bg-black/40 border-y border-stone-100 dark:border-stone-800 flex items-center justify-center min-h-[220px] max-h-[720px] group cursor-pointer"
+                                         onclick="openImageLightbox('{{ Storage::url($post->image) }}', 'Story photo by {{ addslashes($post->user->name) }}')">
+                                        {{-- Ambient blurred backdrop for portrait / non-full-width images --}}
+                                        <div class="absolute inset-0 bg-cover bg-center filter blur-xl opacity-25 dark:opacity-20 scale-110 pointer-events-none"
+                                             style="background-image: url('{{ Storage::url($post->image) }}');"></div>
+                                        
+                                        {{-- Main Sharp Image: Keeps true aspect ratio (portrait or landscape) without cropping --}}
                                         <img src="{{ Storage::url($post->image) }}"
                                             alt="Story image"
-                                            class="w-full h-auto max-h-[650px] object-cover transition-transform duration-500 hover:scale-[1.01]"
+                                            class="relative z-10 w-auto h-auto max-w-full max-h-[680px] object-contain mx-auto transition-transform duration-300 group-hover:scale-[1.01]"
                                             loading="lazy">
+                                            
+                                        {{-- View Full / Expand Indicator on Hover --}}
+                                        <span class="absolute bottom-3 right-3 z-20 px-2.5 py-1 rounded-lg bg-black/65 backdrop-blur-md text-white text-[11px] font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 pointer-events-none">
+                                            <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                                            <span>View full</span>
+                                        </span>
                                     </div>
                                 @endif
 
                                 @if($post->video)
-                                    <div class="-mx-4 sm:-mx-6 mt-4 overflow-hidden bg-black border-y border-stone-100 dark:border-stone-800">
-                                        <video src="{{ Storage::url($post->video) }}" controls class="w-full max-h-[600px] object-cover"></video>
+                                    <div class="-mx-4 sm:-mx-6 mt-4 relative overflow-hidden bg-black border-y border-stone-100 dark:border-stone-800 flex items-center justify-center min-h-[220px]">
+                                        <video src="{{ Storage::url($post->video) }}" controls class="w-auto h-auto max-w-full max-h-[650px] mx-auto"></video>
                                     </div>
                                 @endif
 

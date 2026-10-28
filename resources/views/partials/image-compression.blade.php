@@ -3,7 +3,7 @@
     /**
      * Client-side image compression helper
      */
-    async function compressImage(file, { quality = 0.7, maxWidth = 1920, maxHeight = 1080 } = {}) {
+    async function compressImage(file, { quality = 0.7, maxWidth = 2048, maxHeight = 2048 } = {}) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);

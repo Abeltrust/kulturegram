@@ -1280,6 +1280,7 @@
 
     @include('partials.edit-post-modal')
     @include('partials.welcome-flyer')
+    @include('partials.image-lightbox')
 
     @stack('scripts')
 </body>

@@ -49,6 +49,26 @@ class MetaModelApiClient
     /**
      * Get masked API key for UI indicators (never reveals full secret).
      */
+    /**
+     * Helper to extract content or text from chat completions payload.
+     */
+    public function extractContent(array $data): string
+    {
+        if (!empty($data['choices'][0]['message']['content'])) {
+            return (string) $data['choices'][0]['message']['content'];
+        }
+        if (!empty($data['choices'][0]['message']['reasoning_content'])) {
+            return (string) $data['choices'][0]['message']['reasoning_content'];
+        }
+        if (!empty($data['content'])) {
+            return (string) $data['content'];
+        }
+        if (!empty($data['text'])) {
+            return (string) $data['text'];
+        }
+        return '';
+    }
+
     public function getMaskedKey(): string
     {
         if (!$this->isConfigured()) {
