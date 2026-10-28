@@ -74,6 +74,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/timeline/{post}/checkin', [TimelineController::class, 'checkin'])->name('posts.checkin');
     Route::post('/timeline/{post}/resonance', [TimelineController::class, 'resonance'])->name('timeline.resonance');
     Route::post('/resonances/{resonance}/tap', [TimelineController::class, 'tapResonance'])->name('resonances.tap');
+    Route::post('/timeline/{post}/translate', [TimelineController::class, 'translatePost'])->name('timeline.translate');
+    Route::post('/timeline/ai-voice-format', [TimelineController::class, 'aiVoiceFormat'])->name('timeline.ai-voice-format');
 
 
     // Cultural Hub
@@ -85,6 +87,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/cultural-hub/{culture}/lock-in', [CulturalHubController::class, 'lockin'])->name('cultural-hub.lock-in');
     Route::post('/cultural-hub/{culture}/resonance', [CulturalHubController::class, 'resonance'])->name('cultural-hub.resonance');
     Route::post('/cultural-hub/structure-narrative', [CulturalHubController::class, 'structureNarrative'])->name('cultural-hub.structure-narrative');
+    Route::post('/cultural-hub/ai-voice-format', [CulturalHubController::class, 'aiVoiceFormat'])->name('cultural-hub.ai-voice-format');
     Route::post('/cultural-hub/{culture}/contribute', [CulturalHubController::class, 'submitContribution'])->name('cultural-hub.contribute');
     Route::post('/cultural-hub/{culture}/review-status', [CulturalHubController::class, 'updateReviewStatus'])->name('cultural-hub.review-status');
 

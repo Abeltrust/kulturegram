@@ -264,11 +264,87 @@
                 </div>
             </div>
 
-            {{-- Core Description --}}
+            {{-- Core Description with Oral Tradition Voice Assistant --}}
             <div>
-                <label class="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                    Core Cultural Overview & Synthesis *
-                </label>
+                <div class="flex items-center justify-between mb-1.5 flex-wrap gap-2">
+                    <label class="block text-xs font-semibold text-stone-700 dark:text-stone-300">
+                        Core Cultural Overview & Synthesis *
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <button type="button" 
+                                @click="toggleVoiceStudio()"
+                                class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 transition active:scale-95 shadow-sm">
+                            <i data-lucide="mic" class="w-3.5 h-3.5 text-amber-500" :class="isListening ? 'animate-pulse text-red-500' : ''"></i>
+                            <span x-text="isListening ? 'Listening... (Click to stop)' : '🎙️ Speak to AI (Voice Dictation)'"></span>
+                        </button>
+                        <button type="button" 
+                                @click="formatSpokenCultureRecord()"
+                                :disabled="!voiceTranscript && !description || isFormattingVoice"
+                                class="inline-flex items-center gap-1.5 text-xs font-bold text-white px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-40 transition active:scale-95 shadow-sm">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                            <span x-text="isFormattingVoice ? 'Formatting...' : '✨ AI Format for Post'"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Voice Recording Active Visualizer Box -->
+                <div x-show="showVoiceStudio" x-cloak class="mb-3.5 p-4 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/5 dark:bg-stone-800/90 rounded-2xl border-2 border-amber-400/50 space-y-3 shadow-md">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="relative flex h-3 w-3">
+                                <span x-show="isListening" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-3 w-3" :class="isListening ? 'bg-red-500' : 'bg-stone-400'"></span>
+                            </span>
+                            <span class="text-xs font-extrabold text-stone-900 dark:text-stone-100" x-text="isListening ? 'Listening... Speak your story or oral tradition freely' : 'Oral Dictation Ready'"></span>
+                        </div>
+                        <button type="button" @click="toggleVoiceStudio()" class="p-1 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 rounded-lg">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <!-- Live Equalizer Animation while recording -->
+                    <div x-show="isListening" class="flex items-center gap-1.5 h-6 py-1">
+                        <span class="w-1.5 bg-amber-500 rounded-full animate-bounce h-3"></span>
+                        <span class="w-1.5 bg-amber-500 rounded-full animate-bounce h-6" style="animation-delay: 0.1s"></span>
+                        <span class="w-1.5 bg-amber-500 rounded-full animate-bounce h-2" style="animation-delay: 0.2s"></span>
+                        <span class="w-1.5 bg-amber-500 rounded-full animate-bounce h-5" style="animation-delay: 0.3s"></span>
+                        <span class="w-1.5 bg-amber-500 rounded-full animate-bounce h-4" style="animation-delay: 0.15s"></span>
+                        <span class="text-xs text-stone-600 dark:text-stone-300 ml-2 font-medium italic">Speak in your mother tongue, Nigerian Pidgin, or English. When finished, AI will arrange it for your post.</span>
+                    </div>
+
+                    <!-- Real-time transcript preview -->
+                    <div class="text-xs text-stone-800 dark:text-stone-200 p-3 bg-white/90 dark:bg-stone-900/90 rounded-xl border border-amber-300/60 dark:border-amber-800 min-h-[56px] max-h-40 overflow-y-auto leading-relaxed">
+                        <span x-show="!voiceTranscript" class="text-stone-400 italic">Spoken words will appear here in real time as you speak... Click "Start Speaking" below.</span>
+                        <span x-text="voiceTranscript" class="font-medium"></span>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
+                        <div class="flex items-center gap-2">
+                            <button type="button" 
+                                    @click="isListening ? stopVoiceDictation() : startVoiceDictation()"
+                                    class="px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95"
+                                    :class="isListening ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-amber-500 hover:bg-amber-600 text-white'">
+                                <i data-lucide="mic" class="w-3.5 h-3.5"></i>
+                                <span x-text="isListening ? 'Stop Dictation' : 'Start Speaking'"></span>
+                            </button>
+                            <button type="button" 
+                                    x-show="voiceTranscript" 
+                                    @click="voiceTranscript = ''; description = ''"
+                                    class="px-2.5 py-1.5 rounded-xl text-stone-500 hover:text-stone-700 text-xs font-semibold">
+                                Clear Spoken Text
+                            </button>
+                        </div>
+                        <button type="button" 
+                                @click="formatSpokenCultureRecord()"
+                                :disabled="!voiceTranscript && !description || isFormattingVoice"
+                                class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs shadow-md flex items-center gap-1.5 disabled:opacity-50 transition active:scale-95">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i>
+                            <span x-text="isFormattingVoice ? 'AI Structuring & Formatting...' : '✨ AI Arrange & Format for Post'"></span>
+                        </button>
+                    </div>
+                </div>
+
                 <textarea name="description" rows="5" required
                           x-model="description"
                           placeholder="Provide a thorough, respectful description of the cultural record, its historical origin, and community meaning..."
@@ -306,7 +382,7 @@
                 <label class="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
                     Verbatim Spoken Narrative / Raw Story (Optional)
                 </label>
-                <textarea name="raw_story" rows="4" placeholder="Verbatim quote or transcript in original words..." class="w-full text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 p-3"></textarea>
+                <textarea name="raw_story" x-ref="rawStoryInput" rows="4" placeholder="Verbatim quote or transcript in original words..." class="w-full text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 p-3"></textarea>
             </div>
         </div>
 
@@ -484,6 +560,142 @@
             sourceText: config.sourceText,
             isProcessingAI: false,
             isDraft: false,
+            showVoiceStudio: false,
+            isListening: false,
+            recognition: null,
+            voiceTranscript: '',
+            isFormattingVoice: false,
+
+            toggleVoiceStudio() {
+                this.showVoiceStudio = !this.showVoiceStudio;
+                if (this.showVoiceStudio && !this.isListening) {
+                    this.startVoiceDictation();
+                } else if (!this.showVoiceStudio && this.isListening) {
+                    this.stopVoiceDictation();
+                }
+                this.$nextTick(() => {
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                });
+            },
+
+            startVoiceDictation() {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    alert('Speech Recognition is not supported directly in this browser. You can type or paste your spoken words directly into the box.');
+                    return;
+                }
+
+                try {
+                    if (this.recognition) {
+                        try { this.recognition.stop(); } catch(e) {}
+                    }
+
+                    this.recognition = new SpeechRecognition();
+                    this.recognition.continuous = true;
+                    this.recognition.interimResults = true;
+                    this.recognition.lang = this.$refs.languageInput?.value ? this.$refs.languageInput.value.toLowerCase() : 'en-US';
+
+                    this.recognition.onstart = () => {
+                        this.isListening = true;
+                    };
+
+                    this.recognition.onresult = (event) => {
+                        let finalTranscript = '';
+                        let interim = '';
+                        for (let i = 0; i < event.results.length; ++i) {
+                            if (event.results[i].isFinal) {
+                                finalTranscript += event.results[i][0].transcript + ' ';
+                            } else {
+                                interim += event.results[i][0].transcript;
+                            }
+                        }
+                        this.voiceTranscript = (finalTranscript + interim).trim();
+                        if (this.voiceTranscript && !this.description) {
+                            this.description = this.voiceTranscript;
+                        }
+                    };
+
+                    this.recognition.onerror = (event) => {
+                        console.warn('Speech recognition notice:', event.error);
+                        if (event.error === 'not-allowed') {
+                            alert('Microphone access was denied. Please allow microphone permissions in your browser.');
+                            this.isListening = false;
+                        }
+                    };
+
+                    this.recognition.onend = () => {
+                        this.isListening = false;
+                    };
+
+                    this.recognition.start();
+                    this.isListening = true;
+                } catch(e) {
+                    console.error('Speech recognition start error:', e);
+                    this.isListening = false;
+                }
+            },
+
+            stopVoiceDictation() {
+                if (this.recognition) {
+                    try { this.recognition.stop(); } catch(e) {}
+                }
+                this.isListening = false;
+            },
+
+            async formatSpokenCultureRecord() {
+                const textToFormat = (this.voiceTranscript || this.description || this.sourceText).trim();
+                if (!textToFormat || this.isFormattingVoice) return;
+                this.isFormattingVoice = true;
+
+                try {
+                    const res = await fetch('/cultural-hub/ai-voice-format', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            raw_transcript: textToFormat,
+                            type: 'culture_record',
+                            name: this.$refs.nameInput ? this.$refs.nameInput.value : '',
+                            cultural_group: this.$refs.groupInput ? this.$refs.groupInput.value : '',
+                            region: this.$refs.regionInput ? this.$refs.regionInput.value : '',
+                            language: this.$refs.languageInput ? this.$refs.languageInput.value : '',
+                            category: this.recordType
+                        })
+                    });
+
+                    const result = await res.json();
+                    if (result.success && result.data) {
+                        const d = result.data;
+                        if (d.formatted_description) {
+                            this.description = d.formatted_description;
+                        }
+                        if (d.proposed_title && this.$refs.nameInput && (!this.$refs.nameInput.value || this.$refs.nameInput.value.length < 5)) {
+                            this.$refs.nameInput.value = d.proposed_title;
+                        }
+                        if (d.cultural_group && d.cultural_group !== 'unknown' && this.$refs.groupInput && !this.$refs.groupInput.value) {
+                            this.$refs.groupInput.value = d.cultural_group;
+                        }
+                        if (d.region && d.region !== 'unknown' && this.$refs.regionInput && !this.$refs.regionInput.value) {
+                            this.$refs.regionInput.value = d.region;
+                        }
+                        if (d.language && d.language !== 'unknown' && this.$refs.languageInput && !this.$refs.languageInput.value) {
+                            this.$refs.languageInput.value = d.language;
+                        }
+                        if (this.$refs.rawStoryInput && d.verbatim_transcript) {
+                            this.$refs.rawStoryInput.value = d.verbatim_transcript;
+                        }
+                        alert('Oral story formatted into a structured cultural record! Please review before saving.');
+                    }
+                } catch(e) {
+                    console.error('AI voice formatting error:', e);
+                    alert('Unable to format voice record automatically. Original spoken words preserved in description.');
+                } finally {
+                    this.isFormattingVoice = false;
+                    this.stopVoiceDictation();
+                }
+            },
 
             async runStructuring() {
                 if (!this.sourceText.trim() || this.isProcessingAI) return;

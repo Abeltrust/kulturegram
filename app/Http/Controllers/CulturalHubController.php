@@ -13,6 +13,7 @@ use App\Services\MetaAI\CultureStructuringService;
 use App\Services\MetaAI\CulturalCompanionService;
 use App\Services\MetaAI\CulturalKnowledgeGraphService;
 use App\Services\MetaAI\MultilingualCulturalAccessService;
+use App\Services\MetaAI\OralTraditionVoiceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -647,6 +648,35 @@ class CulturalHubController extends Controller
         $context = $request->only(['title', 'region', 'language', 'category', 'cultural_group']);
 
         $result = $structuringService->structureRecord($sourceText, $context);
+        return response()->json($result);
+    }
+
+    /**
+     * AI-assisted spoken voice dictation and formatting for cultural preservation.
+     */
+    public function aiVoiceFormat(Request $request, OralTraditionVoiceService $voiceService)
+    {
+        $rawTranscript = (string) $request->input('raw_transcript', '');
+
+        // If audio file is provided (e.g. uploaded voice memo)
+        if ($request->hasFile('audio_file')) {
+            $transcription = $voiceService->transcribeAudio($request->file('audio_file'));
+            if (!empty($transcription['transcript'])) {
+                $rawTranscript = $transcription['transcript'];
+            }
+        }
+
+        if (empty(trim($rawTranscript))) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Please speak into the microphone or provide an audio recording.',
+            ], 422);
+        }
+
+        $context = $request->only(['name', 'title', 'region', 'language', 'category', 'cultural_group']);
+        $result = $voiceService->formatOralRecord($rawTranscript, $context);
+        $result['raw_transcript'] = $rawTranscript;
+
         return response()->json($result);
     }
 

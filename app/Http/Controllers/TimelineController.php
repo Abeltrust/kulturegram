@@ -6,6 +6,8 @@ use App\Models\Post;
 use App\Models\Resonance;
 use App\Models\User;
 use App\Services\ContentParserService;
+use App\Services\MetaAI\MultilingualCulturalAccessService;
+use App\Services\MetaAI\OralTraditionVoiceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -87,6 +89,9 @@ class TimelineController extends Controller
             'content' => 'required|string|max:2000',
             'chapter' => 'nullable|string',
             'location' => 'nullable|string',
+            'language' => 'nullable|string|max:60',
+            'oral_transcript' => 'nullable|string',
+            'is_ai_formatted' => 'nullable|boolean',
             'privacy' => 'in:public,private,vault',
             'type' => 'nullable|in:text,image,video,audio',
             'tags' => 'nullable|array',
@@ -95,9 +100,13 @@ class TimelineController extends Controller
             'audio' => 'nullable|file|mimes:mp3,wav,ogg,m4a|max:20480',
         ]);
 
-        $post = new Post($request->only(['content', 'chapter', 'location', 'privacy']));
+        $post = new Post($request->only(['content', 'chapter', 'location', 'privacy', 'language', 'oral_transcript', 'is_ai_formatted']));
         $post->user_id = Auth::id();
         $post->type = $request->input('type', 'text');
+
+        if (!$post->language && Auth::check()) {
+            $post->language = Auth::user()->getPreferredLanguage();
+        }
 
         // Extract and merge hashtags
         $extractedTags = ContentParserService::extractHashtags($request->input('content'));
@@ -366,5 +375,67 @@ class TimelineController extends Controller
             'checkedIn' => $checkedIn,
             'count' => $post->fresh()->check_ins_count,
         ]);
+    }
+
+    /**
+     * AI-assisted translation of a post to the viewer's target language.
+     */
+    public function translatePost(Request $request, Post $post, MultilingualCulturalAccessService $translationService)
+    {
+        $targetLanguage = $request->input('target_language');
+        if (!$targetLanguage && Auth::check()) {
+            $targetLanguage = Auth::user()->getPreferredLanguage();
+        }
+        $targetLanguage = $targetLanguage ?: 'English';
+
+        $culturalContext = "Story chapter: {$post->chapter}. Location: {$post->location}. Author: {$post->user->name}.";
+        $result = $translationService->translatePost($post->content, $targetLanguage, $culturalContext);
+
+        if (!empty($result['translated_text'])) {
+            $result['formatted_translated_content'] = ContentParserService::format($result['translated_text']);
+        }
+
+        return response()->json($result);
+    }
+
+    /**
+     * AI oral voice story formatting: transforms spoken words into a clean, ready-to-post story or culture record.
+     */
+    public function aiVoiceFormat(Request $request, OralTraditionVoiceService $voiceService)
+    {
+        $request->validate([
+            'raw_transcript' => 'nullable|string',
+            'audio_file' => 'nullable|file|max:25600',
+            'type' => 'nullable|string|in:timeline_post,culture_record',
+        ]);
+
+        $rawTranscript = (string) $request->input('raw_transcript', '');
+
+        // If audio file is provided, transcribe it
+        if ($request->hasFile('audio_file')) {
+            $transcription = $voiceService->transcribeAudio($request->file('audio_file'));
+            if (!empty($transcription['transcript'])) {
+                $rawTranscript = $transcription['transcript'];
+            }
+        }
+
+        if (empty(trim($rawTranscript))) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Please speak into the microphone or provide an audio recording.',
+            ], 422);
+        }
+
+        $type = $request->input('type', 'timeline_post');
+        $context = $request->only(['chapter', 'location', 'name', 'cultural_group', 'region', 'language', 'category']);
+
+        if ($type === 'culture_record') {
+            $result = $voiceService->formatOralRecord($rawTranscript, $context);
+        } else {
+            $result = $voiceService->formatTimelineStory($rawTranscript, $context);
+        }
+
+        $result['raw_transcript'] = $rawTranscript;
+        return response()->json($result);
     }
 }

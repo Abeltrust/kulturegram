@@ -196,6 +196,24 @@ class User extends Authenticatable
     | Helper Methods
     |--------------------------------------------------------------------------
     */
+    public function getPreferredLanguage(): string
+    {
+        if (!empty($this->preferences['preferred_language'])) {
+            return (string) $this->preferences['preferred_language'];
+        }
+
+        if (!empty($this->languages) && is_array($this->languages) && !empty($this->languages[0])) {
+            return (string) $this->languages[0];
+        }
+
+        $firstSpoken = $this->spokenLanguages()->first();
+        if ($firstSpoken && !empty($firstSpoken->name)) {
+            return (string) $firstSpoken->name;
+        }
+
+        return 'English';
+    }
+
     public function hasTapped($model)
     {
         return $this->interactions()

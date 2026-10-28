@@ -170,10 +170,71 @@
                                 @endif
                             </div>
 
-                            <!-- Body -->
+                            <!-- Body & Cultural Translation -->
                             <div class="mb-4">
-                                <div class="text-stone-700 dark:text-stone-300 leading-relaxed text-sm sm:text-base">
-                                    {!! $post->formatted_content !!}
+                                <div id="post-content-container-{{ $post->id }}">
+                                    <div id="post-original-content-{{ $post->id }}" class="text-stone-700 dark:text-stone-300 leading-relaxed text-sm sm:text-base">
+                                        {!! $post->formatted_content !!}
+                                    </div>
+                                    <div id="post-translated-content-{{ $post->id }}" class="hidden text-stone-800 dark:text-stone-100 leading-relaxed text-sm sm:text-base bg-amber-500/5 dark:bg-amber-950/20 p-3 rounded-2xl border border-amber-500/20 mt-1">
+                                        <!-- Injected translated content -->
+                                    </div>
+                                </div>
+
+                                <!-- AI Post Translation Bar -->
+                                @php
+                                    $viewerLanguage = auth()->check() ? auth()->user()->getPreferredLanguage() : 'English';
+                                    $postLanguage = $post->language ?: 'English';
+                                    $isDifferentLanguage = strtolower(trim($postLanguage)) !== strtolower(trim($viewerLanguage));
+                                @endphp
+                                <div class="mt-2.5 flex items-center justify-between flex-wrap gap-2 text-xs">
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" 
+                                            onclick="togglePostTranslation({{ $post->id }}, '{{ $viewerLanguage }}')" 
+                                            id="btn-translate-{{ $post->id }}"
+                                            class="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition hover:underline py-0.5"
+                                            title="Translate story with KultureAI">
+                                            <i data-lucide="globe" class="w-3.5 h-3.5 text-amber-500"></i>
+                                            <span id="btn-translate-text-{{ $post->id }}">{{ $isDifferentLanguage ? 'See Translation (to ' . $viewerLanguage . ')' : 'See Translation' }}</span>
+                                        </button>
+                                        <span id="translation-loader-{{ $post->id }}" class="hidden text-[11px] text-amber-500 items-center gap-1">
+                                            <i data-lucide="loader" class="w-3 h-3 animate-spin"></i>
+                                            <span>Translating...</span>
+                                        </span>
+                                        @if($post->language)
+                                            <span class="text-[10px] text-stone-400 dark:text-stone-500 flex items-center gap-1">
+                                                <span>•</span>
+                                                <span class="px-1.5 py-0.2 rounded bg-stone-100 dark:bg-stone-800 font-medium">{{ $post->language }}</span>
+                                            </span>
+                                        @endif
+                                        @if($post->is_ai_formatted)
+                                            <span class="text-[10px] text-amber-600/80 dark:text-amber-400/80 font-medium flex items-center gap-0.5" title="Story recorded via Oral Voice Dictation & AI Arranged">
+                                                <i data-lucide="sparkles" class="w-2.5 h-2.5"></i>
+                                                <span>Oral Story</span>
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    <!-- Language Picker Dropdown -->
+                                    <div class="relative" x-data="{ openLang: false }">
+                                        <button type="button" @click="openLang = !openLang" class="text-[11px] text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition flex items-center gap-1">
+                                            <span>Translate to...</span>
+                                            <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                                        </button>
+                                        <div x-show="openLang" @click.away="openLang = false" x-cloak class="absolute right-0 bottom-full mb-1 z-30 w-40 bg-white dark:bg-stone-900 rounded-2xl shadow-xl border border-stone-200 dark:border-stone-800 py-1.5 text-xs max-h-52 overflow-y-auto">
+                                            <div class="px-3 py-1 text-[10px] font-bold text-stone-400 uppercase tracking-wider">Choose Language</div>
+                                            @foreach(['English', 'Hausa', 'Yoruba', 'Igbo', 'Swahili', 'French', 'Spanish', 'Nigerian Pidgin', 'Arabic', 'Zulu', 'Amharic'] as $langOpt)
+                                                <button type="button" 
+                                                    @click="openLang = false; togglePostTranslation({{ $post->id }}, '{{ $langOpt }}')"
+                                                    class="w-full text-left px-3 py-1.5 hover:bg-amber-500/10 hover:text-amber-600 text-stone-700 dark:text-stone-300 font-medium transition flex items-center justify-between">
+                                                    <span>{{ $langOpt }}</span>
+                                                    @if(strtolower($viewerLanguage) === strtolower($langOpt))
+                                                        <i data-lucide="check" class="w-3 h-3 text-amber-500"></i>
+                                                    @endif
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    </div>
                                 </div>
 
                                 @if($post->chapter === 'Cultural Class' || (!empty($post->tags) && in_array('cultural-class', (array)$post->tags)))
@@ -836,6 +897,130 @@
                 }
             })
             .catch(err => console.error('Error replying to resonance:', err));
+        }
+
+        // Post Translation Handlers
+        const postTranslationsCache = {};
+
+        function togglePostTranslation(postId, targetLanguage = 'English') {
+            const originalContainer = document.getElementById(`post-original-content-${postId}`);
+            const translatedContainer = document.getElementById(`post-translated-content-${postId}`);
+            const translateBtnText = document.getElementById(`btn-translate-text-${postId}`);
+            const loader = document.getElementById(`translation-loader-${postId}`);
+
+            if (!originalContainer || !translatedContainer) return;
+
+            // If translated container is currently visible and user clicked the same language/toggle button, toggle back to original
+            const isCurrentlyTranslated = !translatedContainer.classList.contains('hidden');
+            const currentLang = translatedContainer.getAttribute('data-current-lang');
+
+            if (isCurrentlyTranslated && currentLang === targetLanguage) {
+                showOriginalPostContent(postId);
+                return;
+            }
+
+            // Check client-side cache
+            if (postTranslationsCache[postId] && postTranslationsCache[postId][targetLanguage]) {
+                renderPostTranslation(postId, postTranslationsCache[postId][targetLanguage], targetLanguage);
+                return;
+            }
+
+            // Show loading indicator
+            if (loader) {
+                loader.classList.remove('hidden');
+                loader.classList.add('inline-flex');
+            }
+
+            fetch(`/timeline/${postId}/translate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ target_language: targetLanguage })
+            })
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                return res.json();
+            })
+            .then(data => {
+                if (!postTranslationsCache[postId]) {
+                    postTranslationsCache[postId] = {};
+                }
+                postTranslationsCache[postId][targetLanguage] = data;
+                renderPostTranslation(postId, data, targetLanguage);
+            })
+            .catch(err => {
+                console.error('Translation error:', err);
+                alert('Could not translate story. Please try again.');
+            })
+            .finally(() => {
+                if (loader) {
+                    loader.classList.add('hidden');
+                    loader.classList.remove('inline-flex');
+                }
+            });
+        }
+
+        function renderPostTranslation(postId, data, targetLanguage) {
+            const originalContainer = document.getElementById(`post-original-content-${postId}`);
+            const translatedContainer = document.getElementById(`post-translated-content-${postId}`);
+            const translateBtnText = document.getElementById(`btn-translate-text-${postId}`);
+
+            if (!originalContainer || !translatedContainer) return;
+
+            const contentHtml = data.formatted_translated_content || data.translated_text || '';
+            const detectedSource = data.source_language ? `from ${data.source_language} ` : '';
+
+            translatedContainer.innerHTML = `
+                <div class="flex items-center justify-between pb-2 mb-2 border-b border-amber-500/20 text-xs">
+                    <div class="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-bold">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                        <span>Translated ${detectedSource}to <strong>${targetLanguage}</strong></span>
+                    </div>
+                    <button type="button" 
+                        onclick="showOriginalPostContent(${postId})" 
+                        class="text-[11px] text-amber-700 dark:text-amber-300 hover:underline font-semibold flex items-center gap-1">
+                        <i data-lucide="undo-2" class="w-3 h-3"></i>
+                        <span>Show original</span>
+                    </button>
+                </div>
+                <div class="leading-relaxed text-stone-800 dark:text-stone-100">
+                    ${contentHtml}
+                </div>
+            `;
+
+            translatedContainer.setAttribute('data-current-lang', targetLanguage);
+            originalContainer.classList.add('hidden');
+            translatedContainer.classList.remove('hidden');
+
+            if (translateBtnText) {
+                translateBtnText.innerText = 'Show Original';
+            }
+
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        function showOriginalPostContent(postId) {
+            const originalContainer = document.getElementById(`post-original-content-${postId}`);
+            const translatedContainer = document.getElementById(`post-translated-content-${postId}`);
+            const translateBtnText = document.getElementById(`btn-translate-text-${postId}`);
+
+            if (!originalContainer || !translatedContainer) return;
+
+            translatedContainer.classList.add('hidden');
+            originalContainer.classList.remove('hidden');
+
+            if (translateBtnText) {
+                translateBtnText.innerText = 'See Translation';
+            }
+
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
         }
 
     </script>

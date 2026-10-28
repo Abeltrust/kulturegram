@@ -12,6 +12,9 @@ class Post extends Model
     protected $fillable = [
         'user_id',
         'content',
+        'language',
+        'oral_transcript',
+        'is_ai_formatted',
         'image',
         'video',
         'audio',
@@ -26,6 +29,7 @@ class Post extends Model
     protected $casts = [
         'tags' => 'array',
         'is_featured' => 'boolean',
+        'is_ai_formatted' => 'boolean',
     ];
 
     // Relationships

@@ -733,27 +733,125 @@
                 </div>
             </div>
 
-            <!-- Content -->
+            <!-- Content Header with Voice Dictate & AI Assistant -->
+            <div class="flex items-center justify-between flex-wrap gap-2 mb-1">
+                <label class="text-xs md:text-sm font-semibold text-stone-700 dark:text-stone-300">
+                    Story Narrative
+                </label>
+                <div class="flex items-center gap-2">
+                    <button type="button" 
+                            onclick="togglePostVoiceDictation()" 
+                            id="postVoiceMicBtn"
+                            class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 transition active:scale-95 shadow-sm">
+                        <i data-lucide="mic" class="w-3.5 h-3.5 text-amber-500" id="postVoiceMicIcon"></i>
+                        <span id="postVoiceMicText">🎙️ Speak Story</span>
+                    </button>
+                    <button type="button" 
+                            onclick="formatPostVoiceStory()" 
+                            id="postVoiceFormatBtn"
+                            class="inline-flex items-center gap-1.5 text-xs font-bold text-white px-3 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 transition active:scale-95 shadow-sm">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                        <span id="postVoiceFormatText">✨ AI Format</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Voice Recording Active Visualizer Box -->
+            <div id="postVoiceVisualizer" class="hidden p-3.5 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/5 dark:bg-stone-800/90 rounded-2xl border-2 border-amber-400/50 space-y-2.5 shadow-md">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="relative flex h-3 w-3">
+                            <span id="postVoicePing" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                        </span>
+                        <span id="postVoiceStatusTitle" class="text-xs font-extrabold text-stone-900 dark:text-stone-100">
+                            Listening... Speak your story freely
+                        </span>
+                    </div>
+                    <button type="button" onclick="closePostVoiceVisualizer()" class="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <!-- Animated Equalizer Bars -->
+                <div id="postVoiceWaveform" class="flex items-center gap-1.5 h-5 py-1">
+                    <span class="w-1.5 bg-amber-500 rounded-full animate-bounce h-3"></span>
+                    <span class="w-1.5 bg-amber-500 rounded-full animate-bounce h-5" style="animation-delay: 0.1s"></span>
+                    <span class="w-1.5 bg-amber-500 rounded-full animate-bounce h-2" style="animation-delay: 0.2s"></span>
+                    <span class="w-1.5 bg-amber-500 rounded-full animate-bounce h-4" style="animation-delay: 0.3s"></span>
+                    <span class="w-1.5 bg-amber-500 rounded-full animate-bounce h-3" style="animation-delay: 0.15s"></span>
+                    <span class="text-[11px] text-stone-500 dark:text-stone-400 ml-2 italic">Speak in any language or dialect. AI will arrange and format your thoughts.</span>
+                </div>
+
+                <!-- Real-time transcript preview -->
+                <div id="postVoiceTranscriptPreview" class="text-xs text-stone-800 dark:text-stone-200 p-2.5 bg-white/90 dark:bg-stone-900/90 rounded-xl border border-amber-300/60 dark:border-amber-800 min-h-[48px] max-h-32 overflow-y-auto leading-relaxed">
+                    <span class="text-stone-400 italic">Listening to your voice... Speak your thoughts, memories, or cultural reflections.</span>
+                </div>
+
+                <div class="flex items-center justify-between flex-wrap gap-2 pt-0.5">
+                    <div class="flex items-center gap-2">
+                        <button type="button" 
+                                onclick="togglePostVoiceRecordingState()"
+                                id="postVoiceRecordToggleBtn"
+                                class="px-3 py-1 rounded-xl font-bold text-xs bg-red-500 hover:bg-red-600 text-white flex items-center gap-1.5 shadow-sm transition active:scale-95">
+                            <i data-lucide="square" class="w-3 h-3"></i>
+                            <span>Stop Speaking</span>
+                        </button>
+                        <button type="button" onclick="clearPostVoiceTranscript()" class="px-2 py-1 text-stone-500 hover:text-stone-700 text-xs font-semibold">
+                            Clear
+                        </button>
+                    </div>
+                    <button type="button" 
+                            onclick="formatPostVoiceStory()"
+                            class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs shadow-md flex items-center gap-1.5 transition active:scale-95">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                        <span>✨ Arrange & Format for Post</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content Textarea -->
             <textarea 
+                id="postContentTextarea"
                 name="content" 
                 required 
-                placeholder="What's happening in your story today? Share your cultural insights, daily experiences, or heritage discoveries... (Tip: use @username to tag people and #hashtag to categorize!)" 
+                placeholder="What's happening in your story today? Share your cultural insights, daily experiences, or heritage discoveries... Or click '🎙️ Speak Story' above to dictate naturally! (Tip: use @username to tag people and #hashtag to categorize)" 
                 class="w-full h-24 md:h-32 resize-none border-2 border-stone-200 dark:border-stone-700 bg-transparent text-stone-800 dark:text-stone-100 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:focus:border-amber-500 hover:border-amber-500 dark:hover:border-stone-600 placeholder-stone-400 dark:placeholder-stone-500 leading-relaxed p-2 md:p-3 transition-all text-sm md:text-base"></textarea>
 
-            <!-- Life Chapter -->
-            <div>
-                <label class="block text-xs md:text-sm font-medium text-stone-700 dark:text-stone-300 mb-1 md:mb-2">Life Chapter</label>
-                <select 
-                    name="chapter" 
-                    class="w-full border-2 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 rounded-lg px-2 md:px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 hover:border-amber-500 dark:hover:border-stone-600 transition-all text-sm md:text-base">
-                    <option value="">Select a chapter...</option>
-                    <option value="Cultural Tech Innovation">Cultural Tech Innovation</option>
-                    <option value="Software Architecture Mastery">Software Architecture Mastery</option>
-                    <option value="University & Cultural Awakening">University & Cultural Awakening</option>
-                    <option value="Roots & Foundation">Roots & Foundation</option>
-                    <option value="Community Building">Community Building</option>
-                    <option value="Heritage Preservation">Heritage Preservation</option>
-                </select>
+            <input type="hidden" name="oral_transcript" id="modalPostOralTranscript">
+            <input type="hidden" name="is_ai_formatted" id="modalPostIsAiFormatted" value="0">
+
+            <!-- Life Chapter & Story Language -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs md:text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Life Chapter</label>
+                    <select 
+                        name="chapter" 
+                        class="w-full border-2 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 rounded-lg px-2 md:px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 hover:border-amber-500 dark:hover:border-stone-600 transition-all text-sm md:text-base">
+                        <option value="">Select a chapter...</option>
+                        <option value="Cultural Tech Innovation">Cultural Tech Innovation</option>
+                        <option value="Software Architecture Mastery">Software Architecture Mastery</option>
+                        <option value="University & Cultural Awakening">University & Cultural Awakening</option>
+                        <option value="Roots & Foundation">Roots & Foundation</option>
+                        <option value="Community Building">Community Building</option>
+                        <option value="Heritage Preservation">Heritage Preservation</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs md:text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Story Language</label>
+                    @php
+                        $userPrefLang = auth()->user()->getPreferredLanguage();
+                        $commonLanguages = ['English', 'Hausa', 'Yoruba', 'Igbo', 'Swahili', 'Nigerian Pidgin', 'French', 'Spanish', 'Arabic', 'Zulu', 'Amharic', 'Fulani', 'Twi', 'Edo'];
+                    @endphp
+                    <select 
+                        name="language" 
+                        class="w-full border-2 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 rounded-lg px-2 md:px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 hover:border-amber-500 dark:hover:border-stone-600 transition-all text-sm md:text-base">
+                        @foreach($commonLanguages as $lang)
+                            <option value="{{ $lang }}" {{ strtolower($userPrefLang) === strtolower($lang) ? 'selected' : '' }}>{{ $lang }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
 
             <!-- Location -->
@@ -901,10 +999,216 @@
         function closeCreatePostModal() {
             document.getElementById('createPostModal').classList.add('hidden');
             document.getElementById('createPostModal').classList.remove('flex');
+            stopPostVoiceDictation();
         }
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closeCreatePostModal();
         });
+
+        // ─── Post Modal Voice Dictation & AI Formatter ─────────────────────────────
+        let postSpeechRecognition = null;
+        let isPostSpeaking = false;
+        let postVoiceTranscript = '';
+
+        function togglePostVoiceDictation() {
+            const visualizer = document.getElementById('postVoiceVisualizer');
+            if (!visualizer) return;
+            const isHidden = visualizer.classList.contains('hidden');
+            if (isHidden) {
+                visualizer.classList.remove('hidden');
+                startPostVoiceDictation();
+            } else {
+                stopPostVoiceDictation();
+                visualizer.classList.add('hidden');
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function closePostVoiceVisualizer() {
+            stopPostVoiceDictation();
+            const visualizer = document.getElementById('postVoiceVisualizer');
+            if (visualizer) visualizer.classList.add('hidden');
+        }
+
+        function togglePostVoiceRecordingState() {
+            if (isPostSpeaking) {
+                stopPostVoiceDictation();
+            } else {
+                startPostVoiceDictation();
+            }
+        }
+
+        function clearPostVoiceTranscript() {
+            postVoiceTranscript = '';
+            const preview = document.getElementById('postVoiceTranscriptPreview');
+            if (preview) {
+                preview.innerHTML = '<span class="text-stone-400 italic">Listening to your voice... Speak your thoughts, memories, or cultural reflections.</span>';
+            }
+            const textarea = document.getElementById('postContentTextarea');
+            if (textarea && textarea.value === postVoiceTranscript) {
+                textarea.value = '';
+            }
+        }
+
+        function startPostVoiceDictation() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert('Speech recognition is not supported in this browser. You can type directly or paste text.');
+                return;
+            }
+
+            try {
+                if (postSpeechRecognition) {
+                    try { postSpeechRecognition.stop(); } catch(e) {}
+                }
+
+                postSpeechRecognition = new SpeechRecognition();
+                postSpeechRecognition.continuous = true;
+                postSpeechRecognition.interimResults = true;
+
+                const langSelect = document.querySelector('select[name="language"]');
+                postSpeechRecognition.lang = langSelect && langSelect.value ? langSelect.value.toLowerCase() : 'en-US';
+
+                const toggleBtn = document.getElementById('postVoiceRecordToggleBtn');
+                const micText = document.getElementById('postVoiceMicText');
+                const statusTitle = document.getElementById('postVoiceStatusTitle');
+                const waveform = document.getElementById('postVoiceWaveform');
+                const ping = document.getElementById('postVoicePing');
+                const preview = document.getElementById('postVoiceTranscriptPreview');
+                const textarea = document.getElementById('postContentTextarea');
+
+                postSpeechRecognition.onstart = () => {
+                    isPostSpeaking = true;
+                    if (toggleBtn) toggleBtn.innerHTML = '<i data-lucide="square" class="w-3 h-3"></i><span>Stop Speaking</span>';
+                    if (statusTitle) statusTitle.textContent = 'Listening... Speak your story freely';
+                    if (waveform) waveform.classList.remove('hidden');
+                    if (ping) ping.classList.remove('hidden');
+                    if (micText) micText.textContent = 'Listening...';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                };
+
+                postSpeechRecognition.onresult = (event) => {
+                    let finalTranscript = '';
+                    let interim = '';
+                    for (let i = 0; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) {
+                            finalTranscript += event.results[i][0].transcript + ' ';
+                        } else {
+                            interim += event.results[i][0].transcript;
+                        }
+                    }
+                    postVoiceTranscript = (finalTranscript + interim).trim();
+                    if (preview && postVoiceTranscript) {
+                        preview.textContent = postVoiceTranscript;
+                    }
+                    if (textarea && !textarea.value.trim()) {
+                        textarea.value = postVoiceTranscript;
+                    }
+                };
+
+                postSpeechRecognition.onerror = (event) => {
+                    console.warn('Post speech recognition error:', event.error);
+                    if (event.error === 'not-allowed') {
+                        alert('Microphone permission was denied. Please allow microphone access in your browser.');
+                    }
+                    stopPostVoiceDictation();
+                };
+
+                postSpeechRecognition.onend = () => {
+                    isPostSpeaking = false;
+                    if (toggleBtn) toggleBtn.innerHTML = '<i data-lucide="mic" class="w-3 h-3"></i><span>Start Speaking</span>';
+                    if (statusTitle) statusTitle.textContent = 'Dictation Paused';
+                    if (waveform) waveform.classList.add('hidden');
+                    if (ping) ping.classList.add('hidden');
+                    if (micText) micText.textContent = '🎙️ Speak Story';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                };
+
+                postSpeechRecognition.start();
+                isPostSpeaking = true;
+            } catch(e) {
+                console.error('Speech recognition exception:', e);
+                isPostSpeaking = false;
+            }
+        }
+
+        function stopPostVoiceDictation() {
+            if (postSpeechRecognition) {
+                try { postSpeechRecognition.stop(); } catch(e) {}
+            }
+            isPostSpeaking = false;
+            const toggleBtn = document.getElementById('postVoiceRecordToggleBtn');
+            const statusTitle = document.getElementById('postVoiceStatusTitle');
+            const waveform = document.getElementById('postVoiceWaveform');
+            const ping = document.getElementById('postVoicePing');
+            const micText = document.getElementById('postVoiceMicText');
+            if (toggleBtn) toggleBtn.innerHTML = '<i data-lucide="mic" class="w-3 h-3"></i><span>Start Speaking</span>';
+            if (statusTitle) statusTitle.textContent = 'Dictation Paused';
+            if (waveform) waveform.classList.add('hidden');
+            if (ping) ping.classList.add('hidden');
+            if (micText) micText.textContent = '🎙️ Speak Story';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        async function formatPostVoiceStory() {
+            const textarea = document.getElementById('postContentTextarea');
+            const textToFormat = (postVoiceTranscript || (textarea ? textarea.value : '')).trim();
+            if (!textToFormat) {
+                alert('Please speak or type some thoughts first before asking AI to arrange and format it.');
+                return;
+            }
+
+            stopPostVoiceDictation();
+            const formatText = document.getElementById('postVoiceFormatText');
+            const origFormatHtml = formatText ? formatText.textContent : '✨ AI Format';
+            if (formatText) formatText.textContent = 'Formatting...';
+
+            try {
+                const chapterSelect = document.querySelector('select[name="chapter"]');
+                const locationInput = document.querySelector('input[name="location"]');
+                const langSelect = document.querySelector('select[name="language"]');
+
+                const res = await fetch('/timeline/ai-voice-format', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        raw_transcript: textToFormat,
+                        type: 'timeline_post',
+                        chapter: chapterSelect ? chapterSelect.value : '',
+                        location: locationInput ? locationInput.value : '',
+                        language: langSelect ? langSelect.value : ''
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success && data.data) {
+                    const formatted = data.data.formatted_content;
+                    if (textarea && formatted) {
+                        textarea.value = formatted;
+                    }
+                    if (chapterSelect && data.data.chapter && !chapterSelect.value) {
+                        chapterSelect.value = data.data.chapter;
+                    }
+                    const oralInput = document.getElementById('modalPostOralTranscript');
+                    if (oralInput) oralInput.value = textToFormat;
+                    const aiFlagInput = document.getElementById('modalPostIsAiFormatted');
+                    if (aiFlagInput) aiFlagInput.value = '1';
+
+                    const visualizer = document.getElementById('postVoiceVisualizer');
+                    if (visualizer) visualizer.classList.add('hidden');
+                } else {
+                    alert(data.error || 'Unable to format with AI. Your raw spoken story has been saved in the box.');
+                }
+            } catch(e) {
+                console.error('Format story error:', e);
+                alert('Failed to connect to AI formatter. Original text preserved.');
+            } finally {
+                if (formatText) formatText.textContent = origFormatHtml;
+            }
+        }
     </script>
     
     <script>
