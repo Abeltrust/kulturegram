@@ -154,6 +154,11 @@ class CulturalClassesAndBilingualSubtitlesTest extends TestCase
 
     public function test_instructor_can_publish_cultural_class_with_subtitles_and_timeline_share()
     {
+        $createPage = $this->actingAs($this->instructor)->get(route('education.classes.create'));
+        $createPage->assertStatus(200);
+        $createPage->assertSee('Go Live Instantly');
+        $createPage->assertSee('Schedule Live Class');
+
         $response = $this->actingAs($this->instructor)->post(route('education.classes.store'), [
             'title' => 'Swahili Coastal Greetings & Etiquette',
             'cultural_focus' => 'Swahili Coast Respect',

@@ -165,4 +165,48 @@ class CulturalClass extends Model
         }
         return '$' . number_format($this->price, 2);
     }
+
+    public static function extractYoutubeId(?string $url): ?string
+    {
+        if (!$url) {
+            return null;
+        }
+
+        if (preg_match('/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i', trim($url), $matches)) {
+            return $matches[1];
+        }
+
+        return null;
+    }
+
+    public function youtubeVideoId(): ?string
+    {
+        return static::extractYoutubeId($this->video_url);
+    }
+
+    public function youtubeEmbedUrl(): ?string
+    {
+        $id = $this->youtubeVideoId();
+        return $id ? "https://www.youtube.com/embed/{$id}?rel=0&modestbranding=1&enablejsapi=1" : null;
+    }
+
+    public function resolvedThumbnailUrl(): ?string
+    {
+        if ($this->thumbnail_url) {
+            return Str::startsWith($this->thumbnail_url, ['http://', 'https://'])
+                ? $this->thumbnail_url
+                : asset('storage/' . ltrim($this->thumbnail_url, '/'));
+        }
+
+        $ytId = $this->youtubeVideoId();
+        if ($ytId) {
+            return "https://img.youtube.com/vi/{$ytId}/hqdefault.jpg";
+        }
+
+        if ($this->virtual_background_url) {
+            return $this->virtual_background_url;
+        }
+
+        return null;
+    }
 }

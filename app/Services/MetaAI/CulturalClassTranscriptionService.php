@@ -158,9 +158,9 @@ PROMPT;
             $userPrompt .= "Video Duration: {$videoDuration}s\n";
         }
         if (!empty($preExtractedSegments)) {
-            $userPrompt .= "Audio Timestamp Segments (JSON):\n" . json_encode($preExtractedSegments) . "\n";
+            $userPrompt .= "Audio Timestamp Segments (JSON):\n" . json_encode(array_slice($preExtractedSegments, 0, 25)) . "\n";
         }
-        $userPrompt .= "Spoken Transcript:\n{$transcript}";
+        $userPrompt .= "Spoken Transcript:\n" . Str::limit($transcript, 4000);
 
         $userContent = $userPrompt;
         if (!empty($videoFrames) && is_array($videoFrames)) {
@@ -214,6 +214,14 @@ PROMPT;
         }
 
         $subtitles = (array) ($decoded['subtitles'] ?? []);
+        if (!empty($preExtractedSegments) && count($preExtractedSegments) > count($subtitles)) {
+            $heuristicAll = $this->generateHeuristicBilingualStructure($transcript, $lang, $focus, $preExtractedSegments, $videoDuration)['subtitles'] ?? [];
+            foreach ($heuristicAll as $idx => $hSeg) {
+                if (!isset($subtitles[$idx])) {
+                    $subtitles[$idx] = $hSeg;
+                }
+            }
+        }
         $vocabulary = (array) ($decoded['vocabulary'] ?? []);
         $summary = (string) ($decoded['summary'] ?? "An engaging cultural lesson exploring {$lang} expressions and heritage.");
         $keyTakeaways = (array) ($decoded['key_takeaways'] ?? []);
@@ -522,5 +530,212 @@ PY;
         $millis = floor(($seconds - floor($seconds)) * 1000);
 
         return sprintf('%02d:%02d:%02d.%03d', $hours, $minutes, $secs, $millis);
+    }
+
+    /**
+     * Extract timed captions and video metadata directly from a YouTube URL or 11-char video ID.
+     */
+    public function extractYoutubeTranscript(string $youtubeUrlOrId, ?string $preferredLanguage = null): ?array
+    {
+        $videoId = \App\Models\CulturalClass::extractYoutubeId($youtubeUrlOrId) ?: trim($youtubeUrlOrId);
+        if (!preg_match('/^[a-zA-Z0-9_-]{11}$/', $videoId)) {
+            return null;
+        }
+
+        try {
+            $httpClient = new \GuzzleHttp\Client([
+                'http_errors' => false,
+                'cookies' => true,
+                'timeout' => 12,
+                'connect_timeout' => 6,
+            ]);
+
+            $watchHtml = (string) $httpClient->get("https://www.youtube.com/watch?v={$videoId}", [
+                'headers' => [
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                    'Accept-Language' => 'en-US,en;q=0.9',
+                ],
+            ])->getBody();
+
+            preg_match('/"INNERTUBE_API_KEY":"([^"]+)"/', $watchHtml, $keyMatch);
+            preg_match('/"visitorData":"([^"]+)"/', $watchHtml, $visMatch);
+            $apiKey = $keyMatch[1] ?? '';
+            $visitorData = $visMatch[1] ?? '';
+
+            $videoTitle = '';
+            $videoDescription = '';
+            $durationSeconds = 0;
+            $captionTracks = [];
+
+            // Try IOS and ANDROID Innertube player clients (which return signed timedtext URLs without WEB PO-token blocking)
+            $innertubeClients = [
+                ['IOS', '20.10.4', 'com.google.ios.youtube/20.10.4 (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X;)'],
+                ['ANDROID', '20.10.38', 'com.google.android.youtube/20.10.38 (Linux; U; Android 14) gzip'],
+            ];
+
+            $selectedUserAgent = 'com.google.ios.youtube/20.10.4 (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X;)';
+
+            foreach ($innertubeClients as [$clientName, $clientVersion, $ua]) {
+                $endpoint = 'https://www.youtube.com/youtubei/v1/player?prettyPrint=false' . ($apiKey ? "&key={$apiKey}" : '');
+                $res = $httpClient->post($endpoint, [
+                    'headers' => [
+                        'User-Agent' => $ua,
+                        'X-Goog-Visitor-Id' => $visitorData,
+                        'Content-Type' => 'application/json',
+                    ],
+                    'json' => [
+                        'context' => [
+                            'client' => [
+                                'clientName' => $clientName,
+                                'clientVersion' => $clientVersion,
+                                'hl' => 'en',
+                                'gl' => 'US',
+                                'visitorData' => $visitorData,
+                            ],
+                        ],
+                        'videoId' => $videoId,
+                    ],
+                ]);
+
+                if ($res->getStatusCode() === 200) {
+                    $playerJson = json_decode((string) $res->getBody(), true);
+                    if (is_array($playerJson)) {
+                        $details = $playerJson['videoDetails'] ?? [];
+                        if (!empty($details['title'])) {
+                            $videoTitle = (string) $details['title'];
+                        }
+                        if (!empty($details['shortDescription'])) {
+                            $videoDescription = (string) $details['shortDescription'];
+                        }
+                        if (!empty($details['lengthSeconds'])) {
+                            $durationSeconds = (int) $details['lengthSeconds'];
+                        }
+                        $tracks = $playerJson['captions']['playerCaptionsTracklistRenderer']['captionTracks'] ?? [];
+                        if (!empty($tracks)) {
+                            $captionTracks = $tracks;
+                            $selectedUserAgent = $ua;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Fallback to watch page ytInitialPlayerResponse metadata if needed
+            if ((empty($videoTitle) || empty($captionTracks)) && preg_match('/ytInitialPlayerResponse\s*=\s*(\{.+?\});\s*(?:var|<\/script>)/s', $watchHtml, $m)) {
+                $webPlayer = json_decode($m[1], true);
+                if (is_array($webPlayer)) {
+                    $details = $webPlayer['videoDetails'] ?? [];
+                    $videoTitle = $videoTitle ?: (string) ($details['title'] ?? '');
+                    $videoDescription = $videoDescription ?: (string) ($details['shortDescription'] ?? '');
+                    $durationSeconds = $durationSeconds ?: (int) ($details['lengthSeconds'] ?? 0);
+                    if (empty($captionTracks)) {
+                        $captionTracks = $webPlayer['captions']['playerCaptionsTracklistRenderer']['captionTracks'] ?? [];
+                    }
+                }
+            }
+
+            $segments = [];
+            if (!empty($captionTracks)) {
+                $chosenTrack = $captionTracks[0];
+                foreach ($captionTracks as $track) {
+                    $langCode = strtolower((string) ($track['languageCode'] ?? ''));
+                    if ($preferredLanguage && str_starts_with($langCode, strtolower(substr($preferredLanguage, 0, 2)))) {
+                        $chosenTrack = $track;
+                        break;
+                    }
+                    if (str_starts_with($langCode, 'en')) {
+                        $chosenTrack = $track;
+                    }
+                }
+
+                $baseUrl = $chosenTrack['baseUrl'] ?? '';
+                if ($baseUrl) {
+                    $xml = (string) $httpClient->get($baseUrl, [
+                        'headers' => ['User-Agent' => $selectedUserAgent],
+                    ])->getBody();
+
+                    $rawEntries = [];
+                    if (preg_match_all('/<text\s+start="([\d.]+)"(?:\s+dur="([\d.]+)")?[^>]*>(.*?)<\/text>/si', $xml, $matches, PREG_SET_ORDER)) {
+                        foreach ($matches as $match) {
+                            $start = round((float) $match[1], 1);
+                            $dur = isset($match[2]) && $match[2] !== '' ? (float) $match[2] : 3.5;
+                            $text = html_entity_decode(strip_tags($match[3]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                            $text = trim(preg_replace('/\s+/', ' ', $text));
+                            if ($text !== '') {
+                                $rawEntries[] = [
+                                    'start' => $start,
+                                    'end' => round($start + max(1.5, min($dur, 12.0)), 1),
+                                    'text' => $text,
+                                ];
+                            }
+                        }
+                    } elseif (preg_match_all('/<p\s+t="(\d+)"(?:\s+d="(\d+)")?[^>]*>(.*?)<\/p>/si', $xml, $matches, PREG_SET_ORDER)) {
+                        foreach ($matches as $match) {
+                            $start = round(((float) $match[1]) / 1000.0, 1);
+                            $dur = isset($match[2]) && $match[2] !== '' ? (((float) $match[2]) / 1000.0) : 3.5;
+                            $text = html_entity_decode(strip_tags($match[3]), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                            $text = trim(preg_replace('/\s+/', ' ', $text));
+                            if ($text !== '') {
+                                $rawEntries[] = [
+                                    'start' => $start,
+                                    'end' => round($start + max(1.5, min($dur, 12.0)), 1),
+                                    'text' => $text,
+                                ];
+                            }
+                        }
+                    }
+
+                    // Filter out pure [Music]/[Música] markers if there are actual spoken lines
+                    $spokenEntries = array_values(array_filter($rawEntries, function ($item) {
+                        $t = trim($item['text']);
+                        if (preg_match('/^\[[^\]]+\]$/u', $t)) {
+                            return false;
+                        }
+                        return mb_strlen($t) > 1;
+                    }));
+
+                    $segments = !empty($spokenEntries) ? $spokenEntries : $rawEntries;
+                }
+            }
+
+            // If the YouTube video had no caption tracks (or empty captions), build timed segments from the YouTube video's title & description
+            if (empty($segments) && ($videoTitle !== '' || $videoDescription !== '')) {
+                $cleanDesc = preg_replace('/https?:\/\/\S+/i', '', $videoDescription);
+                $lines = array_values(array_filter(array_map('trim', preg_split('/\r?\n+|\.\s+/', $videoTitle . "\n" . $cleanDesc)), fn($l) => mb_strlen($l) >= 4));
+                $cursor = 0.0;
+                $step = $durationSeconds > 0 && count($lines) > 0
+                    ? max(4.0, min(15.0, round($durationSeconds / max(1, count($lines)), 1)))
+                    : 6.0;
+                foreach (array_slice($lines, 0, 30) as $line) {
+                    $segments[] = [
+                        'start' => round($cursor, 1),
+                        'end' => round($cursor + $step, 1),
+                        'text' => $line,
+                    ];
+                    $cursor += $step;
+                }
+            }
+
+            if (empty($segments)) {
+                return null;
+            }
+
+            $fullTranscript = implode(' ', array_map(fn($s) => $s['text'], $segments));
+            if ($durationSeconds <= 0 && !empty($segments)) {
+                $durationSeconds = (int) ceil(end($segments)['end'] ?? 60);
+            }
+
+            return [
+                'video_id' => $videoId,
+                'title' => $videoTitle,
+                'description' => $videoDescription,
+                'duration_seconds' => $durationSeconds,
+                'transcript' => $fullTranscript,
+                'segments' => $segments,
+            ];
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("CulturalClassTranscriptionService::extractYoutubeTranscript failed for {$videoId}: " . $e->getMessage());
+            return null;
+        }
     }
 }

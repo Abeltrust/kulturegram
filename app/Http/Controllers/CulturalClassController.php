@@ -178,6 +178,8 @@ class CulturalClassController extends Controller
             $thumbnailPath = $request->file('thumbnail')->store('cultural_classes/thumbnails', 'public');
         } elseif ($request->filled('virtual_background_url')) {
             $thumbnailPath = $request->virtual_background_url;
+        } elseif ($videoPath && ($ytId = CulturalClass::extractYoutubeId($videoPath))) {
+            $thumbnailPath = "https://img.youtube.com/vi/{$ytId}/hqdefault.jpg";
         }
 
         $videoDuration = $request->filled('video_duration') && (float) $request->video_duration > 0
@@ -185,18 +187,38 @@ class CulturalClassController extends Controller
             : 0;
         $preSegments = $request->filled('segments_json') ? json_decode($request->segments_json, true) : null;
 
-        // Only structure transcript if explicitly provided (e.g. live camera recording speech or text script).
-        // For uploaded videos, transcription happens when viewing the video so dummy data is never generated.
+        // Only structure transcript if explicitly provided (e.g. live camera recording speech, text script, or YouTube captions).
+        // For uploaded local videos, transcription happens when viewing the video so dummy data is never generated.
         $aiData = [];
+        $extractedFromYoutube = false;
+        if (!$request->filled('raw_transcript') && empty($preSegments) && $videoPath && CulturalClass::extractYoutubeId($videoPath)) {
+            $ytExtracted = $this->transcriptionService->extractYoutubeTranscript($videoPath, $targetLang);
+            if ($ytExtracted && !empty($ytExtracted['segments'])) {
+                $preSegments = $ytExtracted['segments'];
+                $extractedFromYoutube = true;
+                if ($videoDuration <= 0 && !empty($ytExtracted['duration_seconds'])) {
+                    $videoDuration = (float) $ytExtracted['duration_seconds'];
+                }
+            }
+        }
+
         if ($request->filled('raw_transcript') || (!empty($preSegments) && is_array($preSegments))) {
             $rawText = $request->raw_transcript ?: implode(' ', array_map(fn($s) => trim((string) ($s['text'] ?? '')), (array) $preSegments));
-            $aiData = $this->transcriptionService->structureBilingualLesson(
-                $rawText,
-                $targetLang,
-                $culturalFocus,
-                is_array($preSegments) ? $preSegments : null,
-                $videoDuration > 0 ? $videoDuration : null
-            );
+            $aiData = $extractedFromYoutube
+                ? $this->transcriptionService->generateHeuristicBilingualStructure(
+                    $rawText,
+                    $targetLang,
+                    $culturalFocus,
+                    is_array($preSegments) ? $preSegments : null,
+                    $videoDuration > 0 ? $videoDuration : null
+                )
+                : $this->transcriptionService->structureBilingualLesson(
+                    $rawText,
+                    $targetLang,
+                    $culturalFocus,
+                    is_array($preSegments) ? $preSegments : null,
+                    $videoDuration > 0 ? $videoDuration : null
+                );
         }
 
         $price = $priceType === 'paid' ? (float) ($request->price ?: 5.00) : 0.00;
@@ -450,6 +472,7 @@ class CulturalClassController extends Controller
             'video_duration' => 'nullable|numeric|min:0',
             'video_frames_json' => 'nullable|string',
             'regenerate_with_ai' => 'nullable|boolean',
+            'fetch_external_transcript' => 'nullable|boolean',
         ]);
 
         $incomingSubtitles = $request->input('subtitles');
@@ -466,6 +489,20 @@ class CulturalClassController extends Controller
             : (float) ($class->duration_seconds ?: 60);
 
         $transcript = trim((string) ($request->transcript ?? $class->transcript ?? ''));
+
+        // If this class uses a YouTube link and we are fetching/initializing subtitles, extract directly from YouTube
+        if ((empty($preSegments) || $request->boolean('fetch_external_transcript')) && $class->youtubeVideoId()) {
+            $ytExtracted = $this->transcriptionService->extractYoutubeTranscript($class->video_url, $class->target_language);
+            if ($ytExtracted && !empty($ytExtracted['segments'])) {
+                $preSegments = $ytExtracted['segments'];
+                $incomingSubtitles = $ytExtracted['segments'];
+                $transcript = $ytExtracted['transcript'] ?: $transcript;
+                if (!empty($ytExtracted['duration_seconds'])) {
+                    $videoDuration = (float) $ytExtracted['duration_seconds'];
+                }
+            }
+        }
+
         if ($transcript === '' && !empty($preSegments) && is_array($preSegments)) {
             $transcript = implode(' ', array_map(fn($s) => trim((string) ($s['text'] ?? '')), $preSegments));
         }

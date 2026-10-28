@@ -309,15 +309,25 @@
                                     </div>
                                 @endif
 
-                                @if($post->image)
+                                @php
+                                    $postYoutubeId = $post->video ? \App\Models\CulturalClass::extractYoutubeId($post->video) : null;
+                                    $postImageSrc = $post->image
+                                        ? (\Illuminate\Support\Str::startsWith($post->image, ['http://', 'https://']) ? $post->image : Storage::url($post->image))
+                                        : null;
+                                    $postVideoSrc = $post->video
+                                        ? (\Illuminate\Support\Str::startsWith($post->video, ['http://', 'https://']) ? $post->video : Storage::url($post->video))
+                                        : null;
+                                @endphp
+
+                                @if($postImageSrc && !$postYoutubeId)
                                     <div class="-mx-4 sm:-mx-6 mt-4 relative overflow-hidden bg-stone-900/5 dark:bg-black/40 border-y border-stone-100 dark:border-stone-800 flex items-center justify-center min-h-[220px] max-h-[720px] group cursor-pointer"
-                                         onclick="openImageLightbox('{{ Storage::url($post->image) }}', 'Story photo by {{ addslashes($post->user->name) }}')">
+                                         onclick="openImageLightbox('{{ $postImageSrc }}', 'Story photo by {{ addslashes($post->user->name) }}')">
                                         {{-- Ambient blurred backdrop for portrait / non-full-width images --}}
                                         <div class="absolute inset-0 bg-cover bg-center filter blur-xl opacity-25 dark:opacity-20 scale-110 pointer-events-none"
-                                             style="background-image: url('{{ Storage::url($post->image) }}');"></div>
+                                             style="background-image: url('{{ $postImageSrc }}');"></div>
                                         
                                         {{-- Main Sharp Image: Keeps true aspect ratio (portrait or landscape) without cropping --}}
-                                        <img src="{{ Storage::url($post->image) }}"
+                                        <img src="{{ $postImageSrc }}"
                                             alt="Story image"
                                             class="relative z-10 w-auto h-auto max-w-full max-h-[680px] object-contain mx-auto transition-transform duration-300 group-hover:scale-[1.01]"
                                             loading="lazy">
@@ -330,9 +340,17 @@
                                     </div>
                                 @endif
 
-                                @if($post->video)
+                                @if($postYoutubeId)
+                                    <div class="-mx-4 sm:-mx-6 mt-4 relative overflow-hidden bg-black border-y border-stone-100 dark:border-stone-800 aspect-video">
+                                        <iframe src="https://www.youtube.com/embed/{{ $postYoutubeId }}?rel=0&modestbranding=1"
+                                                class="w-full h-full"
+                                                frameborder="0"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                allowfullscreen></iframe>
+                                    </div>
+                                @elseif($postVideoSrc)
                                     <div class="-mx-4 sm:-mx-6 mt-4 relative overflow-hidden bg-black border-y border-stone-100 dark:border-stone-800 flex items-center justify-center min-h-[220px]">
-                                        <video src="{{ Storage::url($post->video) }}" controls class="w-auto h-auto max-w-full max-h-[650px] mx-auto"></video>
+                                        <video src="{{ $postVideoSrc }}" controls class="w-auto h-auto max-w-full max-h-[650px] mx-auto"></video>
                                     </div>
                                 @endif
 

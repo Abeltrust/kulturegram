@@ -129,8 +129,8 @@
                     
                     {{-- Thumbnail & Badges --}}
                     <div class="relative h-48 sm:h-52 overflow-hidden bg-stone-950">
-                        @if ($item->thumbnail_url)
-                            <img src="{{ Str::startsWith($item->thumbnail_url, ['http://', 'https://']) ? $item->thumbnail_url : asset('storage/' . $item->thumbnail_url) }}" 
+                        @if ($item->resolvedThumbnailUrl())
+                            <img src="{{ $item->resolvedThumbnailUrl() }}" 
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                                  alt="{{ $item->title }}"
                                  loading="lazy">

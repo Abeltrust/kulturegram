@@ -72,7 +72,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {{-- Option 1: Go Live Instantly --}}
-                <a href="{{ route('education.classes.create', ['mode' => 'live', 'live' => 'now']) }}"
+                <a href="{{ route('live-stream.index', ['mode' => 'now']) }}"
                    class="group p-5 rounded-2xl border-2 border-stone-200 dark:border-stone-800 hover:border-red-500 dark:hover:border-red-500 bg-stone-50/70 dark:bg-stone-950/60 hover:bg-red-500/5 transition-all flex flex-col justify-between gap-3">
                     <div class="space-y-2">
                         <div class="w-11 h-11 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition">
@@ -87,13 +87,13 @@
                         </p>
                     </div>
                     <span class="text-xs font-bold text-red-500 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                        <span>Start Live Broadcast</span>
+                        <span>Go to Live Studio</span>
                         <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
                     </span>
                 </a>
 
                 {{-- Option 2: Schedule a Live Class --}}
-                <a href="{{ route('education.classes.create', ['mode' => 'live', 'live' => 'schedule']) }}"
+                <a href="{{ route('live-stream.index', ['mode' => 'schedule']) }}"
                    class="group p-5 rounded-2xl border-2 border-stone-200 dark:border-stone-800 hover:border-purple-500 dark:hover:border-purple-500 bg-stone-50/70 dark:bg-stone-950/60 hover:bg-purple-500/5 transition-all flex flex-col justify-between gap-3">
                     <div class="space-y-2">
                         <div class="w-11 h-11 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white transition">
@@ -107,13 +107,13 @@
                         </p>
                     </div>
                     <span class="text-xs font-bold text-purple-500 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                        <span>Schedule Live Session</span>
+                        <span>Schedule Live Stream</span>
                         <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
                     </span>
                 </a>
 
                 {{-- Option 3: Upload a Video Class --}}
-                <a href="{{ route('education.classes.create', ['mode' => 'video', 'video' => 'upload']) }}"
+                <a href="{{ route('education.classes.create', ['video' => 'upload']) }}"
                    class="group p-5 rounded-2xl border-2 border-stone-200 dark:border-stone-800 hover:border-amber-500 dark:hover:border-amber-500 bg-stone-50/70 dark:bg-stone-950/60 hover:bg-amber-500/5 transition-all flex flex-col justify-between gap-3">
                     <div class="space-y-2">
                         <div class="w-11 h-11 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition">
@@ -133,7 +133,7 @@
                 </a>
 
                 {{-- Option 4: Record Video Directly --}}
-                <a href="{{ route('education.classes.create', ['mode' => 'video', 'video' => 'record']) }}"
+                <a href="{{ route('education.classes.create', ['video' => 'record']) }}"
                    class="group p-5 rounded-2xl border-2 border-stone-200 dark:border-stone-800 hover:border-emerald-500 dark:hover:border-emerald-500 bg-stone-50/70 dark:bg-stone-950/60 hover:bg-emerald-500/5 transition-all flex flex-col justify-between gap-3">
                     <div class="space-y-2">
                         <div class="w-11 h-11 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition">
@@ -186,8 +186,8 @@
                     <div class="group bg-white dark:bg-stone-900 rounded-3xl overflow-hidden border border-stone-200 dark:border-stone-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full hover:border-amber-500/40">
                         {{-- Thumbnail Container --}}
                         <div class="relative h-48 overflow-hidden bg-stone-950">
-                            @if($cls->thumbnail_url)
-                                <img src="{{ Str::startsWith($cls->thumbnail_url, ['http://', 'https://']) ? $cls->thumbnail_url : asset('storage/' . $cls->thumbnail_url) }}" 
+                            @if($cls->resolvedThumbnailUrl())
+                                <img src="{{ $cls->resolvedThumbnailUrl() }}" 
                                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                                      alt="{{ $cls->title }}"
                                      loading="lazy">

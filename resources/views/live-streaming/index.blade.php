@@ -340,7 +340,7 @@
 
         document.addEventListener('alpine:init', () => {
             Alpine.data('liveStreamAssistant', () => ({
-                mode: 'now',
+                mode: '{{ request('mode') === 'schedule' ? 'schedule' : 'now' }}',
                 streamTitle: '',
                 streamDesc: '',
                 streamCategory: 'Heritage',

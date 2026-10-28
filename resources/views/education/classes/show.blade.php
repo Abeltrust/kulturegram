@@ -7,6 +7,8 @@
     $resolvedVideoSrc = $class->video_url 
         ? (Str::startsWith($class->video_url, ['http://', 'https://']) ? $class->video_url : '/storage/' . ltrim($class->video_url, '/'))
         : null;
+    $youtubeEmbedUrl = $class->youtubeEmbedUrl();
+    $isYoutubeVideo = !empty($youtubeEmbedUrl);
 @endphp
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10"
      x-data="culturalClassPlayer({
@@ -18,6 +20,7 @@
          targetLanguage: @json($class->target_language ?: 'Hausa'),
          transcript: @json($class->transcript ?: ''),
          videoSrc: @json($resolvedVideoSrc),
+         isYoutubeVideo: {{ $isYoutubeVideo ? 'true' : 'false' }},
          isEnrolled: {{ $isEnrolled ? 'true' : 'false' }},
          isFree: {{ $class->isFree() ? 'true' : 'false' }},
          isInstructor: {{ $isInstructor ? 'true' : 'false' }},
@@ -66,12 +69,17 @@
             <div class="relative rounded-3xl overflow-hidden bg-stone-950 border border-stone-800 shadow-2xl aspect-video group">
                 @php
                     $videoSrc = $resolvedVideoSrc;
-                    $posterSrc = $class->thumbnail_url 
-                        ? (Str::startsWith($class->thumbnail_url, ['http://', 'https://']) ? $class->thumbnail_url : asset('storage/' . $class->thumbnail_url))
-                        : ($class->virtual_background_url ?: null);
+                    $posterSrc = $class->resolvedThumbnailUrl();
                 @endphp
 
-                @if ($videoSrc)
+                @if ($youtubeEmbedUrl)
+                    <iframe id="culturalYoutubeIframe"
+                            src="{{ $youtubeEmbedUrl }}"
+                            class="w-full h-full"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen></iframe>
+                @elseif ($videoSrc)
                     <video id="culturalVideo"
                            class="w-full h-full object-contain"
                            controls
@@ -537,8 +545,8 @@
                             <a href="{{ route('education.classes.show', $rel->slug) }}" 
                                class="flex items-center gap-3 p-2 rounded-2xl hover:bg-stone-50 dark:hover:bg-stone-800/50 transition group">
                                 <div class="w-14 h-10 rounded-xl overflow-hidden bg-stone-950 shrink-0">
-                                    @if ($rel->thumbnail_url)
-                                        <img src="{{ Str::startsWith($rel->thumbnail_url, ['http://', 'https://']) ? $rel->thumbnail_url : asset('storage/' . $rel->thumbnail_url) }}" 
+                                    @if ($rel->resolvedThumbnailUrl())
+                                        <img src="{{ $rel->resolvedThumbnailUrl() }}" 
                                              class="w-full h-full object-cover" alt="{{ $rel->title }}">
                                     @else
                                         <div class="w-full h-full flex items-center justify-center text-amber-500">
@@ -578,6 +586,7 @@
             targetLanguage: config.targetLanguage || 'Hausa',
             editableTranscript: config.transcript || '',
             videoSrc: config.videoSrc || null,
+            isYoutubeVideo: Boolean(config.isYoutubeVideo),
             audioWavUrl: config.audioWavUrl || '',
             syncSubtitlesUrl: config.syncSubtitlesUrl || '',
             isEditingSubtitles: false,
@@ -617,9 +626,46 @@
                             }
                         });
                     }
+
+                    const ytIframe = document.getElementById('culturalYoutubeIframe');
+                    if (ytIframe) {
+                        const subscribeToYt = () => {
+                            if (ytIframe.contentWindow) {
+                                try {
+                                    ytIframe.contentWindow.postMessage(JSON.stringify({
+                                        event: 'listening',
+                                        id: 1,
+                                        channel: 'widget'
+                                    }), '*');
+                                } catch (e) {}
+                            }
+                        };
+                        ytIframe.addEventListener('load', subscribeToYt);
+                        setTimeout(subscribeToYt, 800);
+                        setTimeout(subscribeToYt, 2500);
+
+                        window.addEventListener('message', (event) => {
+                            if (!event.data || typeof event.data !== 'string') return;
+                            try {
+                                const msg = JSON.parse(event.data);
+                                if (msg.event === 'infoDelivery' && msg.info) {
+                                    if (typeof msg.info.currentTime === 'number') {
+                                        this.currentTime = msg.info.currentTime;
+                                    }
+                                    if (typeof msg.info.duration === 'number' && msg.info.duration > 0) {
+                                        this.durationSeconds = Math.round(msg.info.duration);
+                                    }
+                                    if (typeof msg.info.playerState === 'number') {
+                                        this.isPlaying = (msg.info.playerState === 1);
+                                    }
+                                }
+                            } catch (e) {}
+                        });
+                    }
+
                     if (typeof lucide !== 'undefined') lucide.createIcons();
 
-                    // Automatically transcribe video when viewing if subtitles have not been generated yet
+                    // Automatically transcribe video or fetch YouTube captions when viewing if subtitles have not been generated yet
                     if (this.videoSrc && (!this.subtitles || this.subtitles.length === 0)) {
                         setTimeout(() => {
                             this.analyzePostedVideoAudio();
@@ -649,6 +695,23 @@
                     video.currentTime = seconds;
                     video.play();
                     this.isPlaying = true;
+                    return;
+                }
+                const ytIframe = document.getElementById('culturalYoutubeIframe');
+                if (ytIframe && ytIframe.contentWindow) {
+                    try {
+                        ytIframe.contentWindow.postMessage(JSON.stringify({
+                            event: 'command',
+                            func: 'seekTo',
+                            args: [seconds, true]
+                        }), '*');
+                        ytIframe.contentWindow.postMessage(JSON.stringify({
+                            event: 'command',
+                            func: 'playVideo',
+                            args: []
+                        }), '*');
+                        this.isPlaying = true;
+                    } catch (e) {}
                 }
             },
 
@@ -782,6 +845,36 @@
                 this.isAnalyzingAudio = true;
 
                 try {
+                    // For YouTube videos, extract timed captions & metadata on the server
+                    if (this.isYoutubeVideo) {
+                        this.analysisStatus = 'Extracting synchronized captions & transcript from YouTube video...';
+                        const res = await fetch(this.syncSubtitlesUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': config.csrfToken,
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                fetch_external_transcript: true,
+                                regenerate_with_ai: false
+                            })
+                        });
+                        const data = await res.json();
+                        if (data && data.success && Array.isArray(data.timed_subtitles) && data.timed_subtitles.length > 0) {
+                            this.subtitles = data.timed_subtitles;
+                            if (Array.isArray(data.vocabulary)) this.vocabulary = data.vocabulary;
+                            if (Array.isArray(data.key_takeaways)) this.keyTakeaways = data.key_takeaways;
+                            if (data.ai_summary) this.aiSummary = data.ai_summary;
+                            if (data.duration_seconds) this.durationSeconds = data.duration_seconds;
+                            if (data.transcript) this.editableTranscript = data.transcript;
+                            this.analysisStatus = `Synchronized ${data.timed_subtitles.length} subtitle lines from YouTube video.`;
+                        } else {
+                            this.analysisStatus = 'Could not extract captions automatically. Use Edit Subtitles to enter your script.';
+                        }
+                        return;
+                    }
+
                     const { samples, duration } = await this.loadAudioSamples16k();
                     if (duration > 0) {
                         this.durationSeconds = duration;
