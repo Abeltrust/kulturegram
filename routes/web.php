@@ -24,6 +24,7 @@ use Inertia\Inertia;
 
 //  Public routes
 Route::get('/', [TimelineController::class, 'index'])->name('timeline.index');
+Route::get('/timeline/{post}', [TimelineController::class, 'show'])->name('timeline.show');
 Route::get('/cultural-hub', [CulturalHubController::class, 'index'])->name('cultural-hub.index');
 Route::get('/discover', [DiscoverController::class, 'index'])->name('discover.index');
 Route::get('/education', [EducationalHubController::class, 'index'])->name('education.index');
@@ -70,6 +71,9 @@ Route::get('/dashboard', function () {
 Route::middleware('auth')->group(function () {
     // Timeline
     Route::post('/timeline', [TimelineController::class, 'store'])->name('timeline.store');
+    Route::get('/timeline/{post}/edit', [TimelineController::class, 'edit'])->name('timeline.edit');
+    Route::put('/timeline/{post}', [TimelineController::class, 'update'])->name('timeline.update');
+    Route::delete('/timeline/{post}', [TimelineController::class, 'destroy'])->name('timeline.destroy');
     Route::post('/timeline/{post}/tap', [TimelineController::class, 'tap'])->name('posts.tap');
     Route::post('/timeline/{post}/checkin', [TimelineController::class, 'checkin'])->name('posts.checkin');
     Route::post('/timeline/{post}/resonance', [TimelineController::class, 'resonance'])->name('timeline.resonance');
@@ -143,6 +147,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/communities/{community}/join', [CommunityController::class, 'join'])->name('communities.join');
     Route::delete('/communities/{community}/leave', [CommunityController::class, 'leave'])->name('communities.leave');
     Route::post('/communities/{community}/posts', [CommunityPostController::class, 'store'])->name('communities.posts.store');
+    Route::get('/communities/{community}/posts/{post}/edit', [CommunityPostController::class, 'edit'])->name('communities.posts.edit');
     Route::put('/communities/{community}/posts/{post}', [CommunityPostController::class, 'update'])->name('communities.posts.update');
     Route::delete('/communities/{community}/posts/{post}', [CommunityPostController::class, 'destroy'])->name('communities.posts.destroy');
     Route::post('/community-posts/{post}/tap', [CommunityPostController::class, 'tap'])->name('community-posts.tap');

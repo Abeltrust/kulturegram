@@ -118,56 +118,97 @@
                         <!-- Post Content -->
                         <div class="w-full">
                             <!-- Header -->
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
-                                <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-sm sm:text-base">
+                            <div class="flex items-start justify-between gap-3 mb-3">
+                                <div class="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
                                     <!-- User Avatar -->
-                                    <div class="flex-shrink-0">
+                                    <a href="{{ route('profile.user', $post->user) }}" class="flex-shrink-0 mt-0.5">
                                         <img src="{{ $post->user->profile_photo_url }}"
-                                            class="w-10 h-10 rounded-full object-cover border border-stone-100 shadow-sm"
+                                            alt="{{ $post->user->name }}"
+                                            class="w-10 h-10 rounded-full object-cover border border-stone-100 dark:border-stone-800 shadow-sm"
                                             loading="lazy">
-                                    </div>
-
-                                    <!-- User Info -->
-                                    <a href="{{ route('profile.user', $post->user) }}"
-                                        class="font-semibold text-stone-800 dark:text-stone-200 hover:text-amber-600">
-                                        {{ $post->user->name }}
                                     </a>
-                                    <span class="text-stone-400 text-xs sm:text-sm">@ {{ $post->user->username }}</span>
 
-                                    @if($post->user->location)
-                                        <span
-                                            class="text-xs bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 px-2 py-0.5 rounded-full">
-                                            {{ $post->user->location }}
-                                        </span>
-                                    @endif
+                                    <!-- User & Post Meta Details -->
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs sm:text-sm">
+                                            <a href="{{ route('profile.user', $post->user) }}"
+                                                class="font-semibold text-stone-800 dark:text-stone-200 hover:text-amber-600 transition truncate max-w-[130px] sm:max-w-none">
+                                                {{ $post->user->name }}
+                                            </a>
+                                            <span class="text-stone-400 text-xs sm:text-sm">@ {{ $post->user->username }}</span>
 
-                                    <!-- Divider Dot -->
-                                    <span class="hidden sm:inline text-stone-300">•</span>
+                                            @if($post->user->location)
+                                                <span
+                                                    class="text-[10px] sm:text-xs bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 px-2 py-0.5 rounded-full">
+                                                    {{ $post->user->location }}
+                                                </span>
+                                            @endif
+                                        </div>
 
-                                    <!-- Meta Info -->
-                                    <span class="flex items-center space-x-1 text-stone-500">
-                                        <i data-lucide="clock" class="w-3 h-3 sm:w-4 sm:h-4"></i>
-                                        <span>{{ $post->time_ago }}</span>
-                                    </span>
+                                        <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-stone-500 dark:text-stone-400 mt-1">
+                                            <!-- Meta Info -->
+                                            <span class="flex items-center space-x-1">
+                                                <i data-lucide="clock" class="w-3 h-3 text-stone-400"></i>
+                                                <span>{{ $post->time_ago }}</span>
+                                            </span>
 
-                                    @if($post->location)
-                                        <span class="flex items-center space-x-1 text-stone-500">
-                                            <i data-lucide="map-pin" class="w-3 h-3 sm:w-4 sm:h-4"></i>
-                                            <span>{{ $post->location }}</span>
-                                        </span>
-                                    @endif
+                                            @if($post->location)
+                                                <span class="text-stone-300 dark:text-stone-700">•</span>
+                                                <span class="flex items-center space-x-1">
+                                                    <i data-lucide="map-pin" class="w-3 h-3 text-stone-400"></i>
+                                                    <span>{{ $post->location }}</span>
+                                                </span>
+                                            @endif
 
-                                    @if($post->chapter)
-                                        <span
-                                            class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium">
-                                            {{ $post->chapter }}
-                                        </span>
-                                    @endif
+                                            @if($post->chapter)
+                                                <span class="text-stone-300 dark:text-stone-700">•</span>
+                                                <span
+                                                    class="bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium border border-amber-200/60 dark:border-amber-900/40">
+                                                    {{ $post->chapter }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
 
-                                @if($post->privacy === 'private')
-                                    <i data-lucide="lock" class="w-4 h-4 text-stone-400 mt-2 sm:mt-0"></i>
-                                @endif
+                                <!-- Right: Fixed Top Side Actions & Privacy -->
+                                <div class="flex items-center gap-1.5 flex-shrink-0 self-start mt-0.5">
+                                    @if($post->privacy === 'private')
+                                        <i data-lucide="lock" class="w-4 h-4 text-stone-400" title="Private story"></i>
+                                    @elseif($post->privacy === 'vault')
+                                        <i data-lucide="shield" class="w-4 h-4 text-amber-500" title="Personal vault"></i>
+                                    @endif
+
+                                    @auth
+                                        @if(auth()->id() === $post->user_id || auth()->user()->is_admin)
+                                            <div class="relative" x-data="{ openMenu: false }">
+                                                <button type="button" 
+                                                    @click="openMenu = !openMenu" 
+                                                    class="p-1.5 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition -mr-1" 
+                                                    title="Post options">
+                                                    <i data-lucide="more-horizontal" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                                                </button>
+                                                <div x-show="openMenu" 
+                                                    @click.away="openMenu = false" 
+                                                    x-cloak 
+                                                    class="absolute right-0 top-full mt-1 z-30 w-36 bg-white dark:bg-stone-900 rounded-2xl shadow-xl border border-stone-200 dark:border-stone-800 py-1.5 text-xs">
+                                                    <button type="button" 
+                                                        @click="openMenu = false; openEditTimelinePostModal({{ $post->id }})" 
+                                                        class="w-full text-left px-3.5 py-1.5 hover:bg-amber-500/10 hover:text-amber-600 text-stone-700 dark:text-stone-300 font-medium transition flex items-center gap-2">
+                                                        <i data-lucide="pencil" class="w-3.5 h-3.5 text-amber-500"></i>
+                                                        <span>Edit Story</span>
+                                                    </button>
+                                                    <button type="button" 
+                                                        @click="openMenu = false; confirmDeleteTimelinePost({{ $post->id }})" 
+                                                        class="w-full text-left px-3.5 py-1.5 hover:bg-red-500/10 hover:text-red-600 text-red-600 dark:text-red-400 font-medium transition flex items-center gap-2">
+                                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                        <span>Delete</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endauth
+                                </div>
                             </div>
 
                             <!-- Body & Cultural Translation -->

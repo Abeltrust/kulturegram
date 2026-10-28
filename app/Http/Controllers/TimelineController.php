@@ -10,6 +10,7 @@ use App\Services\MetaAI\MultilingualCulturalAccessService;
 use App\Services\MetaAI\OralTraditionVoiceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class TimelineController extends Controller
@@ -153,6 +154,196 @@ class TimelineController extends Controller
 
         return redirect()->route('timeline.index')
             ->with('success', 'Story shared successfully!');
+    }
+
+    /**
+     * Display a single timeline post.
+     */
+    public function show(Request $request, Post $post)
+    {
+        // Check privacy access
+        if ($post->privacy === 'private' && (!Auth::check() || ($post->user_id !== Auth::id() && !Auth::user()->is_admin))) {
+            abort(403, 'This story is private.');
+        }
+
+        if ($post->privacy === 'vault' && (!Auth::check() || $post->user_id !== Auth::id())) {
+            abort(403, 'This story is stored in a personal vault.');
+        }
+
+        $post->load([
+            'user',
+            'taps',
+            'resonances.user',
+            'resonances.replies.user',
+            'resonances.interactions',
+            'resonances.replies.interactions',
+            'lockIns',
+            'checkIns'
+        ]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'post' => $post]);
+        }
+
+        return view('timeline.show', compact('post'));
+    }
+
+    /**
+     * Retrieve post details for editing.
+     */
+    public function edit(Request $request, Post $post)
+    {
+        if ($post->user_id !== Auth::id() && !Auth::user()->is_admin) {
+            abort(403, 'You are not authorized to edit this story.');
+        }
+
+        return response()->json([
+            'success' => true,
+            'post' => [
+                'id' => $post->id,
+                'content' => $post->content,
+                'chapter' => $post->chapter,
+                'location' => $post->location,
+                'language' => $post->language,
+                'privacy' => $post->privacy,
+                'tags' => $post->tags,
+                'image_url' => $post->image ? Storage::url($post->image) : null,
+                'video_url' => $post->video ? Storage::url($post->video) : null,
+                'audio_url' => $post->audio ? Storage::url($post->audio) : null,
+            ],
+        ]);
+    }
+
+    /**
+     * Update a timeline post.
+     */
+    public function update(Request $request, Post $post)
+    {
+        if ($post->user_id !== Auth::id() && !Auth::user()->is_admin) {
+            abort(403, 'You are not authorized to edit this story.');
+        }
+
+        $request->validate([
+            'content' => 'required|string|max:2000',
+            'chapter' => 'nullable|string',
+            'location' => 'nullable|string',
+            'language' => 'nullable|string|max:60',
+            'privacy' => 'nullable|in:public,private,vault',
+            'tags' => 'nullable|array',
+            'remove_image' => 'nullable|boolean',
+            'remove_video' => 'nullable|boolean',
+            'remove_audio' => 'nullable|boolean',
+            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
+            'audio' => 'nullable|file|mimes:mp3,wav,ogg,m4a|max:20480',
+        ]);
+
+        $post->content = $request->input('content');
+        if ($request->has('chapter')) $post->chapter = $request->input('chapter');
+        if ($request->has('location')) $post->location = $request->input('location');
+        if ($request->has('language')) $post->language = $request->input('language');
+        if ($request->has('privacy')) $post->privacy = $request->input('privacy');
+
+        // Extract hashtags and merge with existing or manual tags
+        $extractedTags = ContentParserService::extractHashtags($request->input('content'));
+        $manualTags = is_array($request->tags) ? $request->tags : [];
+        $mergedTags = array_values(array_unique(array_merge($manualTags, $extractedTags)));
+        $post->tags = !empty($mergedTags) ? $mergedTags : null;
+
+        // Handle Media Removal
+        if ($request->boolean('remove_image') && $post->image) {
+            Storage::disk('public')->delete($post->image);
+            $post->image = null;
+        }
+        if ($request->boolean('remove_video') && $post->video) {
+            Storage::disk('public')->delete($post->video);
+            $post->video = null;
+        }
+        if ($request->boolean('remove_audio') && $post->audio) {
+            Storage::disk('public')->delete($post->audio);
+            $post->audio = null;
+        }
+
+        // Handle Media Replacement/Upload
+        if ($request->hasFile('image')) {
+            if ($post->image) Storage::disk('public')->delete($post->image);
+            $post->image = $request->file('image')->store('posts', 'public');
+            $post->type = 'image';
+        } elseif ($request->hasFile('video')) {
+            if ($post->video) Storage::disk('public')->delete($post->video);
+            $post->video = $request->file('video')->store('posts/videos', 'public');
+            $post->type = 'video';
+        } elseif ($request->hasFile('audio')) {
+            if ($post->audio) Storage::disk('public')->delete($post->audio);
+            $post->audio = $request->file('audio')->store('posts/audio', 'public');
+            $post->type = 'audio';
+        }
+
+        if (!$post->image && !$post->video && !$post->audio) {
+            $post->type = 'text';
+        }
+
+        $post->save();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Story updated successfully!',
+                'post' => [
+                    'id' => $post->id,
+                    'content' => $post->content,
+                    'formatted_content' => $post->formatted_content,
+                    'chapter' => $post->chapter,
+                    'location' => $post->location,
+                    'language' => $post->language,
+                    'privacy' => $post->privacy,
+                    'tags' => $post->tags,
+                    'image' => $post->image ? Storage::url($post->image) : null,
+                    'video' => $post->video ? Storage::url($post->video) : null,
+                    'audio' => $post->audio ? Storage::url($post->audio) : null,
+                ],
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Story updated successfully!');
+    }
+
+    /**
+     * Delete a timeline post.
+     */
+    public function destroy(Request $request, Post $post)
+    {
+        if ($post->user_id !== Auth::id() && !Auth::user()->is_admin) {
+            abort(403, 'You are not authorized to delete this story.');
+        }
+
+        // Delete media files from storage
+        foreach (['image', 'video', 'audio'] as $media) {
+            if ($post->$media) {
+                Storage::disk('public')->delete($post->$media);
+            }
+        }
+
+        // Decrement user posts count
+        if ($post->user && $post->user->posts_count > 0) {
+            $post->user->decrement('posts_count');
+        }
+
+        // Delete associated resonances and interactions
+        $post->resonances()->delete();
+        $post->interactions()->delete();
+        $postId = $post->id;
+        $post->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Story deleted successfully.',
+                'post_id' => $postId,
+            ]);
+        }
+
+        return redirect()->route('timeline.index')->with('success', 'Story deleted successfully.');
     }
 
     public function tap(Post $post)

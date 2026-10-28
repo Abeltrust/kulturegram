@@ -48,24 +48,88 @@ class CommunityPostController extends Controller
 
 
     /**
-     * Update a community post (only owner).
+     * Retrieve post details for editing.
+     */
+    public function edit(Community $community, CommunityPost $post)
+    {
+        if ($post->user_id !== Auth::id() && !Auth::user()->is_admin && $community->user_id !== Auth::id()) {
+            abort(403, 'You are not allowed to edit this post.');
+        }
+
+        return response()->json([
+            'success' => true,
+            'post' => [
+                'id' => $post->id,
+                'content' => $post->content,
+                'community_id' => $community->id,
+                'image_url' => $post->image ? asset('storage/' . $post->image) : null,
+                'video_url' => $post->video ? asset('storage/' . $post->video) : null,
+                'audio_url' => $post->audio ? asset('storage/' . $post->audio) : null,
+            ]
+        ]);
+    }
+
+    /**
+     * Update a community post (owner, community creator, or admin).
      */
     public function update(Request $request, Community $community, CommunityPost $post)
     {
-        if ($post->user_id !== Auth::id()) {
+        if ($post->user_id !== Auth::id() && !Auth::user()->is_admin && $community->user_id !== Auth::id()) {
             abort(403, 'You are not allowed to update this post.');
         }
 
         $request->validate([
             'content' => 'required|string|max:2000',
+            'remove_image' => 'nullable|boolean',
+            'remove_video' => 'nullable|boolean',
+            'remove_audio' => 'nullable|boolean',
+            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
+            'audio' => 'nullable|file|mimes:mp3,wav,ogg,m4a|max:20480',
         ]);
 
-        $post->update([
-            'content' => $request->input('content'),
-        ]);
+        $post->content = $request->input('content');
+
+        // Handle Media Removal
+        if ($request->boolean('remove_image') && $post->image) {
+            Storage::disk('public')->delete($post->image);
+            $post->image = null;
+        }
+        if ($request->boolean('remove_video') && $post->video) {
+            Storage::disk('public')->delete($post->video);
+            $post->video = null;
+        }
+        if ($request->boolean('remove_audio') && $post->audio) {
+            Storage::disk('public')->delete($post->audio);
+            $post->audio = null;
+        }
+
+        // Handle Media Replacement/Upload
+        if ($request->hasFile('image')) {
+            if ($post->image) Storage::disk('public')->delete($post->image);
+            $post->image = $request->file('image')->store('community_posts', 'public');
+        } elseif ($request->hasFile('video')) {
+            if ($post->video) Storage::disk('public')->delete($post->video);
+            $post->video = $request->file('video')->store('community_posts', 'public');
+        } elseif ($request->hasFile('audio')) {
+            if ($post->audio) Storage::disk('public')->delete($post->audio);
+            $post->audio = $request->file('audio')->store('community_posts', 'public');
+        }
+
+        $post->save();
 
         if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'post' => $post]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Post updated successfully!',
+                'post' => [
+                    'id' => $post->id,
+                    'content' => $post->content,
+                    'image' => $post->image ? asset('storage/' . $post->image) : null,
+                    'video' => $post->video ? asset('storage/' . $post->video) : null,
+                    'audio' => $post->audio ? asset('storage/' . $post->audio) : null,
+                ]
+            ]);
         }
 
         return redirect()
@@ -74,11 +138,11 @@ class CommunityPostController extends Controller
     }
 
     /**
-     * Delete a community post (only owner or admin).
+     * Delete a community post (owner, community creator, or admin).
      */
-    public function destroy(Community $community, CommunityPost $post)
+    public function destroy(Request $request, Community $community, CommunityPost $post)
     {
-        if ($post->user_id !== Auth::id()) {
+        if ($post->user_id !== Auth::id() && !Auth::user()->is_admin && $community->user_id !== Auth::id()) {
             abort(403, 'You are not allowed to delete this post.');
         }
 
@@ -89,7 +153,16 @@ class CommunityPostController extends Controller
             }
         }
 
+        $postId = $post->id;
         $post->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Post deleted successfully.',
+                'post_id' => $postId,
+            ]);
+        }
 
         return redirect()
             ->route('communities.show', $community->id)

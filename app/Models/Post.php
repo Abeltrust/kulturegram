@@ -20,6 +20,7 @@ class Post extends Model
         'audio',
         'location',
         'chapter',
+        'community_id',
         'privacy',
         'type',
         'tags',
@@ -36,6 +37,11 @@ class Post extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function community()
+    {
+        return $this->belongsTo(Community::class);
     }
 
     public function interactions()

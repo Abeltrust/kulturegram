@@ -1278,6 +1278,7 @@
         // ────────────────────────────────────────────────────────────────────────
     </script>
 
+    @include('partials.edit-post-modal')
     @include('partials.welcome-flyer')
 
     @stack('scripts')

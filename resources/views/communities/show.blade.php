@@ -68,16 +68,50 @@
                     <div class="bg-white dark:bg-stone-900 rounded-2xl shadow-md border border-stone-100 dark:border-stone-800 p-5 post-card"
                         id="post-{{ $post->id }}">
 
-                        {{-- User Info --}}
-                        <div class="flex items-center gap-3 mb-3">
-                            <img src="{{ $post->user->profile_photo_url }}" alt="{{ $post->user->name }}"
-                                class="w-12 h-12 rounded-full object-cover"
-                                loading="lazy">
-                            <div>
-                                <p class="font-semibold text-sm sm:text-base text-stone-800 dark:text-stone-100">
-                                    {{ $post->user->name }}</p>
-                                <p class="text-xs sm:text-sm text-stone-500 dark:text-stone-400">
-                                    {{ $post->created_at->diffForHumans() }}</p>
+                        {{-- User Info & Actions --}}
+                        <div class="flex items-start justify-between gap-3 mb-3">
+                            <div class="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
+                                <img src="{{ $post->user->profile_photo_url }}" alt="{{ $post->user->name }}"
+                                    class="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover flex-shrink-0 mt-0.5"
+                                    loading="lazy">
+                                <div class="min-w-0 flex-1">
+                                    <p class="font-semibold text-sm sm:text-base text-stone-800 dark:text-stone-100 truncate">
+                                        {{ $post->user->name }}</p>
+                                    <p class="text-xs sm:text-sm text-stone-500 dark:text-stone-400 mt-0.5">
+                                        {{ $post->created_at->diffForHumans() }}</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-1.5 flex-shrink-0 self-start mt-0.5">
+                                @auth
+                                    @if(auth()->id() === $post->user_id || auth()->user()->is_admin || $community->user_id === auth()->id())
+                                        <div class="relative" x-data="{ openMenu: false }">
+                                            <button type="button" 
+                                                @click="openMenu = !openMenu" 
+                                                class="p-1.5 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition -mr-1" 
+                                                title="Post options">
+                                                <i data-lucide="more-horizontal" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                                            </button>
+                                            <div x-show="openMenu" 
+                                                @click.away="openMenu = false" 
+                                                x-cloak 
+                                                class="absolute right-0 top-full mt-1 z-30 w-36 bg-white dark:bg-stone-900 rounded-2xl shadow-xl border border-stone-200 dark:border-stone-800 py-1.5 text-xs">
+                                                <button type="button" 
+                                                    @click="openMenu = false; openEditCommunityPostModal({{ $community->id }}, {{ $post->id }})" 
+                                                    class="w-full text-left px-3.5 py-1.5 hover:bg-orange-500/10 hover:text-orange-600 text-stone-700 dark:text-stone-300 font-medium transition flex items-center gap-2">
+                                                    <i data-lucide="pencil" class="w-3.5 h-3.5 text-orange-500"></i>
+                                                    <span>Edit Post</span>
+                                                </button>
+                                                <button type="button" 
+                                                    @click="openMenu = false; confirmDeleteCommunityPost({{ $community->id }}, {{ $post->id }})" 
+                                                    class="w-full text-left px-3.5 py-1.5 hover:bg-red-500/10 hover:text-red-600 text-red-600 dark:text-red-400 font-medium transition flex items-center gap-2">
+                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                    <span>Delete</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @endif
+                                @endauth
                             </div>
                         </div>
 
