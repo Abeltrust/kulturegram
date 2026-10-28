@@ -29,23 +29,25 @@
       <input type="hidden" name="ai_flyer_path" :value="aiFlyerPath">
 
       {{-- AI Cultural Reach Assistant Drawer / Card --}}
-      <div class="bg-gradient-to-r from-amber-500/10 via-stone-900/5 to-emerald-500/10 dark:from-amber-950/20 dark:via-stone-900 dark:to-emerald-950/20 rounded-2xl p-5 border border-amber-500/20 dark:border-amber-500/10 space-y-4">
-        <div class="flex items-start justify-between gap-3">
-          <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
+      <div class="bg-gradient-to-r from-amber-500/10 via-stone-900/5 to-emerald-500/10 dark:from-amber-950/20 dark:via-stone-900 dark:to-emerald-950/20 rounded-2xl p-4 sm:p-5 border border-amber-500/20 dark:border-amber-500/10 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sm:gap-4">
+          <div class="flex items-start gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 shadow-xs">
               <i data-lucide="sparkles" class="w-5 h-5"></i>
             </div>
-            <div>
-              <h3 class="font-bold text-stone-900 dark:text-stone-100 text-sm flex items-center gap-2">
-                AI Cultural Reach Assistant
-                <span class="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-amber-500/20 text-amber-500">Meta AI</span>
+            <div class="min-w-0 flex-1">
+              <h3 class="font-bold text-stone-900 dark:text-stone-100 text-sm sm:text-base flex flex-wrap items-center gap-1.5 sm:gap-2 leading-tight">
+                <span>AI Cultural Reach Assistant</span>
+                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 shrink-0">Meta AI</span>
               </h3>
-              <p class="text-xs text-stone-500">Enhance your gathering's discoverability, target audience tags, and community reach.</p>
+              <p class="text-xs text-stone-600 dark:text-stone-400 mt-1 leading-relaxed">
+                Enhance your gathering's discoverability, target audience tags, and community reach.
+              </p>
             </div>
           </div>
 
           <button type="button" @click="optimize()" :disabled="optimizing"
-            class="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow transition flex items-center gap-1.5 shrink-0 disabled:opacity-50">
+            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-xl bg-amber-600 hover:bg-amber-500 active:scale-95 text-white font-bold text-xs shadow-md shadow-amber-600/15 transition disabled:opacity-50 shrink-0">
             <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
             <span x-text="optimizing ? 'Analyzing...' : 'Optimize Reach with AI'"></span>
           </button>
@@ -53,51 +55,54 @@
 
         {{-- Optimization Suggestions Panel --}}
         <template x-if="optimization">
-          <div class="bg-white/80 dark:bg-stone-950/80 rounded-xl p-4 border border-amber-500/20 space-y-3 text-xs animate-in fade-in duration-200">
-            <div class="flex items-center justify-between text-stone-700 dark:text-stone-300 font-bold border-b border-stone-200 dark:border-stone-800 pb-2">
-              <span class="text-amber-500 font-black">AI Recommendations</span>
-              <button type="button" @click="applyAll()" class="text-amber-600 dark:text-amber-400 hover:underline">Apply All Suggestions</button>
+          <div class="bg-white/90 dark:bg-stone-950/90 backdrop-blur-sm rounded-xl p-3.5 sm:p-4 border border-amber-500/25 space-y-3.5 text-xs animate-in fade-in duration-200 shadow-sm">
+            <div class="flex items-center justify-between text-stone-700 dark:text-stone-300 font-bold border-b border-stone-200/80 dark:border-stone-800 pb-2.5">
+              <span class="text-amber-600 dark:text-amber-400 font-black flex items-center gap-1.5">
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-amber-500"></i>
+                AI Recommendations
+              </span>
+              <button type="button" @click="applyAll()" class="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-semibold hover:underline transition">Apply All Suggestions</button>
             </div>
 
             {{-- Suggested Title --}}
-            <div>
-              <span class="text-stone-400 font-semibold uppercase tracking-wider text-[10px] block">Suggested Catchy Cultural Title:</span>
-              <div class="flex items-center justify-between gap-2 mt-0.5">
-                <span class="font-bold text-stone-800 dark:text-stone-200" x-text="optimization.optimized_title"></span>
-                <button type="button" @click="applyTitle()" class="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold text-[10px]">Use</button>
+            <div class="space-y-1">
+              <span class="text-stone-400 dark:text-stone-500 font-semibold uppercase tracking-wider text-[10px] block">Suggested Catchy Cultural Title:</span>
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-lg bg-stone-50 dark:bg-stone-900/60 border border-stone-200/60 dark:border-stone-800/60">
+                <span class="font-bold text-stone-800 dark:text-stone-200 break-words leading-snug" x-text="optimization.optimized_title"></span>
+                <button type="button" @click="applyTitle()" class="self-end sm:self-auto px-2.5 py-1 rounded-md bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-[10px] transition shrink-0 shadow-xs">Use</button>
               </div>
             </div>
 
             {{-- Suggested Description --}}
-            <div>
-              <span class="text-stone-400 font-semibold uppercase tracking-wider text-[10px] block">Culturally Enriched Description:</span>
-              <div class="flex items-start justify-between gap-2 mt-0.5">
-                <p class="text-stone-600 dark:text-stone-400 line-clamp-3 leading-relaxed" x-text="optimization.optimized_description"></p>
-                <button type="button" @click="applyDescription()" class="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold text-[10px] shrink-0">Use</button>
+            <div class="space-y-1">
+              <span class="text-stone-400 dark:text-stone-500 font-semibold uppercase tracking-wider text-[10px] block">Culturally Enriched Description:</span>
+              <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 p-2.5 rounded-lg bg-stone-50 dark:bg-stone-900/60 border border-stone-200/60 dark:border-stone-800/60">
+                <p class="text-stone-600 dark:text-stone-300 leading-relaxed break-words text-xs flex-1" x-text="optimization.optimized_description"></p>
+                <button type="button" @click="applyDescription()" class="self-end sm:self-start px-2.5 py-1 rounded-md bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-[10px] shrink-0 transition shadow-xs">Use</button>
               </div>
             </div>
 
             {{-- Reach Tags --}}
             <template x-if="optimization.reach_tags && optimization.reach_tags.length > 0">
-              <div>
-                <span class="text-stone-400 font-semibold uppercase tracking-wider text-[10px] block">Recommended Reach Tags:</span>
+              <div class="space-y-1">
+                <span class="text-stone-400 dark:text-stone-500 font-semibold uppercase tracking-wider text-[10px] block">Recommended Reach Tags:</span>
                 <div class="flex flex-wrap gap-1.5 mt-1">
                   <template x-for="tag in optimization.reach_tags" :key="tag">
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20" x-text="'#' + tag"></span>
+                    <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/25" x-text="'#' + tag"></span>
                   </template>
                 </div>
               </div>
             </template>
 
             {{-- Target Communities & Timing Tips --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2 border-t border-stone-200 dark:border-stone-800 text-[11px] text-stone-500">
-              <div>
-                <strong class="text-stone-700 dark:text-stone-300">Target Cultural Circles:</strong>
-                <span x-text="optimization.target_communities ? optimization.target_communities.join(', ') : 'Heritage Hubs'"></span>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2.5 border-t border-stone-200/80 dark:border-stone-800 text-[11px] text-stone-500 dark:text-stone-400">
+              <div class="p-2 rounded-lg bg-stone-50/60 dark:bg-stone-900/40">
+                <strong class="text-stone-700 dark:text-stone-200 block mb-0.5">Target Cultural Circles:</strong>
+                <span class="break-words" x-text="optimization.target_communities ? optimization.target_communities.join(', ') : 'Heritage Hubs'"></span>
               </div>
-              <div>
-                <strong class="text-stone-700 dark:text-stone-300">Cultural Timing Advice:</strong>
-                <span x-text="optimization.timing_suggestions || 'Evenings & Weekends'"></span>
+              <div class="p-2 rounded-lg bg-stone-50/60 dark:bg-stone-900/40">
+                <strong class="text-stone-700 dark:text-stone-200 block mb-0.5">Cultural Timing Advice:</strong>
+                <span class="break-words" x-text="optimization.timing_suggestions || 'Evenings & Weekends'"></span>
               </div>
             </div>
           </div>
@@ -115,24 +120,24 @@
 
       <!-- Description & Concept Generator -->
       <div class="space-y-2">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-2">
           <label for="description" class="block text-gray-700 dark:text-stone-300 font-semibold">Description</label>
           <button type="button" @click="showConceptHelper = !showConceptHelper"
-            class="text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-500 flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 transition">
+            class="text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-500 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 transition">
             <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
             <span x-text="showConceptHelper ? 'Hide Concept Helper' : 'AI Cultural Concept & Description'"></span>
           </button>
         </div>
 
         {{-- Interactive AI Concept Generator Drawer --}}
-        <div x-show="showConceptHelper" x-transition class="p-4 rounded-xl bg-stone-50 dark:bg-stone-800/40 border border-amber-500/20 space-y-3">
+        <div x-show="showConceptHelper" x-transition class="p-3.5 sm:p-4 rounded-xl bg-stone-50 dark:bg-stone-800/40 border border-amber-500/20 space-y-3">
           <div class="flex items-start justify-between gap-2">
             <div>
               <p class="text-xs font-bold text-stone-800 dark:text-stone-200 flex items-center gap-1.5">
                 <i data-lucide="file-text" class="w-3.5 h-3.5 text-amber-500"></i>
                 Draft from Rough Key Points
               </p>
-              <p class="text-[11px] text-stone-500 dark:text-stone-400">
+              <p class="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5 leading-relaxed">
                 Enter quick notes or an outline of your gathering. The AI will compose an authentic cultural concept and presentation for your community.
               </p>
             </div>
@@ -142,10 +147,10 @@
             class="w-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 rounded-xl p-3 text-xs focus:ring-2 focus:ring-amber-500 outline-none"
             placeholder="e.g. Elders teaching traditional pottery songs to youth, hands-on clay shaping, blessing of ancestral earth, tea sharing..."></textarea>
 
-          <div class="flex items-center justify-between">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <span class="text-[10px] text-stone-400 italic">No formal writing needed—just list your points.</span>
             <button type="button" @click="generateConceptDescription()" :disabled="generatingConcept || (!conceptPoints && !formTitle)"
-              class="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow flex items-center gap-1.5 disabled:opacity-50 transition">
+              class="w-full sm:w-auto px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow flex items-center justify-center gap-1.5 disabled:opacity-50 transition">
               <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
               <span x-text="generatingConcept ? 'Composing Concept...' : 'Generate Description'"></span>
             </button>
@@ -154,13 +159,13 @@
           {{-- Suggested Output Preview --}}
           <template x-if="suggestedConcept">
             <div class="mt-3 p-3.5 rounded-xl bg-white dark:bg-stone-900 border border-amber-500/20 space-y-2 text-xs">
-              <div class="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-2">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-100 dark:border-stone-800 pb-2">
                 <div class="flex items-center gap-2">
                   <span class="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold text-[10px]">Concept Preview</span>
                   <span class="text-[11px] font-semibold text-stone-500" x-text="suggestedConcept.tagline"></span>
                 </div>
                 <div class="flex items-center gap-2">
-                  <button type="button" @click="applyConceptDesc()" class="px-2.5 py-1 rounded-lg bg-amber-500 text-white font-bold text-[11px] hover:bg-amber-600 transition">
+                  <button type="button" @click="applyConceptDesc()" class="w-full sm:w-auto px-2.5 py-1 rounded-lg bg-amber-500 text-white font-bold text-[11px] hover:bg-amber-600 transition">
                     Use This Description
                   </button>
                 </div>
@@ -384,14 +389,14 @@
                 Add your real event date, venue, time, couple/baby/speaker photo, and logo—ideal for weddings, naming ceremonies, and cultural events.
               </p>
             </div>
-            <div class="flex flex-wrap items-center gap-2 shrink-0">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto shrink-0">
               <button type="button" @click="showFlyerDesigner = !showFlyerDesigner"
-                class="px-3.5 py-2 rounded-xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                class="w-full sm:w-auto px-3.5 py-2 rounded-xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
                 <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
                 <span x-text="showFlyerDesigner ? 'Hide Flyer Studio' : 'Customize Flyer Details & Photo'"></span>
               </button>
               <button type="button" @click="generateFlyer()" :disabled="generatingFlyer"
-                class="px-4 py-2 rounded-xl bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 hover:bg-amber-600 dark:hover:bg-amber-400 dark:hover:text-stone-950 font-bold text-xs shadow flex items-center gap-2 shrink-0 disabled:opacity-50 transition cursor-pointer">
+                class="w-full sm:w-auto px-4 py-2 rounded-xl bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 hover:bg-amber-600 dark:hover:bg-amber-400 dark:hover:text-stone-950 font-bold text-xs shadow flex items-center justify-center gap-2 shrink-0 disabled:opacity-50 transition cursor-pointer">
                 <i data-lucide="wand-2" class="w-3.5 h-3.5" :class="generatingFlyer ? 'animate-spin' : ''"></i>
                 <span x-text="generatingFlyer ? 'Designing Flyer...' : 'Generate AI Cultural Flyer'"></span>
               </button>

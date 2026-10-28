@@ -19,6 +19,8 @@ class EventCrudTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Cultural Events');
+        $response->assertSee('Create Event');
+        $response->assertSee(route('events.create'));
     }
 
     public function test_authenticated_user_can_create_event(): void
