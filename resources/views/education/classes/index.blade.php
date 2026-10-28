@@ -195,7 +195,7 @@
                             {{ $item->cultural_focus }}
                         </div>
 
-                        <h3 class="text-base sm:text-lg font-black text-stone-800 dark:text-stone-100 group-hover:text-amber-500 transition-colors line-clamp-1 mb-2">
+                        <h3 class="text-base sm:text-lg font-black text-amber-500 line-clamp-1 mb-2">
                             <a href="{{ route('education.classes.show', $item->slug) }}">
                                 {{ $item->title }}
                             </a>

@@ -27,8 +27,17 @@
         #kulturegram-brand-title,
         .page-title,
         .page-header-title,
-        h1.page-title,
-        h2.page-title {
+        .page-heading,
+        h1,
+        h2,
+        h3,
+        h4,
+        h1 a,
+        h2 a,
+        h3 a,
+        h4 a,
+        .page-title a,
+        .page-header-title a {
             color: #f59e0b !important; /* System Amber (amber-500) */
             text-decoration: none !important;
             transition: none !important;
@@ -37,8 +46,17 @@
         .dark #kulturegram-brand-title,
         .dark .page-title,
         .dark .page-header-title,
-        .dark h1.page-title,
-        .dark h2.page-title {
+        .dark .page-heading,
+        .dark h1,
+        .dark h2,
+        .dark h3,
+        .dark h4,
+        .dark h1 a,
+        .dark h2 a,
+        .dark h3 a,
+        .dark h4 a,
+        .dark .page-title a,
+        .dark .page-header-title a {
             color: #f59e0b !important;
         }
 
@@ -50,7 +68,36 @@
         .page-title:active,
         .page-header-title:hover,
         .page-header-title:focus,
-        .page-header-title:active {
+        .page-header-title:active,
+        .page-heading:hover,
+        .page-heading:focus,
+        .page-heading:active,
+        h1:hover,
+        h2:hover,
+        h3:hover,
+        h4:hover,
+        h1:focus,
+        h2:focus,
+        h3:focus,
+        h4:focus,
+        h1 a:hover,
+        h2 a:hover,
+        h3 a:hover,
+        h4 a:hover,
+        h1 a:focus,
+        h2 a:focus,
+        h3 a:focus,
+        h4 a:focus,
+        .page-title a:hover,
+        .page-title a:focus,
+        .group:hover h1,
+        .group:hover h2,
+        .group:hover h3,
+        .group:hover h4,
+        .group:hover h1 a,
+        .group:hover h2 a,
+        .group:hover h3 a,
+        .group:hover h4 a {
             color: #f59e0b !important;
             text-decoration: none !important;
         }
@@ -62,9 +109,44 @@
         .dark .page-title:active,
         .dark .page-header-title:hover,
         .dark .page-header-title:focus,
-        .dark .page-header-title:active {
+        .dark .page-header-title:active,
+        .dark .page-heading:hover,
+        .dark .page-heading:focus,
+        .dark .page-heading:active,
+        .dark h1:hover,
+        .dark h2:hover,
+        .dark h3:hover,
+        .dark h4:hover,
+        .dark h1:focus,
+        .dark h2:focus,
+        .dark h3:focus,
+        .dark h4:focus,
+        .dark h1 a:hover,
+        .dark h2 a:hover,
+        .dark h3 a:hover,
+        .dark h4 a:hover,
+        .dark h1 a:focus,
+        .dark h2 a:focus,
+        .dark h3 a:focus,
+        .dark h4 a:focus,
+        .dark .page-title a:hover,
+        .dark .page-title a:focus,
+        .dark .group:hover h1,
+        .dark .group:hover h2,
+        .dark .group:hover h3,
+        .dark .group:hover h4,
+        .dark .group:hover h1 a,
+        .dark .group:hover h2 a,
+        .dark .group:hover h3 a,
+        .dark .group:hover h4 a {
             color: #f59e0b !important;
             text-decoration: none !important;
+        }
+
+        /* Protect gradient clip text spans */
+        .text-transparent,
+        .bg-clip-text {
+            color: transparent !important;
         }
         [x-cloak] { display: none !important; }
         html, body {

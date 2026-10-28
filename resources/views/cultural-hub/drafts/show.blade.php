@@ -21,7 +21,7 @@
                             {{ str_replace('_', ' ', ucfirst($draft->status)) }}
                         </span>
                     </div>
-                    <h1 class="text-xl sm:text-2xl font-black text-stone-100 mt-0.5">{{ $draft->title }}</h1>
+                    <h1 class="page-title text-xl sm:text-2xl font-black text-amber-500 mt-0.5">{{ $draft->title }}</h1>
                 </div>
             </div>
 

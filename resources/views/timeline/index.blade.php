@@ -13,7 +13,7 @@
                         class="w-14 h-14 sm:w-16 sm:h-16 glass-orange rounded-2xl flex items-center justify-center mx-auto mb-4">
                         <i data-lucide="book-open" class="w-7 h-7 sm:w-8 sm:h-8 text-white"></i>
                     </div>
-                    <h2 class="text-2xl sm:text-3xl font-bold text-stone-800 dark:text-white mb-3">
+                    <h2 class="page-title text-2xl sm:text-3xl font-bold text-amber-500 mb-3">
                         Welcome to Kulturegram
                     </h2>
                     <p class="text-base sm:text-lg text-stone-600 dark:text-stone-400 leading-relaxed max-w-2xl mx-auto">
@@ -28,7 +28,7 @@
                         <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                             <i data-lucide="book-open" class="w-6 h-6 text-blue-600"></i>
                         </div>
-                        <h3 class="font-semibold text-stone-800 dark:text-stone-200 mb-2">Authentic Stories</h3>
+                        <h3 class="font-semibold text-amber-500 mb-2">Authentic Stories</h3>
                         <p class="text-sm text-stone-600 dark:text-stone-400">Share your real journey chronologically, not
                             algorithmically</p>
                     </div>
@@ -37,7 +37,7 @@
                         <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                             <i data-lucide="globe" class="w-6 h-6 text-green-600"></i>
                         </div>
-                        <h3 class="font-semibold text-stone-800 mb-2">Cultural Heritage</h3>
+                        <h3 class="font-semibold text-amber-500 mb-2">Cultural Heritage</h3>
                         <p class="text-sm text-stone-600">Preserve and celebrate cultures from around the world</p>
                     </div>
 
@@ -45,7 +45,7 @@
                         <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                             <i data-lucide="users" class="w-6 h-6 text-purple-600"></i>
                         </div>
-                        <h3 class="font-semibold text-stone-800 mb-2">Meaningful Connections</h3>
+                        <h3 class="font-semibold text-amber-500 mb-2">Meaningful Connections</h3>
                         <p class="text-sm text-stone-600">Lock-In to timelines that matter, TAP to show appreciation</p>
                     </div>
 
@@ -53,7 +53,7 @@
                         <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                             <i data-lucide="archive" class="w-6 h-6 text-orange-600"></i>
                         </div>
-                        <h3 class="font-semibold text-stone-800 mb-2">Personal Vault</h3>
+                        <h3 class="font-semibold text-amber-500 mb-2">Personal Vault</h3>
                         <p class="text-sm text-stone-600">Keep your most precious memories safe and private</p>
                     </div>
                 </div>
@@ -619,7 +619,7 @@
             </button>
 
             <!-- Header -->
-            <h2 class="text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2 text-stone-800 dark:text-stone-100">
+            <h2 class="text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2 text-amber-500">
                 <i data-lucide="share-2" class="w-4 h-4 sm:w-5 sm:h-5 text-amber-500"></i>
                 <span>Share Story</span>
             </h2>
@@ -731,7 +731,7 @@
                 <i data-lucide="x" class="w-4 h-4 sm:w-5 sm:h-5"></i>
             </button>
 
-            <h2 class="text-base sm:text-lg font-bold mb-1 flex items-center gap-2 text-stone-800 dark:text-stone-100">
+            <h2 class="text-base sm:text-lg font-bold mb-1 flex items-center gap-2 text-amber-500">
                 <i data-lucide="user-plus" class="w-4 h-4 sm:w-5 sm:h-5 text-amber-500"></i>
                 <span>Tag People on Story</span>
             </h2>

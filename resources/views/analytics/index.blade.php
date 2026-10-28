@@ -5,7 +5,7 @@
 
         <!-- HEADER -->
         <div>
-            <h1 class="text-2xl font-bold text-stone-800 dark:text-stone-100">Story Analytics</h1>
+            <h1 class="page-title text-2xl font-bold text-amber-500">Story Analytics</h1>
             <p class="text-stone-500 dark:text-stone-400 text-sm">Insights into your cultural impact and storytelling reach.
             </p>
         </div>

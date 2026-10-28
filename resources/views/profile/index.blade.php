@@ -301,7 +301,7 @@
                         {{-- Name, Username & Tags --}}
                         <div class="space-y-1 sm:mb-2">
                             <div class="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2">
-                                <h1 class="text-xl sm:text-3xl font-black text-stone-900 dark:text-white tracking-tight">
+                                <h1 class="page-title text-xl sm:text-3xl font-black text-amber-500 tracking-tight">
                                     {{ $user->name }}
                                 </h1>
                                 @if($user->is_admin)

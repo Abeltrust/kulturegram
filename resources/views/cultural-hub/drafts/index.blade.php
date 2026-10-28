@@ -11,7 +11,7 @@
                     <i data-lucide="archive" class="w-4 h-4"></i>
                     <span>Living Heritage Archive Workflows</span>
                 </div>
-                <h1 class="text-2xl sm:text-3xl font-black text-stone-100">My Cultural Heritage Drafts</h1>
+                <h1 class="page-title text-2xl sm:text-3xl font-black text-amber-500">My Cultural Heritage Drafts</h1>
                 <p class="text-xs sm:text-sm text-stone-400 mt-1">Review, enrich, and verify community-extracted cultural records before submitting to archive curators.</p>
             </div>
             <div class="flex items-center gap-3">

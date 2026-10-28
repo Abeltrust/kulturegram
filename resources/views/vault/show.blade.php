@@ -36,7 +36,7 @@
                     @endswitch
                 </div>
                 <div>
-                    <h1 class="text-2xl sm:text-3xl font-black text-stone-900 dark:text-stone-100">
+                    <h1 class="page-title text-2xl sm:text-3xl font-black text-amber-500">
                         {{ $vaultItem->title }}
                     </h1>
                     <div class="flex items-center gap-2 mt-1">

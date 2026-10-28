@@ -432,7 +432,7 @@
         <span>/</span>
         <a href="{{ route('education.classes.index') }}" class="hover:text-amber-500 transition">Cultural Classes</a>
         <span>/</span>
-        <span class="text-stone-800 dark:text-stone-100 font-semibold">Publish Video Class</span>
+        <span class="text-amber-500 font-semibold">Publish Video Class</span>
     </div>
 
     {{-- Header Banner --}}
@@ -555,7 +555,7 @@
                 {{-- Video Upload or Direct Recording Card --}}
                 <div class="bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-8 border border-stone-200 dark:border-stone-800 shadow-sm space-y-5">
                     <div class="flex flex-wrap items-center justify-between gap-3">
-                        <h2 class="text-base sm:text-lg font-black text-stone-800 dark:text-stone-100 flex items-center gap-2">
+                        <h2 class="text-base sm:text-lg font-black text-amber-500 flex items-center gap-2">
                             <i data-lucide="film" class="w-5 h-5 text-amber-500"></i>
                             <span>Lesson Video</span>
                         </h2>
@@ -720,7 +720,7 @@
 
                 {{-- Basic Class Information Card --}}
                 <div class="bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-8 border border-stone-200 dark:border-stone-800 shadow-sm space-y-5">
-                    <h2 class="text-base sm:text-lg font-black text-stone-800 dark:text-stone-100 flex items-center gap-2">
+                    <h2 class="text-base sm:text-lg font-black text-amber-500 flex items-center gap-2">
                         <i data-lucide="book-open" class="w-5 h-5 text-amber-500"></i>
                         <span>Class Overview</span>
                     </h2>
@@ -802,7 +802,7 @@
 
                 {{-- Access & Pricing Card --}}
                 <div class="bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-7 border border-stone-200 dark:border-stone-800 shadow-sm space-y-4">
-                    <h2 class="text-sm sm:text-base font-black text-stone-800 dark:text-stone-100 flex items-center gap-2">
+                    <h2 class="text-sm sm:text-base font-black text-amber-500 flex items-center gap-2">
                         <i data-lucide="tag" class="w-4 h-4 text-amber-500"></i>
                         <span>Access & Monetization</span>
                     </h2>

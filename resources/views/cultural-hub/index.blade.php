@@ -109,7 +109,7 @@
                     <i data-lucide="sparkles" class="w-3 h-3"></i>
                     <span>Living Heritage Archive</span>
                 </div>
-                <h2 class="text-xl sm:text-2xl font-extrabold text-stone-900 dark:text-stone-100 tracking-tight">
+                <h2 class="page-title text-xl sm:text-2xl font-extrabold text-amber-500 tracking-tight">
                     Preserve Oral Traditions & Living Practices
                 </h2>
                 <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-400 leading-relaxed">

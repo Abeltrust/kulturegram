@@ -13,7 +13,7 @@
         <div
             class="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 text-center sm:text-left">
             <div>
-                <h2 class="text-2xl sm:text-3xl font-bold text-stone-800 dark:text-white mb-2 sm:mb-3">
+                <h2 class="page-title text-2xl sm:text-3xl font-bold text-amber-500 mb-2 sm:mb-3">
                     Communities
                 </h2>
                 <p class="text-sm sm:text-base text-stone-600 dark:text-stone-400 leading-relaxed max-w-2xl">
@@ -117,7 +117,7 @@
                             <!-- Content Info Body -->
                             <div class="p-5 flex-1 flex flex-col justify-between">
                                 <div class="space-y-1">
-                                    <h3 class="font-bold text-stone-900 dark:text-stone-100 text-lg leading-tight truncate">
+                                    <h3 class="font-bold text-amber-500 text-lg leading-tight truncate">
                                         {{ $community->name }}
                                     </h3>
                                     <p class="text-stone-600 dark:text-stone-400 text-sm line-clamp-2 leading-relaxed">

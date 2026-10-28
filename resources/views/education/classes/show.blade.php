@@ -183,7 +183,7 @@
                     @endif
                 </div>
 
-                <h1 class="text-xl sm:text-2xl font-black text-stone-800 dark:text-stone-100">
+                <h1 class="page-title text-xl sm:text-2xl font-black text-amber-500">
                     {{ $class->title }}
                 </h1>
 
@@ -211,7 +211,7 @@
             {{-- AI Cultural Summary & Takeaways (Reactive) --}}
             <div x-show="keyTakeaways && keyTakeaways.length > 0" x-transition
                  class="bg-gradient-to-br from-amber-500/5 via-stone-900/40 to-stone-900 rounded-3xl p-6 sm:p-8 border border-amber-500/20 shadow-sm space-y-4">
-                <h3 class="text-sm sm:text-base font-black text-stone-800 dark:text-stone-100 flex items-center gap-2">
+                <h3 class="text-sm sm:text-base font-black text-amber-500 flex items-center gap-2">
                     <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
                     <span>Lesson Key Takeaways</span>
                 </h3>
@@ -228,7 +228,7 @@
 
             {{-- Class Discussions / Questions Container --}}
             <div class="bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-8 border border-stone-200 dark:border-stone-800 shadow-sm space-y-6">
-                <h3 class="text-base font-black text-stone-800 dark:text-stone-100 flex items-center justify-between">
+                <h3 class="text-base font-black text-amber-500 flex items-center justify-between">
                     <span class="flex items-center gap-2">
                         <i data-lucide="message-square" class="w-5 h-5 text-amber-500"></i>
                         <span>Learner Questions & Discussion</span>
@@ -299,7 +299,7 @@
             {{-- Real-Time Interactive Synchronized Transcript --}}
             <div class="bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-7 border border-stone-200 dark:border-stone-800 shadow-sm space-y-4">
                 <div class="flex items-center justify-between gap-2">
-                    <h3 class="text-sm sm:text-base font-black text-stone-800 dark:text-stone-100 flex items-center gap-2">
+                    <h3 class="text-sm sm:text-base font-black text-amber-500 flex items-center gap-2">
                         <i data-lucide="subtitles" class="w-4 h-4 text-amber-500"></i>
                         <span>Live Synchronized Transcript</span>
                     </h3>
@@ -478,7 +478,7 @@
             {{-- Bilingual Cultural Vocabulary & Flashcard Cards (Reactive) --}}
             <div class="bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-7 border border-stone-200 dark:border-stone-800 shadow-sm space-y-4">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-sm sm:text-base font-black text-stone-800 dark:text-stone-100 flex items-center gap-2">
+                    <h3 class="text-sm sm:text-base font-black text-amber-500 flex items-center gap-2">
                         <i data-lucide="languages" class="w-4 h-4 text-amber-500"></i>
                         <span>Bilingual Vocabulary & Phrase Cards</span>
                     </h3>

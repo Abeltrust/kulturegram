@@ -243,7 +243,7 @@
                     <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back to Profile
                 </a>
             </div>
-            <h1 class="text-xl sm:text-3xl font-black text-stone-900 dark:text-white">Account & Privacy Settings</h1>
+            <h1 class="page-title text-xl sm:text-3xl font-black text-amber-500">Account & Privacy Settings</h1>
             <p class="text-xs sm:text-sm text-stone-500">Manage your profile identity, security, notifications, and cultural data sovereignty.</p>
         </div>
 

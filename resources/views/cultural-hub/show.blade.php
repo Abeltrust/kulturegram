@@ -198,7 +198,7 @@
 
                 {{-- Record Title and Optional Translated Title --}}
                 <div class="space-y-1">
-                    <h1 class="font-archive-title text-2xl sm:text-4xl lg:text-5xl font-extrabold text-stone-900 dark:text-stone-100 tracking-tight leading-tight">
+                    <h1 class="page-title font-archive-title text-2xl sm:text-4xl lg:text-5xl font-extrabold text-amber-500 tracking-tight leading-tight">
                         {{ $culture->name }}
                     </h1>
                     @if($culture->translated_title && $culture->translated_title !== $culture->name)

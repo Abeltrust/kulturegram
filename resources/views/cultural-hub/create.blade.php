@@ -24,7 +24,7 @@
                 <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center">
                     <i data-lucide="archive" class="w-5 h-5"></i>
                 </div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold text-stone-900 dark:text-stone-100">
+                <h1 class="page-title text-2xl sm:text-3xl font-extrabold text-amber-500">
                     Document Living Heritage
                 </h1>
             </div>

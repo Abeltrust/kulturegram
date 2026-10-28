@@ -162,7 +162,7 @@
                     <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
                     <span>AI Subtitles & Bilingual Vocab</span>
                 </div>
-                <h2 class="text-2xl sm:text-3xl font-black text-stone-800 dark:text-stone-100 tracking-tight">
+                <h2 class="page-title text-2xl sm:text-3xl font-black text-amber-500 tracking-tight">
                     Cultural Classes & Language Studio
                 </h2>
                 <p class="text-stone-500 dark:text-stone-400 text-xs sm:text-sm mt-0.5">
@@ -229,7 +229,7 @@
                             <div class="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-500 mb-1">
                                 {{ $cls->cultural_focus }}
                             </div>
-                            <h3 class="text-base font-black text-stone-800 dark:text-stone-100 group-hover:text-amber-500 transition line-clamp-1 mb-2">
+                            <h3 class="text-base font-black text-amber-500 line-clamp-1 mb-2">
                                 <a href="{{ route('education.classes.show', $cls->slug) }}">
                                     {{ $cls->title }}
                                 </a>
@@ -338,7 +338,7 @@
 
                             {{-- Content --}}
                             <div class="p-6 flex-1 flex flex-col">
-                                <h3 class="text-xl font-black text-stone-800 dark:text-stone-100 group-hover:text-amber-600 transition-colors line-clamp-1 mb-2">
+                                <h3 class="text-xl font-black text-amber-500 line-clamp-1 mb-2">
                                     {{ $event->title }}
                                 </h3>
                                 <p class="text-stone-500 dark:text-stone-400 text-sm line-clamp-2 mb-6 leading-relaxed">

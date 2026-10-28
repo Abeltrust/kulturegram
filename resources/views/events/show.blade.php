@@ -45,7 +45,7 @@
                 </div>
 
                 <div class="absolute bottom-6 left-6 right-6 z-20">
-                    <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight mb-2 drop-shadow-md">
+                    <h1 class="page-title text-3xl sm:text-4xl md:text-5xl font-black text-amber-500 leading-tight mb-2 drop-shadow-md">
                         {{ $event->title }}
                     </h1>
                 </div>
@@ -62,7 +62,7 @@
                         </span>
                     @endif
                 </div>
-                <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-stone-900 dark:text-white leading-tight mb-6 mt-2">
+                <h1 class="page-title text-3xl sm:text-4xl md:text-5xl font-black text-amber-500 leading-tight mb-6 mt-2">
                     {{ $event->title }}
                 </h1>
             </div>
@@ -84,7 +84,7 @@
 
                 {{-- Description --}}
                 <div>
-                    <h3 class="text-xl font-bold text-stone-900 dark:text-stone-100 mb-4 flex items-center gap-2">
+                    <h3 class="text-xl font-bold text-amber-500 mb-4 flex items-center gap-2">
                         <i data-lucide="info" class="w-5 h-5 text-amber-500"></i> About this Event
                     </h3>
                     <div class="prose prose-stone dark:prose-invert max-w-none text-stone-700 dark:text-stone-300 whitespace-pre-line leading-relaxed">

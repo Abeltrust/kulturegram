@@ -6,7 +6,7 @@
 
         {{-- Page Header --}}
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 dark:text-stone-100 tracking-tight">
+            <h1 class="page-title text-2xl sm:text-3xl lg:text-4xl font-extrabold text-amber-500 tracking-tight">
                 Cultural Events</h1>
 
             {{-- Search --}}

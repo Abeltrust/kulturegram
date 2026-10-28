@@ -332,7 +332,7 @@
 
                 {{-- Community Info --}}
                 <div class="p-5">
-                    <h2 class="text-lg sm:text-xl font-semibold text-stone-800 dark:text-stone-100">{{ $community->name }}
+                    <h2 class="page-title text-lg sm:text-xl font-semibold text-amber-500">{{ $community->name }}
                     </h2>
                     <p class="text-xs sm:text-sm text-stone-500 dark:text-stone-400 mt-1">
                         {{ $community->members()->count() }} members •
