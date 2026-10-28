@@ -3,10 +3,21 @@
 
 @section('content')
 <div class="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-8 overflow-x-hidden w-full" x-data="{
-    activeTab: 'profile',
+    activeTab: '{{ $errors->has('password') ? 'data' : 'profile' }}',
     avatarPreview: null,
     coverPreview: null,
-    showDeleteModal: false,
+    showSignOutModal: false,
+    showDeleteModal: {{ $errors->has('password') ? 'true' : 'false' }},
+
+    openSignOutModal() {
+        this.showSignOutModal = true;
+        this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+    },
+
+    openDeleteModal() {
+        this.showDeleteModal = true;
+        this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+    },
 
     // Avatar adjustment modal in settings
     showAvatarModal: false,
@@ -268,37 +279,37 @@
         </div>
     @endif
 
-    {{-- Mobile Tab Navigation (Horizontal Scroll with Zero Scrollbar) --}}
-    <div class="md:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar scrollbar-none py-1 mb-4" style="scrollbar-width: none; -ms-overflow-style: none;">
-        <button @click="activeTab = 'profile'"
+    {{-- Mobile Tab Navigation (Icon-Only on Mobile) --}}
+    <div class="md:hidden grid grid-cols-6 gap-2 py-1 mb-4">
+        <button type="button" @click="activeTab = 'profile'" title="Profile & Identity" aria-label="Profile & Identity"
             :class="activeTab === 'profile' ? 'bg-amber-500 text-white shadow-md' : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-800'"
-            class="px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 shrink-0">
-            <i data-lucide="user" class="w-3.5 h-3.5"></i> Profile
+            class="py-2.5 rounded-xl transition flex items-center justify-center">
+            <i data-lucide="user" class="w-4 h-4"></i>
         </button>
-        <button @click="activeTab = 'security'"
+        <button type="button" @click="activeTab = 'security'" title="Security & Password" aria-label="Security & Password"
             :class="activeTab === 'security' ? 'bg-amber-500 text-white shadow-md' : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-800'"
-            class="px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 shrink-0">
-            <i data-lucide="key" class="w-3.5 h-3.5"></i> Security
+            class="py-2.5 rounded-xl transition flex items-center justify-center">
+            <i data-lucide="key" class="w-4 h-4"></i>
         </button>
-        <button @click="activeTab = 'privacy'"
+        <button type="button" @click="activeTab = 'privacy'" title="Privacy & Sovereignty" aria-label="Privacy & Sovereignty"
             :class="activeTab === 'privacy' ? 'bg-amber-500 text-white shadow-md' : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-800'"
-            class="px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 shrink-0">
-            <i data-lucide="shield" class="w-3.5 h-3.5"></i> Privacy
+            class="py-2.5 rounded-xl transition flex items-center justify-center">
+            <i data-lucide="shield" class="w-4 h-4"></i>
         </button>
-        <button @click="activeTab = 'notifications'"
+        <button type="button" @click="activeTab = 'notifications'" title="Notifications" aria-label="Notifications"
             :class="activeTab === 'notifications' ? 'bg-amber-500 text-white shadow-md' : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-800'"
-            class="px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 shrink-0">
-            <i data-lucide="bell" class="w-3.5 h-3.5"></i> Alerts
+            class="py-2.5 rounded-xl transition flex items-center justify-center">
+            <i data-lucide="bell" class="w-4 h-4"></i>
         </button>
-        <button @click="activeTab = 'appearance'"
+        <button type="button" @click="activeTab = 'appearance'" title="Appearance" aria-label="Appearance"
             :class="activeTab === 'appearance' ? 'bg-amber-500 text-white shadow-md' : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-800'"
-            class="px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 shrink-0">
-            <i data-lucide="palette" class="w-3.5 h-3.5"></i> Theme
+            class="py-2.5 rounded-xl transition flex items-center justify-center">
+            <i data-lucide="palette" class="w-4 h-4"></i>
         </button>
-        <button @click="activeTab = 'data'"
+        <button type="button" @click="activeTab = 'data'" title="Data & Account" aria-label="Data & Account"
             :class="activeTab === 'data' ? 'bg-amber-500 text-white shadow-md' : 'bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-800'"
-            class="px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 shrink-0">
-            <i data-lucide="database" class="w-3.5 h-3.5"></i> Data
+            class="py-2.5 rounded-xl transition flex items-center justify-center">
+            <i data-lucide="database" class="w-4 h-4"></i>
         </button>
     </div>
 
@@ -661,12 +672,9 @@
                             </h4>
                             <p class="text-[11px] sm:text-xs text-stone-500 mt-0.5">Terminate and sign out of your active authenticated session on this device.</p>
                         </div>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="px-4 py-2 bg-stone-200 hover:bg-stone-300 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-800 dark:text-white rounded-xl text-xs font-bold transition shadow-sm w-fit">
-                                Sign Out
-                            </button>
-                        </form>
+                        <button type="button" @click.stop="openSignOutModal()" class="px-4 py-2 bg-stone-200 hover:bg-stone-300 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-800 dark:text-white rounded-xl text-xs font-bold transition shadow-sm w-fit">
+                            Sign Out
+                        </button>
                     </div>
 
                     <div class="p-4 sm:p-5 rounded-2xl bg-red-50/60 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
@@ -674,7 +682,7 @@
                             <h4 class="font-bold text-red-700 dark:text-red-400 text-xs sm:text-sm">Delete Account</h4>
                             <p class="text-[11px] sm:text-xs text-red-600/80 dark:text-red-400/80 mt-0.5">Permanently erase your account, private vault, and personal memories.</p>
                         </div>
-                        <button type="button" @click="showDeleteModal = true" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition shadow-sm w-fit">
+                        <button type="button" @click.stop="openDeleteModal()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition shadow-sm w-fit">
                             Delete Account
                         </button>
                     </div>
@@ -888,18 +896,47 @@
         </div>
     </div>
 
+    <!-- SIGN OUT CONFIRMATION MODAL -->
+    <div x-show="showSignOutModal" x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm"
+        @click.self="showSignOutModal = false"
+        @keydown.escape.window="showSignOutModal = false">
+        <div class="bg-white dark:bg-stone-900 rounded-3xl max-w-md w-full p-5 sm:p-8 border border-stone-200 dark:border-stone-800 shadow-2xl space-y-4">
+            <div class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <i data-lucide="log-out" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h3 class="text-base sm:text-lg font-black text-stone-900 dark:text-white">Confirm Sign Out</h3>
+                <p class="text-xs text-stone-500 mt-1 leading-relaxed">
+                    Are you sure you want to sign out of your active session on this device? You can sign back in anytime.
+                </p>
+            </div>
+
+            <form action="{{ route('logout') }}" method="POST" class="flex justify-end gap-2 pt-2">
+                @csrf
+                <button type="button" @click="showSignOutModal = false" class="px-4 py-2 text-xs sm:text-sm font-bold text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 transition">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 sm:px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md transition">
+                    Confirm Sign Out
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- DELETE ACCOUNT MODAL -->
-    <div x-show="showDeleteModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm"
+    <div x-show="showDeleteModal" x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm"
+        @click.self="showDeleteModal = false"
         @keydown.escape.window="showDeleteModal = false">
-        <div class="bg-white dark:bg-stone-900 rounded-3xl max-w-md w-full p-5 sm:p-8 border border-stone-200 dark:border-stone-800 shadow-2xl space-y-4"
-            @click.away="showDeleteModal = false">
+        <div class="bg-white dark:bg-stone-900 rounded-3xl max-w-md w-full p-5 sm:p-8 border border-stone-200 dark:border-stone-800 shadow-2xl space-y-4">
             <div class="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-950/50 text-red-600 flex items-center justify-center">
                 <i data-lucide="alert-triangle" class="w-6 h-6"></i>
             </div>
             <div>
-                <h3 class="text-base sm:text-lg font-black text-stone-900 dark:text-white">Are you absolutely sure?</h3>
+                <h3 class="text-base sm:text-lg font-black text-stone-900 dark:text-white">Confirm Account Deletion</h3>
                 <p class="text-xs text-stone-500 mt-1 leading-relaxed">
-                    This action cannot be undone. All stories, personal vault files, and connections will be permanently wiped.
+                    Are you sure you want to permanently delete your account? This action cannot be undone and all stories, personal vault files, and connections will be permanently wiped.
                 </p>
             </div>
 
@@ -908,13 +945,16 @@
                 @method('DELETE')
                 <div>
                     <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider mb-1">Confirm with Password</label>
-                    <input type="password" name="password" required placeholder="Your current password"
+                    <input type="password" name="password" required placeholder="Enter your current password to confirm"
                         class="w-full px-4 py-2.5 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-sm text-stone-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:outline-none">
+                    @error('password')
+                        <p class="text-xs text-red-600 dark:text-red-400 font-semibold mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" @click="showDeleteModal = false" class="px-4 py-2 text-xs sm:text-sm font-bold text-stone-500 hover:text-stone-700">Cancel</button>
-                    <button type="submit" class="px-4 sm:px-5 py-2 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md">Permanently Delete</button>
+                    <button type="button" @click="showDeleteModal = false" class="px-4 py-2 text-xs sm:text-sm font-bold text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 transition">Cancel</button>
+                    <button type="submit" class="px-4 sm:px-5 py-2 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md transition">Confirm & Delete Account</button>
                 </div>
             </form>
         </div>
