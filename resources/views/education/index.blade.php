@@ -3,7 +3,13 @@
 @section('title', 'Educational Hub - Kulturegram')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" x-data="{
+    showTeachModal: false,
+    openTeachModal() {
+        this.showTeachModal = true;
+        this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+    }
+}">
     
     {{-- Hero Section --}}
     <div class="relative rounded-3xl overflow-hidden bg-stone-900 border border-stone-800 shadow-2xl mb-12">
@@ -24,7 +30,9 @@
                 Host traditional rituals, join professional trainings, or attend cultural lectures. The hub for preservation and growth.
             </p>
             <div class="flex flex-wrap gap-4">
-                <a href="{{ route('education.classes.create') }}" class="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-2xl font-black uppercase tracking-wider shadow-lg shadow-amber-500/20 hover:scale-105 transition-transform flex items-center gap-2">
+                <a href="{{ route('education.classes.create') }}"
+                   @click.prevent="openTeachModal()"
+                   class="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-2xl font-black uppercase tracking-wider shadow-lg shadow-amber-500/20 hover:scale-105 transition-transform flex items-center gap-2 cursor-pointer">
                     <i data-lucide="video" class="w-4 h-4"></i>
                     <span>Teach a Class</span>
                 </a>
@@ -35,6 +43,113 @@
                 <a href="#browse-events" class="px-6 py-4 text-stone-400 hover:text-white font-bold text-sm flex items-center gap-1 transition">
                     <span>Live Gatherings</span>
                     <i data-lucide="arrow-down" class="w-3.5 h-3.5"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {{-- Teach a Class Format Selector Modal --}}
+    <div x-show="showTeachModal" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+         @click.self="showTeachModal = false"
+         @keydown.escape.window="showTeachModal = false">
+        <div class="bg-white dark:bg-stone-900 rounded-3xl max-w-2xl w-full p-6 sm:p-8 border border-stone-200 dark:border-stone-800 shadow-2xl space-y-6">
+            <div class="flex items-start justify-between gap-4 border-b border-stone-100 dark:border-stone-800 pb-4">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold mb-2">
+                        <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i>
+                        <span>Educational Hub Creator Studio</span>
+                    </div>
+                    <h3 class="text-xl sm:text-2xl font-black text-stone-900 dark:text-white">How Would You Like to Teach?</h3>
+                    <p class="text-xs sm:text-sm text-stone-500 dark:text-stone-400 mt-1">
+                        Choose whether to broadcast a live interactive class or publish an on-demand video lesson.
+                    </p>
+                </div>
+                <button type="button" @click="showTeachModal = false" class="p-2 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 hover:text-stone-800 dark:hover:text-white transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {{-- Option 1: Go Live Instantly --}}
+                <a href="{{ route('education.classes.create', ['mode' => 'live', 'live' => 'now']) }}"
+                   class="group p-5 rounded-2xl border-2 border-stone-200 dark:border-stone-800 hover:border-red-500 dark:hover:border-red-500 bg-stone-50/70 dark:bg-stone-950/60 hover:bg-red-500/5 transition-all flex flex-col justify-between gap-3">
+                    <div class="space-y-2">
+                        <div class="w-11 h-11 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition">
+                            <i data-lucide="radio" class="w-5 h-5"></i>
+                        </div>
+                        <h4 class="text-sm sm:text-base font-black text-stone-900 dark:text-white flex items-center gap-2">
+                            <span>Go Live Instantly</span>
+                            <span class="px-2 py-0.5 rounded-full bg-red-500/15 text-red-500 text-[10px] font-black uppercase">Live Now</span>
+                        </h4>
+                        <p class="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                            Start an instant live broadcast to teach learners in real time with live camera, audio, and community Q&amp;A.
+                        </p>
+                    </div>
+                    <span class="text-xs font-bold text-red-500 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                        <span>Start Live Broadcast</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </span>
+                </a>
+
+                {{-- Option 2: Schedule a Live Class --}}
+                <a href="{{ route('education.classes.create', ['mode' => 'live', 'live' => 'schedule']) }}"
+                   class="group p-5 rounded-2xl border-2 border-stone-200 dark:border-stone-800 hover:border-purple-500 dark:hover:border-purple-500 bg-stone-50/70 dark:bg-stone-950/60 hover:bg-purple-500/5 transition-all flex flex-col justify-between gap-3">
+                    <div class="space-y-2">
+                        <div class="w-11 h-11 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white transition">
+                            <i data-lucide="calendar-clock" class="w-5 h-5"></i>
+                        </div>
+                        <h4 class="text-sm sm:text-base font-black text-stone-900 dark:text-white">
+                            Schedule a Live Class
+                        </h4>
+                        <p class="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                            Set a future date and time for your live cultural lecture or language session so learners can RSVP.
+                        </p>
+                    </div>
+                    <span class="text-xs font-bold text-purple-500 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                        <span>Schedule Live Session</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </span>
+                </a>
+
+                {{-- Option 3: Upload a Video Class --}}
+                <a href="{{ route('education.classes.create', ['mode' => 'video', 'video' => 'upload']) }}"
+                   class="group p-5 rounded-2xl border-2 border-stone-200 dark:border-stone-800 hover:border-amber-500 dark:hover:border-amber-500 bg-stone-50/70 dark:bg-stone-950/60 hover:bg-amber-500/5 transition-all flex flex-col justify-between gap-3">
+                    <div class="space-y-2">
+                        <div class="w-11 h-11 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition">
+                            <i data-lucide="upload-cloud" class="w-5 h-5"></i>
+                        </div>
+                        <h4 class="text-sm sm:text-base font-black text-stone-900 dark:text-white">
+                            Upload a Video Class
+                        </h4>
+                        <p class="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                            Upload a pre-recorded video lesson using the normal creator studio with automatic on-view AI subtitles.
+                        </p>
+                    </div>
+                    <span class="text-xs font-bold text-amber-500 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                        <span>Upload Video Lesson</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </span>
+                </a>
+
+                {{-- Option 4: Record Video Directly --}}
+                <a href="{{ route('education.classes.create', ['mode' => 'video', 'video' => 'record']) }}"
+                   class="group p-5 rounded-2xl border-2 border-stone-200 dark:border-stone-800 hover:border-emerald-500 dark:hover:border-emerald-500 bg-stone-50/70 dark:bg-stone-950/60 hover:bg-emerald-500/5 transition-all flex flex-col justify-between gap-3">
+                    <div class="space-y-2">
+                        <div class="w-11 h-11 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition">
+                            <i data-lucide="camera" class="w-5 h-5"></i>
+                        </div>
+                        <h4 class="text-sm sm:text-base font-black text-stone-900 dark:text-white">
+                            Record Video in Studio
+                        </h4>
+                        <p class="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                            Record your lesson directly from your webcam and microphone on the platform and publish to the hub.
+                        </p>
+                    </div>
+                    <span class="text-xs font-bold text-emerald-500 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                        <span>Open Camera Studio</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </span>
                 </a>
             </div>
         </div>

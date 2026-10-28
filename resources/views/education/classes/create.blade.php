@@ -22,12 +22,22 @@
             isConfigured: config.isConfigured || false,
             maskedKey: config.maskedKey || '',
 
-            videoMode: 'upload', // 'upload' | 'record' | 'url'
+            studioMode: @json(request('mode') === 'live' ? 'live' : 'video'), // 'video' | 'live'
+            liveMode: @json(request('live') === 'schedule' ? 'schedule' : 'now'), // 'now' | 'schedule'
+            videoMode: @json(in_array(request('video'), ['upload', 'record', 'url']) ? request('video') : 'upload'), // 'upload' | 'record' | 'url'
             mediaFile: null,
             tempVideoPath: '',
             videoPreviewUrl: null,
             videoDuration: 0,
             fileSizeMb: null,
+
+            init() {
+                if (this.studioMode === 'video' && this.videoMode === 'record') {
+                    this.$nextTick(() => {
+                        this.startCamera();
+                    });
+                }
+            },
 
             // Direct in-browser camera recording state
             isCameraActive: false,
@@ -443,8 +453,189 @@
         </div>
     @endif
 
-    {{-- Main Studio Form --}}
-    <form method="POST" action="{{ route('education.classes.store') }}" enctype="multipart/form-data" @submit="handleSubmit($event)" novalidate class="space-y-8">
+    {{-- Teaching Format Selector: Go Live (Instant / Scheduled) or Video Class (Upload / Record) --}}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <button type="button"
+                @click="stopCameraStream(); studioMode = 'live'; liveMode = 'now'"
+                class="p-4 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-2 cursor-pointer"
+                :class="studioMode === 'live' && liveMode === 'now' ? 'border-red-500 bg-red-500/10 shadow-md' : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-red-500/50'">
+            <div class="flex items-center justify-between">
+                <div class="w-9 h-9 rounded-xl bg-red-500/15 text-red-500 flex items-center justify-center">
+                    <i data-lucide="radio" class="w-4 h-4"></i>
+                </div>
+                <span class="px-2 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-black uppercase">Live</span>
+            </div>
+            <div>
+                <div class="text-xs sm:text-sm font-black text-stone-900 dark:text-white">Go Live Instantly</div>
+                <p class="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-1">Start a real-time live class now</p>
+            </div>
+        </button>
+
+        <button type="button"
+                @click="stopCameraStream(); studioMode = 'live'; liveMode = 'schedule'"
+                class="p-4 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-2 cursor-pointer"
+                :class="studioMode === 'live' && liveMode === 'schedule' ? 'border-purple-500 bg-purple-500/10 shadow-md' : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-purple-500/50'">
+            <div class="flex items-center justify-between">
+                <div class="w-9 h-9 rounded-xl bg-purple-500/15 text-purple-500 flex items-center justify-center">
+                    <i data-lucide="calendar-clock" class="w-4 h-4"></i>
+                </div>
+                <span class="px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-500 text-[10px] font-black uppercase">Schedule</span>
+            </div>
+            <div>
+                <div class="text-xs sm:text-sm font-black text-stone-900 dark:text-white">Schedule Live Class</div>
+                <p class="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-1">Set a future date &amp; time</p>
+            </div>
+        </button>
+
+        <button type="button"
+                @click="stopCameraStream(); studioMode = 'video'; videoMode = 'upload'"
+                class="p-4 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-2 cursor-pointer"
+                :class="studioMode === 'video' && videoMode === 'upload' ? 'border-amber-500 bg-amber-500/10 shadow-md' : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-500/50'">
+            <div class="flex items-center justify-between">
+                <div class="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-500 flex items-center justify-center">
+                    <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                </div>
+                <span class="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 text-[10px] font-black uppercase">Video</span>
+            </div>
+            <div>
+                <div class="text-xs sm:text-sm font-black text-stone-900 dark:text-white">Upload Video Class</div>
+                <p class="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-1">Upload pre-recorded lesson</p>
+            </div>
+        </button>
+
+        <button type="button"
+                @click="studioMode = 'video'; videoMode = 'record'; startCamera()"
+                class="p-4 rounded-2xl border-2 text-left transition-all flex flex-col justify-between gap-2 cursor-pointer"
+                :class="studioMode === 'video' && videoMode === 'record' ? 'border-emerald-500 bg-emerald-500/10 shadow-md' : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-emerald-500/50'">
+            <div class="flex items-center justify-between">
+                <div class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center">
+                    <i data-lucide="camera" class="w-4 h-4"></i>
+                </div>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 text-[10px] font-black uppercase">Camera</span>
+            </div>
+            <div>
+                <div class="text-xs sm:text-sm font-black text-stone-900 dark:text-white">Record Video</div>
+                <p class="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-1">Record directly in studio</p>
+            </div>
+        </button>
+    </div>
+
+    {{-- LIVE CLASS STUDIO FORM (Go Live Instantly or Schedule a Live Class) --}}
+    <form x-show="studioMode === 'live'" x-cloak method="POST" action="{{ route('live-stream.store') }}" enctype="multipart/form-data" class="space-y-8">
+        @csrf
+        <input type="hidden" name="ai_thumbnail_path" :value="selectedBackgroundUrl">
+
+        <div class="bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-8 border border-stone-200 dark:border-stone-800 shadow-sm space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-stone-100 dark:border-stone-800 pb-4">
+                <div>
+                    <h2 class="text-lg sm:text-xl font-black text-stone-900 dark:text-white flex items-center gap-2">
+                        <i data-lucide="radio" class="w-5 h-5 text-red-500"></i>
+                        <span x-text="liveMode === 'now' ? 'Go Live Instantly — Cultural Class Broadcast' : 'Schedule an Upcoming Live Cultural Class'"></span>
+                    </h2>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5"
+                       x-text="liveMode === 'now' ? 'Launch a live interactive class room immediately with real-time chat and AI moderation.' : 'Pick a date and time so learners across the platform can join when you go live.'"></p>
+                </div>
+
+                <div class="inline-flex rounded-xl bg-stone-100 dark:bg-stone-950 p-1 border border-stone-200 dark:border-stone-800">
+                    <button type="button" @click="liveMode = 'now'"
+                            class="px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                            :class="liveMode === 'now' ? 'bg-red-600 text-white shadow-xs' : 'text-stone-600 dark:text-stone-400'">
+                        <i data-lucide="radio" class="w-3.5 h-3.5"></i>
+                        <span>Go Live Now</span>
+                    </button>
+                    <button type="button" @click="liveMode = 'schedule'"
+                            class="px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                            :class="liveMode === 'schedule' ? 'bg-purple-600 text-white shadow-xs' : 'text-stone-600 dark:text-stone-400'">
+                        <i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i>
+                        <span>Schedule for Later</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5">
+                            Live Class Title *
+                        </label>
+                        <input type="text" name="title" x-model="classTitle" required
+                               placeholder="e.g. Live Hausa Conversational Greetings & Etiquette"
+                               class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-4 py-3 text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5">
+                                Language / Category
+                            </label>
+                            <select name="category" x-model="targetLanguage"
+                                    class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-3.5 py-3 text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none">
+                                @foreach ($commonLanguages as $lang)
+                                    <option value="{{ $lang }} Class">{{ $lang }} Class</option>
+                                @endforeach
+                                <option value="Cultural Heritage">Cultural Heritage</option>
+                            </select>
+                        </div>
+
+                        <div x-show="liveMode === 'schedule'" x-transition>
+                            <label class="block text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5">
+                                Scheduled Date &amp; Time *
+                            </label>
+                            <input type="datetime-local" name="scheduled_at"
+                                   :disabled="liveMode !== 'schedule'"
+                                   :required="liveMode === 'schedule'"
+                                   class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-3.5 py-3 text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-purple-500 outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5">
+                            Class Description &amp; Topic Notes
+                        </label>
+                        <textarea name="description" rows="3"
+                                  placeholder="Tell learners what you will cover during this live cultural session..."
+                                  class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 p-3.5 text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none leading-relaxed">{{ old('description') }}</textarea>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5">
+                            Cover Thumbnail (Optional)
+                        </label>
+                        <input type="file" name="thumbnail" accept="image/*"
+                               class="w-full text-xs text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-white hover:file:bg-amber-600 transition cursor-pointer">
+                        <p class="text-[11px] text-stone-400 mt-1">Upload a cover image or select one of the cultural backdrops below.</p>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2">
+                        @foreach (array_slice($presets, 0, 3) as $preset)
+                            <div @click="selectedBackgroundUrl = '{{ $preset['image_url'] }}'"
+                                 class="relative rounded-xl overflow-hidden border-2 cursor-pointer transition-all aspect-video"
+                                 :class="selectedBackgroundUrl === '{{ $preset['image_url'] }}' ? 'border-amber-500 ring-2 ring-amber-500/40' : 'border-stone-200 dark:border-stone-800 opacity-80 hover:opacity-100'">
+                                <img src="{{ $preset['image_url'] }}" class="w-full h-full object-cover" alt="{{ $preset['name'] }}">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-1.5">
+                                    <span class="text-[9px] font-bold text-white line-clamp-1">{{ $preset['name'] }}</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-stone-100 dark:border-stone-800 flex items-center justify-end gap-3">
+                <button type="submit"
+                        class="px-7 py-3.5 rounded-2xl text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-lg transition-all flex items-center gap-2 cursor-pointer"
+                        :class="liveMode === 'now' ? 'bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 shadow-red-500/20' : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-purple-500/20'">
+                    <i data-lucide="video" class="w-4 h-4"></i>
+                    <span x-text="liveMode === 'now' ? 'Start Live Broadcast Now' : 'Schedule Live Class'"></span>
+                </button>
+            </div>
+        </div>
+    </form>
+
+    {{-- Main Video Class Studio Form (Upload File or Record Video Directly) --}}
+    <form x-show="studioMode === 'video'" method="POST" action="{{ route('education.classes.store') }}" enctype="multipart/form-data" @submit="handleSubmit($event)" novalidate class="space-y-8">
         @csrf
         <input type="hidden" name="temp_video_path" :value="tempVideoPath">
         <input type="hidden" name="video_duration" :value="videoDuration">
