@@ -363,7 +363,7 @@
                                         class="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition text-stone-600 hover:bg-stone-100">
                                         <i data-lucide="message-circle" class="w-3 h-3 sm:w-4 sm:h-4"></i>
                                         <span class="font-medium"
-                                            data-resonance-count="{{ $post->id }}">{{ $post->resonances->count() }} Resonance</span>
+                                            data-resonance-count="{{ $post->id }}">{{ $post->resonances->count() }}</span>
                                     </button>
 
                                     <!-- Check-In -->
@@ -802,7 +802,7 @@
                         }
                         input.value = '';
                         const countSpan = document.querySelector(`[data-resonance-count="${postId}"]`);
-                        if (countSpan) countSpan.innerText = `${data.count} Resonance`;
+                        if (countSpan) countSpan.innerText = `${data.count}`;
                         if (typeof lucide !== 'undefined') lucide.createIcons();
                     }
                 })
@@ -945,7 +945,7 @@
                     input.value = '';
                     toggleResonanceReplyBox(postId, resonanceId);
                     const countSpan = document.querySelector(`[data-resonance-count="${postId}"]`);
-                    if (countSpan) countSpan.innerText = `${data.count} Resonance`;
+                    if (countSpan) countSpan.innerText = `${data.count}`;
                     if (typeof lucide !== 'undefined') lucide.createIcons();
                 }
             })
