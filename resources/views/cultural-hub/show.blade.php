@@ -156,8 +156,9 @@
                 <div class="flex flex-wrap items-center justify-between gap-2.5">
                     <div class="flex items-center gap-2 flex-wrap">
                         {{-- Category / Subtype --}}
-                        <span class="px-3 py-1 rounded-md text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-stone-200 border border-stone-200 dark:border-stone-700">
-                            {{ $culture->category }}
+                        <span class="px-3 py-1 rounded-md text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-stone-200 border border-stone-200 dark:border-stone-700 inline-flex items-center gap-1.5">
+                            <i data-lucide="{{ $culture->category_icon }}" class="w-3.5 h-3.5 text-amber-500"></i>
+                            <span>{{ $culture->category }}</span>
                             @if($culture->subtype)
                                 <span class="text-stone-400 dark:text-stone-500">/</span> {{ $culture->subtype }}
                             @endif

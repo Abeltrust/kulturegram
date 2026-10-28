@@ -21,25 +21,44 @@
 @endphp
 
 @section('content')
-    <div class="max-w-md mx-auto mt-10 mb-10 bg-white dark:bg-stone-900 shadow-lg rounded-2xl p-6 border dark:border-stone-800"
+<div class="relative min-h-[calc(100vh-160px)] flex items-center justify-center py-10 px-4 overflow-hidden">
+    {{-- Ambient Amber Glowing Aura in Background --}}
+    <div class="absolute -top-32 -left-32 w-80 h-80 bg-amber-500/10 dark:bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-32 -right-32 w-80 h-80 bg-amber-500/10 dark:bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="relative w-full max-w-lg bg-white/95 dark:bg-stone-900/95 backdrop-blur-md shadow-2xl rounded-3xl p-6 sm:p-9 border border-stone-200/90 dark:border-stone-800 z-10 transition-all"
         x-data="registerForm(@js($initialState))">
 
-        <h2 class="text-2xl font-bold mb-2 text-center text-amber-500">
-            <span x-show="step === 1">Register</span>
-            <span x-show="step === 2" x-cloak>Your roots</span>
-        </h2>
-
-        <!-- Progress bar -->
-        <div class="mb-6">
-            <div class="flex gap-2" aria-hidden="true">
-                <div class="h-1.5 flex-1 rounded-full bg-amber-500"></div>
-                <div class="h-1.5 flex-1 rounded-full transition-colors duration-300"
-                    :class="step === 2 ? 'bg-amber-500' : 'bg-stone-200 dark:bg-stone-700'"></div>
+        {{-- Brand Header Badge --}}
+        <div class="text-center mb-6">
+            <div class="w-14 h-14 mx-auto mb-3.5 rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-500/25 flex items-center justify-center">
+                <i data-lucide="sparkles" class="w-7 h-7"></i>
             </div>
-            <p class="mt-2 text-xs text-center text-stone-500 dark:text-stone-400">
-                Step <span x-text="step">1</span> of 2 &middot;
-                <span x-text="step === 1 ? 'Account details' : 'Where you\'re from (optional)'">Account details</span>
+            <h2 class="text-2xl sm:text-3xl font-black text-amber-500 tracking-tight">
+                <span x-show="step === 1">Register</span>
+                <span x-show="step === 2" x-cloak>Your roots</span>
+            </h2>
+            <p class="text-xs sm:text-sm text-stone-500 dark:text-stone-400 mt-1 leading-relaxed">
+                <span x-show="step === 1">Create your profile to celebrate heritage and connect with your circle.</span>
+                <span x-show="step === 2" x-cloak>Share your origin and spoken languages to discover your people.</span>
             </p>
+        </div>
+
+        <!-- Modern Step Progress Indicator -->
+        <div class="mb-6 p-1.5 rounded-2xl bg-stone-100 dark:bg-stone-800/80 border border-stone-200/60 dark:border-stone-700/60">
+            <div class="grid grid-cols-2 gap-2 text-center text-xs font-bold">
+                <div class="py-2 px-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer"
+                     @click="if (step === 2) step = 1"
+                     :class="step === 1 ? 'bg-amber-500 text-white shadow-md' : 'bg-transparent text-stone-500 dark:text-stone-400 hover:text-amber-500'">
+                    <i data-lucide="circle-user-round" class="w-4 h-4"></i>
+                    <span>1. Account</span>
+                </div>
+                <div class="py-2 px-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5"
+                     :class="step === 2 ? 'bg-amber-500 text-white shadow-md' : 'bg-transparent text-stone-400 dark:text-stone-500'">
+                    <i data-lucide="globe" class="w-4 h-4"></i>
+                    <span>2. Roots</span>
+                </div>
+            </div>
         </div>
 
         <form method="POST" action="{{ route('register') }}" x-ref="form" @submit="onSubmit($event)" enctype="multipart/form-data" novalidate>
@@ -72,100 +91,146 @@
                     @enderror
                 </div>
                 <!-- Name -->
-                <div class="mb-4 relative">
-                    <label for="name" class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Name</label>
-                    <div class="mt-1 relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-400">
-                            <i data-lucide="circle-user-round" class="w-5 h-5"></i>
+                <div class="mb-4">
+                    <label for="name" class="block text-xs sm:text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5">Full Name</label>
+                    <div class="relative group">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-stone-400 group-focus-within:text-amber-500 transition-colors pointer-events-none">
+                            <i data-lucide="circle-user-round" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                         </span>
                         <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus
-                            class="pl-10 py-3 block w-full stnd-input px-4 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-200 dark:placeholder-stone-500"
-                            placeholder="name">
-                        @error('name')
-                            <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
-                        @enderror
+                            class="pl-10 py-3 block w-full stnd-input px-4 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-200 dark:placeholder-stone-500 transition"
+                            placeholder="Your full name">
                     </div>
+                    @error('name')
+                        <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1 font-medium">
+                            <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 <!-- Username -->
-                <div class="mb-4 relative">
-                    <label for="username"
-                        class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Username</label>
-                    <div class="mt-1 relative">
-                        <span class="mb-1 absolute inset-y-0 left-0 pl-3 flex items-center text-stone-400">
-                            <i data-lucide="user" class="w-5 h-5"></i>
+                <div class="mb-4">
+                    <label for="username" class="block text-xs sm:text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5">Username</label>
+                    <div class="relative group">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-stone-400 group-focus-within:text-amber-500 transition-colors pointer-events-none">
+                            <i data-lucide="at-sign" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                         </span>
                         <input id="username" type="text" name="username" value="{{ old('username') }}" required
-                            class="pl-10 py-3 block w-full stnd-input px-4 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-200 dark:placeholder-stone-500"
-                            placeholder="username">
-                        @error('username')
-                            <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
-                        @enderror
+                            class="pl-10 py-3 block w-full stnd-input px-4 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-200 dark:placeholder-stone-500 transition"
+                            placeholder="unique_username">
                     </div>
+                    @error('username')
+                        <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1 font-medium">
+                            <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 <!-- Email -->
-                <div class="mb-4 relative">
-                    <label for="email" class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Email</label>
-                    <div class="mt-1 relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-400">
-                            <i data-lucide="mail" class="w-5 h-5"></i>
+                <div class="mb-4">
+                    <label for="email" class="block text-xs sm:text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5">Email Address</label>
+                    <div class="relative group">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-stone-400 group-focus-within:text-amber-500 transition-colors pointer-events-none">
+                            <i data-lucide="mail" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                         </span>
                         <input id="email" type="email" name="email" value="{{ old('email') }}" required
-                            class="pl-10 py-3 block w-full stnd-input px-4 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-200 dark:placeholder-stone-500"
+                            class="pl-10 py-3 block w-full stnd-input px-4 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-200 dark:placeholder-stone-500 transition"
                             placeholder="your@email.com">
-                        @error('email')
-                            <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
-                        @enderror
                     </div>
+                    @error('email')
+                        <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1 font-medium">
+                            <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 <!-- Password -->
-                <div class="mb-4 relative" x-data="{ show: false }">
-                    <label for="password"
-                        class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Password</label>
-                    <div class="mt-1 relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-400">
-                            <i data-lucide="lock" class="w-5 h-5"></i>
+                <div class="mb-4" x-data="{ show: false }">
+                    <label for="password" class="block text-xs sm:text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5">Password</label>
+                    <div class="relative group">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-stone-400 group-focus-within:text-amber-500 transition-colors pointer-events-none">
+                            <i data-lucide="lock" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                         </span>
                         <input id="password" :type="show ? 'text' : 'password'" name="password" required
-                            class="pl-10 py-3 block w-full stnd-input px-4 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-200 dark:placeholder-stone-500"
-                            placeholder="Your password">
-                        <button type="button" class="absolute inset-y-0 right-3 text-sm text-gray-500" @click="show = !show"
-                            tabindex="-1">
-                            <span x-show="!show">👁</span>
-                            <span x-show="show">🙈</span>
+                            class="pl-10 pr-10 py-3 block w-full stnd-input px-4 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-200 dark:placeholder-stone-500 transition"
+                            placeholder="At least 8 characters">
+                        <button type="button" @click="show = !show; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); })"
+                            class="absolute inset-y-0 right-3.5 flex items-center text-stone-400 hover:text-amber-600 transition"
+                            tabindex="-1" aria-label="Toggle password visibility">
+                            <span x-show="!show"><i data-lucide="eye" class="w-4 h-4"></i></span>
+                            <span x-show="show" x-cloak><i data-lucide="eye-off" class="w-4 h-4"></i></span>
                         </button>
-                        @error('password')
-                            <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
-                        @enderror
                     </div>
+                    @error('password')
+                        <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1 font-medium">
+                            <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
                 <!-- Confirm Password -->
-                <div class="mb-6 relative" x-data="{ show: false }">
-                    <label for="password_confirmation"
-                        class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Confirm Password</label>
-                    <div class="mt-1 relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-400">
-                            <i data-lucide="lock" class="w-5 h-5"></i>
+                <div class="mb-6" x-data="{ show: false }">
+                    <label for="password_confirmation" class="block text-xs sm:text-sm font-semibold text-stone-700 dark:text-stone-300 mb-1.5">Confirm Password</label>
+                    <div class="relative group">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-stone-400 group-focus-within:text-amber-500 transition-colors pointer-events-none">
+                            <i data-lucide="shield-check" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                         </span>
                         <input id="password_confirmation" :type="show ? 'text' : 'password'" name="password_confirmation"
                             required
-                            class="pl-10 py-3 block w-full stnd-input px-4 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-200 dark:placeholder-stone-500"
-                            placeholder="confirmation password">
-                        <button type="button" class="absolute inset-y-0 right-3 text-sm text-gray-500" @click="show = !show"
-                            tabindex="-1">
-                            <span x-show="!show">👁</span>
-                            <span x-show="show">🙈</span>
+                            class="pl-10 pr-10 py-3 block w-full stnd-input px-4 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-200 dark:placeholder-stone-500 transition"
+                            placeholder="Confirm your password">
+                        <button type="button" @click="show = !show; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); })"
+                            class="absolute inset-y-0 right-3.5 flex items-center text-stone-400 hover:text-amber-600 transition"
+                            tabindex="-1" aria-label="Toggle password visibility">
+                            <span x-show="!show"><i data-lucide="eye" class="w-4 h-4"></i></span>
+                            <span x-show="show" x-cloak><i data-lucide="eye-off" class="w-4 h-4"></i></span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Continue -->
+                <!-- Terms & Community Agreement -->
+                <div class="mb-5 p-3.5 rounded-2xl border transition-all duration-200"
+                    :class="termsError
+                        ? 'border-red-400 bg-red-50/50 dark:border-red-500/60 dark:bg-red-950/20'
+                        : 'border-stone-200 dark:border-stone-800 bg-stone-50/60 dark:bg-stone-800/40'">
+                    <div class="flex items-start gap-3">
+                        <input type="checkbox" id="terms" name="terms" value="1"
+                            x-model="termsAccepted"
+                            @change="if (termsAccepted) termsError = false"
+                            class="mt-1 w-4 h-4 rounded text-amber-500 focus:ring-amber-400 border-stone-300 dark:border-stone-600 dark:bg-stone-800 cursor-pointer">
+                        <label for="terms" class="text-xs text-stone-600 dark:text-stone-300 select-none leading-relaxed">
+                            I have read and agree to the
+                            <button type="button" @click="showTermsModal = true" class="text-amber-600 dark:text-amber-400 font-bold hover:underline inline-flex items-center gap-0.5">
+                                Terms of Service
+                                <i data-lucide="external-link" class="w-3 h-3"></i>
+                            </button>
+                            and
+                            <a href="{{ route('privacy') }}" target="_blank" class="text-amber-600 dark:text-amber-400 font-bold hover:underline">
+                                Privacy Policy
+                            </a>,
+                            and agree to uphold cultural dignity and community standards.
+                        </label>
+                    </div>
+                    <p x-show="termsError" x-cloak class="text-xs text-red-500 mt-2 font-medium flex items-center gap-1.5">
+                        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                        You must agree to the Terms of Service before continuing.
+                    </p>
+                    @error('terms')
+                        <p class="text-xs text-red-500 mt-2 font-medium flex items-center gap-1.5">
+                            <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+
+                <!-- Continue Button -->
                 <button type="button" id="register-continue" @click="next()"
-                    class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition-colors duration-200 shadow-sm active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer">
-                    Continue
+                    class="w-full bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer text-sm">
+                    <span>Continue to Roots</span>
                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </button>
 
@@ -191,6 +256,17 @@
                 <p class="text-sm text-stone-600 dark:text-stone-400 mb-5 text-center">
                     Help us connect you with your people and culture. It takes a few seconds, and you can change it any time.
                 </p>
+
+                <!-- Terms Status Reassurance Badge -->
+                <div class="mb-4 flex items-center justify-between px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-300">
+                    <span class="inline-flex items-center gap-1.5 font-medium">
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-amber-500"></i>
+                        Terms & Community Guidelines agreed
+                    </span>
+                    <button type="button" @click="showTermsModal = true" class="text-[11px] font-semibold underline hover:text-amber-800 dark:hover:text-amber-200">
+                        Review
+                    </button>
+                </div>
 
                 <!-- Country -->
                 <div class="mb-4">
@@ -234,14 +310,14 @@
                     <label for="origin-area" class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
                         City / region / local area
                     </label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-400 pointer-events-none">
-                            <i data-lucide="map-pin" class="w-5 h-5"></i>
+                    <div class="relative group">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-stone-400 group-focus-within:text-amber-500 transition-colors pointer-events-none">
+                            <i data-lucide="map-pin" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                         </span>
                         <input id="origin-area" type="text" x-model="localArea" maxlength="120" autocomplete="off"
                             @focus="areaOpen = true; fetchAreas()" @input.debounce.300ms="areaOpen = true; fetchAreas()"
                             @keydown.escape="areaOpen = false" @keydown.enter.prevent="areaOpen = false"
-                            class="pl-10 py-3 block w-full stnd-input px-4 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-200 dark:placeholder-stone-500"
+                            class="pl-10 py-3 block w-full stnd-input px-4 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-200 dark:placeholder-stone-500 transition"
                             placeholder="e.g. Accra, Texas, Greater London">
                     </div>
                     <ul x-show="areaOpen && areaMatches.length" x-cloak x-transition.opacity.duration.150ms
@@ -279,9 +355,9 @@
                     </div>
 
                     <!-- Search / add -->
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-400 pointer-events-none">
-                            <i data-lucide="languages" class="w-5 h-5"></i>
+                    <div class="relative group">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-stone-400 group-focus-within:text-amber-500 transition-colors pointer-events-none">
+                            <i data-lucide="languages" class="w-4 h-4 sm:w-5 sm:h-5"></i>
                         </span>
                         <input id="origin-language" type="text" x-model="langQuery" autocomplete="off" maxlength="60"
                             :disabled="languagesFull"
@@ -290,7 +366,7 @@
                             @keydown.arrow-down.prevent="moveLang(1)" @keydown.arrow-up.prevent="moveLang(-1)"
                             @keydown.enter.prevent="pickActiveLanguage()" @keydown.escape="langOpen = false"
                             @keydown.backspace="if (!langQuery) removeLastLanguage()"
-                            class="pl-10 py-3 block w-full stnd-input px-4 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-200 dark:placeholder-stone-500 disabled:opacity-50">
+                            class="pl-10 py-3 block w-full stnd-input px-4 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-200 dark:placeholder-stone-500 disabled:opacity-50 transition">
                     </div>
 
                     <ul x-show="langOpen && langQuery.trim() && (languageMatches.length || canAddLanguage)" x-cloak
@@ -347,12 +423,13 @@
 
                 <!-- Actions -->
                 <button type="submit" id="register-submit" :disabled="submitting"
-                    class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition-colors duration-200 shadow-sm active:scale-[0.99] disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer">
+                    class="w-full bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-amber-500/20 transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer text-sm">
                     <svg x-show="submitting" x-cloak class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
                         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" class="opacity-25"></circle>
                         <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
                     </svg>
-                    Create account
+                    <span>Create My Account</span>
+                    <i data-lucide="check" class="w-4 h-4"></i>
                 </button>
 
                 <div class="mt-3 flex items-center justify-between text-sm">
@@ -366,8 +443,283 @@
                     </button>
                 </div>
             </div>
+            {{-- Interactive Terms & Conditions Modal --}}
+            <template x-teleport="body">
+                <div x-show="showTermsModal" x-cloak
+                    class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-3 sm:p-4 bg-stone-900/80 backdrop-blur-sm"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0"
+                    x-transition:enter-end="opacity-100"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0">
+
+                    <div class="relative w-full max-w-2xl max-h-[90vh] bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 shadow-2xl flex flex-col overflow-hidden"
+                        @click.outside="showTermsModal = false"
+                        @keydown.escape.window="showTermsModal = false">
+
+                        {{-- Modal Header --}}
+                        <div class="p-5 sm:p-6 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between shrink-0 bg-stone-50/80 dark:bg-stone-900/80">
+                            <div>
+                                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-400 text-[11px] font-bold mb-1">
+                                    <i data-lucide="scale" class="w-3.5 h-3.5"></i>
+                                    Community Standards & Terms
+                                </div>
+                                <h3 class="text-lg sm:text-xl font-black text-amber-500">
+                                    Kulturegram Terms of Service
+                                </h3>
+                            </div>
+                            <button type="button" @click="showTermsModal = false"
+                                class="w-9 h-9 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 flex items-center justify-center text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 transition">
+                                <i data-lucide="x" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+
+                        {{-- Modal Scrollable Content --}}
+                        <div class="p-5 sm:p-6 overflow-y-auto modern-scrollbar space-y-6 text-xs sm:text-sm text-stone-700 dark:text-stone-300 leading-relaxed">
+                            {{-- Quick Summary Card --}}
+                            <div class="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 space-y-2">
+                                <h4 class="font-bold text-amber-800 dark:text-amber-400 flex items-center gap-1.5 text-xs uppercase tracking-wider">
+                                    <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+                                    The Gist (Plain English Summary)
+                                </h4>
+                                <ul class="space-y-1.5 text-stone-600 dark:text-stone-400 text-xs">
+                                    <li class="flex items-start gap-2">
+                                        <i data-lucide="check" class="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5"></i>
+                                        <span><strong>Creator-First:</strong> You retain 100% ownership of your photos, audio, videos, stories, and cultural folklore.</span>
+                                    </li>
+                                    <li class="flex items-start gap-2">
+                                        <i data-lucide="check" class="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5"></i>
+                                        <span><strong>Cultural Dignity:</strong> Zero tolerance for hate speech, ethnic mockery, discrimination, or publishing sacred restricted rituals.</span>
+                                    </li>
+                                    <li class="flex items-start gap-2">
+                                        <i data-lucide="check" class="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5"></i>
+                                        <span><strong>Locked-In Privacy:</strong> Direct messaging is reserved for your mutually locked-in circles to maintain safety and privacy.</span>
+                                    </li>
+                                    <li class="flex items-start gap-2">
+                                        <i data-lucide="check" class="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5"></i>
+                                        <span><strong>Tagging Sovereignty:</strong> You can remove your tag from any post at any time without asking permission.</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            {{-- Section 1 --}}
+                            <div class="space-y-1.5">
+                                <h4 class="font-bold text-stone-900 dark:text-white flex items-center gap-1.5">
+                                    <i data-lucide="user-check" class="w-4 h-4 text-amber-500"></i>
+                                    1. Age & Eligibility
+                                </h4>
+                                <p class="text-stone-600 dark:text-stone-400 text-xs">
+                                    You must be at least 13 years old (or the legal age required in your jurisdiction) to create an account. You agree to provide accurate information and safeguard your password credentials.
+                                </p>
+                            </div>
+
+                            {{-- Section 2 --}}
+                            <div class="space-y-1.5">
+                                <h4 class="font-bold text-stone-900 dark:text-white flex items-center gap-1.5">
+                                    <i data-lucide="lock" class="w-4 h-4 text-amber-500"></i>
+                                    2. Social Circles & Messaging
+                                </h4>
+                                <p class="text-stone-600 dark:text-stone-400 text-xs">
+                                    Direct messaging is exclusive to members who have mutually "Locked-In". Vibing with a profile lets you see curated updates in your timeline without opening direct messaging access.
+                                </p>
+                            </div>
+
+                            {{-- Section 3 --}}
+                            <div class="space-y-1.5">
+                                <h4 class="font-bold text-stone-900 dark:text-white flex items-center gap-1.5">
+                                    <i data-lucide="heart-handshake" class="w-4 h-4 text-amber-500"></i>
+                                    3. Cultural Reverence & Zero Hate Speech
+                                </h4>
+                                <p class="text-stone-600 dark:text-stone-400 text-xs">
+                                    Kulturegram enforces a zero-tolerance policy against tribalism, casteism, ethnic chauvinism, xenophobia, and harassment. Sacred, non-public rituals protected by customary laws may not be broadcasted without consent from legitimate lineage elders.
+                                </p>
+                            </div>
+
+                            {{-- Section 4 --}}
+                            <div class="space-y-1.5">
+                                <h4 class="font-bold text-stone-900 dark:text-white flex items-center gap-1.5">
+                                    <i data-lucide="award" class="w-4 h-4 text-amber-500"></i>
+                                    4. Intellectual Property & Content Rights
+                                </h4>
+                                <p class="text-stone-600 dark:text-stone-400 text-xs">
+                                    You own all content you post. You grant Kulturegram a limited, royalty-free license solely to host, display, and format your contributions on our platform. We never sell your personal data or cultural memories to third-party ad brokers.
+                                </p>
+                            </div>
+
+                            {{-- Section 5 --}}
+                            <div class="space-y-1.5">
+                                <h4 class="font-bold text-stone-900 dark:text-white flex items-center gap-1.5">
+                                    <i data-lucide="shield-alert" class="w-4 h-4 text-amber-500"></i>
+                                    5. Safety, Scrapers & Bots
+                                </h4>
+                                <p class="text-stone-600 dark:text-stone-400 text-xs">
+                                    Automated scrapers, bot accounts, spamming, impersonation, doxxing, malware distribution, and illegal material are strictly banned and subject to permanent termination and legal reporting.
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Modal Footer --}}
+                        <div class="p-4 sm:p-5 border-t border-stone-200 dark:border-stone-800 bg-stone-50/80 dark:bg-stone-900/80 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+                            <a href="{{ route('terms') }}" target="_blank" class="text-xs text-stone-500 hover:text-amber-600 flex items-center gap-1 font-medium">
+                                Read complete legal document
+                                <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+                            </a>
+                            <div class="flex items-center gap-2 w-full sm:w-auto">
+                                <button type="button" @click="showTermsModal = false"
+                                    class="flex-1 sm:flex-none px-4 py-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs font-semibold hover:bg-stone-50 dark:hover:bg-stone-700 transition">
+                                    Close
+                                </button>
+                                <button type="button" @click="termsAccepted = true; termsError = false; showTermsModal = false;"
+                                    class="flex-1 sm:flex-none px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-bold transition shadow-md flex items-center justify-center gap-1.5">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                    I Agree & Accept
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+            {{-- Interactive Terms & Conditions Modal --}}
+            <template x-teleport="body">
+                <div x-show="showTermsModal" x-cloak
+                    class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-3 sm:p-4 bg-stone-900/80 backdrop-blur-sm"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0"
+                    x-transition:enter-end="opacity-100"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0">
+
+                    <div class="relative w-full max-w-2xl max-h-[90vh] bg-white dark:bg-stone-900 rounded-3xl border border-stone-200 dark:border-stone-800 shadow-2xl flex flex-col overflow-hidden"
+                        @click.outside="showTermsModal = false"
+                        @keydown.escape.window="showTermsModal = false">
+
+                        {{-- Modal Header --}}
+                        <div class="p-5 sm:p-6 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between shrink-0 bg-stone-50/80 dark:bg-stone-900/80">
+                            <div>
+                                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-400 text-[11px] font-bold mb-1">
+                                    <i data-lucide="scale" class="w-3.5 h-3.5"></i>
+                                    Community Standards & Terms
+                                </div>
+                                <h3 class="text-lg sm:text-xl font-black text-amber-500">
+                                    Kulturegram Terms of Service
+                                </h3>
+                            </div>
+                            <button type="button" @click="showTermsModal = false"
+                                class="w-9 h-9 rounded-xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 flex items-center justify-center text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 transition">
+                                <i data-lucide="x" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+
+                        {{-- Modal Scrollable Content --}}
+                        <div class="p-5 sm:p-6 overflow-y-auto modern-scrollbar space-y-6 text-xs sm:text-sm text-stone-700 dark:text-stone-300 leading-relaxed">
+                            {{-- Quick Summary Card --}}
+                            <div class="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 space-y-2">
+                                <h4 class="font-bold text-amber-800 dark:text-amber-400 flex items-center gap-1.5 text-xs uppercase tracking-wider">
+                                    <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+                                    The Gist (Plain English Summary)
+                                </h4>
+                                <ul class="space-y-1.5 text-stone-600 dark:text-stone-400 text-xs">
+                                    <li class="flex items-start gap-2">
+                                        <i data-lucide="check" class="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5"></i>
+                                        <span><strong>Creator-First:</strong> You retain 100% ownership of your photos, audio, videos, stories, and cultural folklore.</span>
+                                    </li>
+                                    <li class="flex items-start gap-2">
+                                        <i data-lucide="check" class="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5"></i>
+                                        <span><strong>Cultural Dignity:</strong> Zero tolerance for hate speech, ethnic mockery, discrimination, or publishing sacred restricted rituals.</span>
+                                    </li>
+                                    <li class="flex items-start gap-2">
+                                        <i data-lucide="check" class="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5"></i>
+                                        <span><strong>Locked-In Privacy:</strong> Direct messaging is reserved for your mutually locked-in circles to maintain safety and privacy.</span>
+                                    </li>
+                                    <li class="flex items-start gap-2">
+                                        <i data-lucide="check" class="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5"></i>
+                                        <span><strong>Tagging Sovereignty:</strong> You can remove your tag from any post at any time without asking permission.</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            {{-- Section 1 --}}
+                            <div class="space-y-1.5">
+                                <h4 class="font-bold text-stone-900 dark:text-white flex items-center gap-1.5">
+                                    <i data-lucide="user-check" class="w-4 h-4 text-amber-500"></i>
+                                    1. Age & Eligibility
+                                </h4>
+                                <p class="text-stone-600 dark:text-stone-400 text-xs">
+                                    You must be at least 13 years old (or the legal age required in your jurisdiction) to create an account. You agree to provide accurate information and safeguard your password credentials.
+                                </p>
+                            </div>
+
+                            {{-- Section 2 --}}
+                            <div class="space-y-1.5">
+                                <h4 class="font-bold text-stone-900 dark:text-white flex items-center gap-1.5">
+                                    <i data-lucide="lock" class="w-4 h-4 text-amber-500"></i>
+                                    2. Social Circles & Messaging
+                                </h4>
+                                <p class="text-stone-600 dark:text-stone-400 text-xs">
+                                    Direct messaging is exclusive to members who have mutually "Locked-In". Vibing with a profile lets you see curated updates in your timeline without opening direct messaging access.
+                                </p>
+                            </div>
+
+                            {{-- Section 3 --}}
+                            <div class="space-y-1.5">
+                                <h4 class="font-bold text-stone-900 dark:text-white flex items-center gap-1.5">
+                                    <i data-lucide="heart-handshake" class="w-4 h-4 text-amber-500"></i>
+                                    3. Cultural Reverence & Zero Hate Speech
+                                </h4>
+                                <p class="text-stone-600 dark:text-stone-400 text-xs">
+                                    Kulturegram enforces a zero-tolerance policy against tribalism, casteism, ethnic chauvinism, xenophobia, and harassment. Sacred, non-public rituals protected by customary laws may not be broadcasted without consent from legitimate lineage elders.
+                                </p>
+                            </div>
+
+                            {{-- Section 4 --}}
+                            <div class="space-y-1.5">
+                                <h4 class="font-bold text-stone-900 dark:text-white flex items-center gap-1.5">
+                                    <i data-lucide="award" class="w-4 h-4 text-amber-500"></i>
+                                    4. Intellectual Property & Content Rights
+                                </h4>
+                                <p class="text-stone-600 dark:text-stone-400 text-xs">
+                                    You own all content you post. You grant Kulturegram a limited, royalty-free license solely to host, display, and format your contributions on our platform. We never sell your personal data or cultural memories to third-party ad brokers.
+                                </p>
+                            </div>
+
+                            {{-- Section 5 --}}
+                            <div class="space-y-1.5">
+                                <h4 class="font-bold text-stone-900 dark:text-white flex items-center gap-1.5">
+                                    <i data-lucide="shield-alert" class="w-4 h-4 text-amber-500"></i>
+                                    5. Safety, Scrapers & Bots
+                                </h4>
+                                <p class="text-stone-600 dark:text-stone-400 text-xs">
+                                    Automated scrapers, bot accounts, spamming, impersonation, doxxing, malware distribution, and illegal material are strictly banned and subject to permanent termination and legal reporting.
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Modal Footer --}}
+                        <div class="p-4 sm:p-5 border-t border-stone-200 dark:border-stone-800 bg-stone-50/80 dark:bg-stone-900/80 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+                            <a href="{{ route('terms') }}" target="_blank" class="text-xs text-stone-500 hover:text-amber-600 flex items-center gap-1 font-medium">
+                                Read complete legal document
+                                <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+                            </a>
+                            <div class="flex items-center gap-2 w-full sm:w-auto">
+                                <button type="button" @click="showTermsModal = false"
+                                    class="flex-1 sm:flex-none px-4 py-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs font-semibold hover:bg-stone-50 dark:hover:bg-stone-700 transition">
+                                    Close
+                                </button>
+                                <button type="button" @click="termsAccepted = true; termsError = false; showTermsModal = false;"
+                                    class="flex-1 sm:flex-none px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-bold transition shadow-md flex items-center justify-center gap-1.5">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                    I Agree & Accept
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
         </form>
     </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -447,6 +799,9 @@
             return {
                 step: initial.step,
                 submitting: false,
+                termsAccepted: Boolean({{ old('terms') ? 'true' : 'false' }}),
+                termsError: false,
+                showTermsModal: false,
                 detectedCountryId: null,
                 maxLanguages: 10,
 
@@ -476,6 +831,9 @@
                         this.areaSuggestions = [];
                     });
                     this.$watch('stateId', () => { this.lgaId = null; });
+                    this.$watch('showTermsModal', (val) => {
+                        if (val) this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+                    });
                 },
 
                 // ---------- Location ----------
@@ -604,6 +962,13 @@
                         confirm.addEventListener('input', () => confirm.setCustomValidity(''), { once: true });
                         return;
                     }
+                    if (!this.termsAccepted) {
+                        this.termsError = true;
+                        const termsEl = document.getElementById('terms');
+                        if (termsEl) termsEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        return;
+                    }
+                    this.termsError = false;
                     this.step = 2;
                     if (!this.countryId) this.detectCountry();
                     this.$nextTick(() => {
@@ -617,9 +982,20 @@
                         this.next();
                         return;
                     }
+                    if (!this.termsAccepted) {
+                        event.preventDefault();
+                        this.step = 1;
+                        this.termsError = true;
+                        return;
+                    }
                     this.submitting = true;
                 },
                 skip() {
+                    if (!this.termsAccepted) {
+                        this.step = 1;
+                        this.termsError = true;
+                        return;
+                    }
                     this.countryId = null;
                     this.$nextTick(() => {
                         this.languageIds = [];

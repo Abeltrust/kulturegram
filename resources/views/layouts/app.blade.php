@@ -148,6 +148,16 @@
         .bg-clip-text {
             color: transparent !important;
         }
+
+        /* Ensure profile avatar and cover banner images preserve aspect ratio without stretching */
+        #profile-avatar-display,
+        #profile-cover-display,
+        #settings-avatar-img,
+        #settings-cover-img,
+        .avatar-img-proportional {
+            object-fit: cover !important;
+            max-width: 100% !important;
+        }
         [x-cloak] { display: none !important; }
         html, body {
             max-width: 100%;
@@ -163,9 +173,79 @@
             .gap-8 { @apply gap-4; }
         }
 
-        /* Standardized Input Styling */
-        .stnd-input {
-            @apply rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 focus:outline-none placeholder-stone-400 dark:placeholder-stone-500 transition-colors;
+        /* Standardized Input & Modern Amber Outline System */
+        .stnd-input,
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="search"],
+        input[type="tel"],
+        input[type="number"],
+        input[type="url"],
+        textarea,
+        select {
+            border-radius: 0.75rem;
+            border: 1.5px solid #d6d3d1; /* stone-300 */
+            background-color: #ffffff;
+            color: #1c1917; /* stone-900 */
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background-color 0.15s ease;
+        }
+
+        .dark .stnd-input,
+        .dark input[type="text"],
+        .dark input[type="email"],
+        .dark input[type="password"],
+        .dark input[type="search"],
+        .dark input[type="tel"],
+        .dark input[type="number"],
+        .dark input[type="url"],
+        .dark textarea,
+        .dark select {
+            border-color: #44403c; /* stone-700 */
+            background-color: #1c1917; /* stone-900 */
+            color: #f5f5f4; /* stone-100 */
+        }
+
+        /* Hover border amber */
+        .stnd-input:hover,
+        input[type="text"]:hover,
+        input[type="email"]:hover,
+        input[type="password"]:hover,
+        input[type="search"]:hover,
+        input[type="tel"]:hover,
+        input[type="number"]:hover,
+        input[type="url"]:hover,
+        textarea:hover,
+        select:hover {
+            border-color: #fbbf24; /* amber-400 */
+        }
+
+        /* Glowing Amber Outline on Focus */
+        .stnd-input:focus,
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        input[type="search"]:focus,
+        input[type="tel"]:focus,
+        input[type="number"]:focus,
+        input[type="url"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none !important;
+            border-color: #f59e0b !important; /* amber-500 */
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.28) !important;
+        }
+
+        /* Modern Select Inputs with Amber Chevron */
+        select:not([multiple]) {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f59e0b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 0.85rem center !important;
+            background-size: 1.15rem !important;
+            padding-right: 2.5rem !important;
+            cursor: pointer;
         }
 
         /* Modal Animations */
@@ -185,10 +265,36 @@
             animation: backdrop-fade 0.3s ease-out forwards;
         }
 
-        /* Custom Modern Scrollbar */
+        /* Modern Amber Scrollbar across Whole Page & All Modals/Containers */
+        *::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.03);
+        }
+
+        .dark *::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background: #f59e0b; /* System Amber */
+            border-radius: 9999px;
+            border: 1px solid transparent;
+            background-clip: padding-box;
+            transition: background 0.2s ease;
+        }
+
+        *::-webkit-scrollbar-thumb:hover {
+            background: #d97706; /* Amber-600 */
+        }
+
+        /* Specific Modern Scrollbar for Modals, Dropdowns & Lists */
         .modern-scrollbar::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
+            width: 6px;
+            height: 6px;
         }
 
         .modern-scrollbar::-webkit-scrollbar-track {
@@ -196,31 +302,18 @@
         }
 
         .modern-scrollbar::-webkit-scrollbar-thumb {
-            background: #d6d3d1; /* stone-300 */
-            border-radius: 10px;
-            transition: background 0.2s ease;
+            background: #f59e0b;
+            border-radius: 9999px;
         }
 
         .modern-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #a8a29e; /* stone-400 */
+            background: #d97706;
         }
 
-        .dark .modern-scrollbar::-webkit-scrollbar-thumb {
-            background: #44403c; /* stone-700 */
-        }
-
-        .dark .modern-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #57534e; /* stone-600 */
-        }
-
-        /* Firefox Support */
-        .modern-scrollbar {
+        /* Firefox Support for Whole Page & Modals */
+        html, body, * {
             scrollbar-width: thin;
-            scrollbar-color: #d6d3d1 transparent;
-        }
-
-        .dark .modern-scrollbar {
-            scrollbar-color: #44403c transparent;
+            scrollbar-color: #f59e0b transparent;
         }
 
         /* Hide Scrollbar Utilities */
@@ -812,14 +905,14 @@
                             id="postVoiceMicBtn"
                             class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 transition active:scale-95 shadow-sm">
                         <i data-lucide="mic" class="w-3.5 h-3.5 text-amber-500" id="postVoiceMicIcon"></i>
-                        <span id="postVoiceMicText">🎙️ Speak Story</span>
+                        <span id="postVoiceMicText">Speak Story</span>
                     </button>
                     <button type="button" 
                             onclick="formatPostVoiceStory()" 
                             id="postVoiceFormatBtn"
                             class="inline-flex items-center gap-1.5 text-xs font-bold text-white px-3 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 transition active:scale-95 shadow-sm">
                         <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                        <span id="postVoiceFormatText">✨ AI Format</span>
+                        <span id="postVoiceFormatText">AI Format</span>
                     </button>
                 </div>
             </div>
@@ -873,7 +966,7 @@
                             onclick="formatPostVoiceStory()"
                             class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs shadow-md flex items-center gap-1.5 transition active:scale-95">
                         <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                        <span>✨ Arrange & Format for Post</span>
+                        <span>Arrange & Format for Post</span>
                     </button>
                 </div>
             </div>
@@ -883,7 +976,7 @@
                 id="postContentTextarea"
                 name="content" 
                 required 
-                placeholder="What's happening in your story today? Share your cultural insights, daily experiences, or heritage discoveries... Or click '🎙️ Speak Story' above to dictate naturally! (Tip: use @username to tag people and #hashtag to categorize)" 
+                placeholder="What's happening in your story today? Share your cultural insights, daily experiences, or heritage discoveries... Or click 'Speak Story' above to dictate naturally! (Tip: use @username to tag people and #hashtag to categorize)" 
                 class="w-full h-24 md:h-32 resize-none border-2 border-stone-200 dark:border-stone-700 bg-transparent text-stone-800 dark:text-stone-100 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:focus:border-amber-500 hover:border-amber-500 dark:hover:border-stone-600 placeholder-stone-400 dark:placeholder-stone-500 leading-relaxed p-2 md:p-3 transition-all text-sm md:text-base"></textarea>
 
             <input type="hidden" name="oral_transcript" id="modalPostOralTranscript">
@@ -1309,7 +1402,7 @@
 
             stopPostVoiceDictation();
             const formatText = document.getElementById('postVoiceFormatText');
-            const origFormatHtml = formatText ? formatText.textContent : '✨ AI Format';
+            const origFormatHtml = formatText ? formatText.textContent : 'AI Format';
             if (formatText) formatText.textContent = 'Formatting...';
 
             try {

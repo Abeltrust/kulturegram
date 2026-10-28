@@ -43,7 +43,11 @@ class RegisteredUserController extends Controller
             'email' => 'required|string|lowercase|email|max:255|unique:users,email',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-        ], $origin->rules($request)), $origin->messages());
+            'terms' => ['required', 'accepted'],
+        ], $origin->rules($request)), array_merge([
+            'terms.required' => 'You must review and agree to the Kulturegram Terms of Service and Community Guidelines before signing up.',
+            'terms.accepted' => 'You must review and agree to the Kulturegram Terms of Service and Community Guidelines before signing up.',
+        ], $origin->messages()));
 
         $user = DB::transaction(function () use ($request, $validated, $origin) {
             $user = User::create([

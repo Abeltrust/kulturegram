@@ -185,7 +185,7 @@
                             <div class="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
                                 <div class="space-y-1.5">
                                     <div class="flex items-center justify-between text-[10px] text-stone-500">
-                                        <span class="font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">{{ $culture->category }}</span>
+                                        <span class="font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 inline-flex items-center gap-1.5"><i data-lucide="{{ $culture->category_icon }}" class="w-3.5 h-3.5 text-amber-500"></i><span>{{ $culture->category }}</span></span>
                                         @if($culture->cultural_group)
                                             <span class="truncate max-w-[120px]">{{ $culture->cultural_group }}</span>
                                         @endif
@@ -277,16 +277,7 @@
                                 class="flex items-center justify-between group px-6 py-4 rounded-[1.5rem] transition-all duration-500 {{ $category === $key ? 'bg-stone-900 dark:bg-white text-white dark:text-stone-900 shadow-2xl scale-[1.05] z-10' : 'text-stone-500 dark:text-stone-400 hover:bg-white dark:hover:bg-stone-800 hover:shadow-xl hover:scale-[1.02]' }}">
                                 <div class="flex items-center space-x-4">
                                     @php
-                                        $icon = match($key) {
-                                            'all' => 'globe-2',
-                                            'festivals' => 'party-popper',
-                                            'traditions' => 'scroll',
-                                            'music' => 'music-4',
-                                            'heritage' => 'landmark',
-                                            'crafts' => 'hammer',
-                                            'language' => 'languages',
-                                            default => 'sparkles'
-                                        };
+                                        $icon = \App\Models\Culture::getCategoryIcon($key);
                                     @endphp
                                     <i data-lucide="{{ $icon }}" class="w-5 h-5 {{ $category === $key ? 'text-amber-500' : 'text-stone-400 group-hover:text-amber-500' }} transition-colors"></i>
                                     <span class="text-[11px] font-black uppercase tracking-tight">{{ $label }}</span>

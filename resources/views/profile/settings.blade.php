@@ -19,24 +19,42 @@
         this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
     },
 
-    // Avatar adjustment modal in settings
+    // Avatar interactive crop state in settings
     showAvatarModal: false,
     avatarFile: null,
     avatarFilename: '',
     avatarFilesize: '',
     avatarModalImg: '',
+    avatarNaturalWidth: 0,
+    avatarNaturalHeight: 0,
     avatarScale: 1.0,
     avatarRotation: 0,
+    avatarOffsetX: 0,
+    avatarOffsetY: 0,
+    isDraggingAvatar: false,
+    avatarDragStartX: 0,
+    avatarDragStartY: 0,
+    avatarDragInitX: 0,
+    avatarDragInitY: 0,
     isSavingAvatar: false,
 
-    // Cover adjustment modal in settings
+    // Cover interactive crop state in settings
     showCoverModal: false,
     coverFile: null,
     coverFilename: '',
     coverFilesize: '',
     coverModalImg: '',
+    coverNaturalWidth: 0,
+    coverNaturalHeight: 0,
     coverScale: 1.0,
+    coverRotation: 0,
+    coverOffsetX: 0,
     coverOffsetY: 0,
+    isDraggingCover: false,
+    coverDragStartX: 0,
+    coverDragStartY: 0,
+    coverDragInitX: 0,
+    coverDragInitY: 0,
     isSavingCover: false,
 
     // Toast feedback
@@ -61,20 +79,76 @@
         this.avatarFilesize = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
         this.avatarScale = 1.0;
         this.avatarRotation = 0;
+        this.avatarOffsetX = 0;
+        this.avatarOffsetY = 0;
+        this.isDraggingAvatar = false;
         
         const reader = new FileReader();
         reader.onload = (e) => {
             this.avatarModalImg = e.target.result;
-            this.showAvatarModal = true;
-            this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+            const testImg = new Image();
+            testImg.onload = () => {
+                this.avatarNaturalWidth = testImg.naturalWidth;
+                this.avatarNaturalHeight = testImg.naturalHeight;
+                this.showAvatarModal = true;
+                this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+            };
+            testImg.src = e.target.result;
         };
         reader.readAsDataURL(file);
+    },
+
+    startAvatarDrag(e) {
+        this.isDraggingAvatar = true;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        this.avatarDragStartX = clientX;
+        this.avatarDragStartY = clientY;
+        this.avatarDragInitX = this.avatarOffsetX;
+        this.avatarDragInitY = this.avatarOffsetY;
+    },
+
+    onAvatarDrag(e) {
+        if (!this.isDraggingAvatar) return;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        this.avatarOffsetX = this.avatarDragInitX + (clientX - this.avatarDragStartX);
+        this.avatarOffsetY = this.avatarDragInitY + (clientY - this.avatarDragStartY);
+    },
+
+    stopAvatarDrag() {
+        this.isDraggingAvatar = false;
+    },
+
+    onAvatarWheel(e) {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.05 : -0.05;
+        this.avatarScale = Math.min(3.0, Math.max(0.5, +(this.avatarScale + delta).toFixed(2)));
+    },
+
+    getAvatarImgStyle() {
+        if (!this.avatarNaturalWidth || !this.avatarNaturalHeight) {
+            return 'width: 100%; height: 100%; object-fit: cover;';
+        }
+        const W = this.avatarNaturalWidth;
+        const H = this.avatarNaturalHeight;
+        const V = 280;
+        let baseW, baseH;
+        if (W >= H) {
+            baseH = V;
+            baseW = V * (W / H);
+        } else {
+            baseW = V;
+            baseH = V * (H / W);
+        }
+        return `width: ${baseW}px; height: ${baseH}px; left: calc(50% + ${this.avatarOffsetX}px); top: calc(50% + ${this.avatarOffsetY}px); transform: translate(-50%, -50%) scale(${this.avatarScale}) rotate(${this.avatarRotation}deg);`;
     },
 
     closeAvatarModal() {
         this.showAvatarModal = false;
         this.avatarFile = null;
         this.avatarModalImg = '';
+        this.isDraggingAvatar = false;
         const input = document.getElementById('settings-avatar-input');
         if (input) input.value = '';
     },
@@ -87,15 +161,31 @@
         canvas.width = 512;
         canvas.height = 512;
         const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
         const img = new Image();
         img.onload = () => {
             ctx.clearRect(0, 0, 512, 512);
             ctx.save();
-            ctx.translate(256, 256);
+
+            const M = 512 / 280;
+            ctx.translate(256 + this.avatarOffsetX * M, 256 + this.avatarOffsetY * M);
             ctx.rotate((this.avatarRotation * Math.PI) / 180);
             ctx.scale(this.avatarScale, this.avatarScale);
-            ctx.drawImage(img, -256, -256, 512, 512);
+
+            const W = img.naturalWidth;
+            const H = img.naturalHeight;
+            let baseW, baseH;
+            if (W >= H) {
+                baseH = 512;
+                baseW = 512 * (W / H);
+            } else {
+                baseW = 512;
+                baseH = 512 * (H / W);
+            }
+
+            ctx.drawImage(img, -baseW / 2, -baseH / 2, baseW, baseH);
             ctx.restore();
 
             canvas.toBlob((blob) => {
@@ -118,6 +208,7 @@
                         this.avatarPreview = data.avatar_url;
                         const avatarImg = document.getElementById('settings-avatar-img');
                         if (avatarImg) avatarImg.src = data.avatar_url;
+                        document.querySelectorAll('.user-avatar-sync').forEach(el => el.src = data.avatar_url);
                         this.notify(data.message || 'Profile picture updated successfully!');
                         this.closeAvatarModal();
                     } else {
@@ -129,7 +220,7 @@
                     this.isSavingAvatar = false;
                     this.closeAvatarModal();
                 });
-            }, 'image/jpeg', 0.92);
+            }, 'image/jpeg', 0.95);
         };
         img.src = this.avatarModalImg;
     },
@@ -145,21 +236,79 @@
         this.coverFilename = file.name;
         this.coverFilesize = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
         this.coverScale = 1.0;
+        this.coverRotation = 0;
+        this.coverOffsetX = 0;
         this.coverOffsetY = 0;
+        this.isDraggingCover = false;
 
         const reader = new FileReader();
         reader.onload = (e) => {
             this.coverModalImg = e.target.result;
-            this.showCoverModal = true;
-            this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+            const testImg = new Image();
+            testImg.onload = () => {
+                this.coverNaturalWidth = testImg.naturalWidth;
+                this.coverNaturalHeight = testImg.naturalHeight;
+                this.showCoverModal = true;
+                this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+            };
+            testImg.src = e.target.result;
         };
         reader.readAsDataURL(file);
+    },
+
+    startCoverDrag(e) {
+        this.isDraggingCover = true;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        this.coverDragStartX = clientX;
+        this.coverDragStartY = clientY;
+        this.coverDragInitX = this.coverOffsetX;
+        this.coverDragInitY = this.coverOffsetY;
+    },
+
+    onCoverDrag(e) {
+        if (!this.isDraggingCover) return;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        this.coverOffsetX = this.coverDragInitX + (clientX - this.coverDragStartX);
+        this.coverOffsetY = this.coverDragInitY + (clientY - this.coverDragStartY);
+    },
+
+    stopCoverDrag() {
+        this.isDraggingCover = false;
+    },
+
+    onCoverWheel(e) {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.05 : -0.05;
+        this.coverScale = Math.min(3.0, Math.max(0.6, +(this.coverScale + delta).toFixed(2)));
+    },
+
+    getCoverImgStyle() {
+        if (!this.coverNaturalWidth || !this.coverNaturalHeight) {
+            return 'width: 100%; height: 100%; object-fit: cover;';
+        }
+        const W = this.coverNaturalWidth;
+        const H = this.coverNaturalHeight;
+        const ar = W / H;
+        const Vw = 480;
+        const Vh = 120;
+        let baseW, baseH;
+        if (ar >= 4.0) {
+            baseH = Vh;
+            baseW = Vh * ar;
+        } else {
+            baseW = Vw;
+            baseH = Vw / ar;
+        }
+        return `width: ${baseW}px; height: ${baseH}px; left: calc(50% + ${this.coverOffsetX}px); top: calc(50% + ${this.coverOffsetY}px); transform: translate(-50%, -50%) scale(${this.coverScale}) rotate(${this.coverRotation}deg);`;
     },
 
     closeCoverModal() {
         this.showCoverModal = false;
         this.coverFile = null;
         this.coverModalImg = '';
+        this.isDraggingCover = false;
         const input = document.getElementById('settings-cover-input');
         if (input) input.value = '';
     },
@@ -170,17 +319,34 @@
 
         const canvas = document.createElement('canvas');
         canvas.width = 1200;
-        canvas.height = 450;
+        canvas.height = 300;
         const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
         const img = new Image();
         img.onload = () => {
-            ctx.clearRect(0, 0, 1200, 450);
+            ctx.clearRect(0, 0, 1200, 300);
             ctx.save();
-            ctx.translate(600, 225);
+
+            const M = 1200 / 480;
+            ctx.translate(600 + this.coverOffsetX * M, 150 + this.coverOffsetY * M);
+            ctx.rotate((this.coverRotation * Math.PI) / 180);
             ctx.scale(this.coverScale, this.coverScale);
-            ctx.translate(0, this.coverOffsetY * 2.5);
-            ctx.drawImage(img, -600, -225, 1200, 450);
+
+            const W = img.naturalWidth;
+            const H = img.naturalHeight;
+            const ar = W / H;
+            let baseW, baseH;
+            if (ar >= 4.0) {
+                baseH = 300;
+                baseW = 300 * ar;
+            } else {
+                baseW = 1200;
+                baseH = 1200 / ar;
+            }
+
+            ctx.drawImage(img, -baseW / 2, -baseH / 2, baseW, baseH);
             ctx.restore();
 
             canvas.toBlob((blob) => {
@@ -214,7 +380,7 @@
                     this.isSavingCover = false;
                     this.closeCoverModal();
                 });
-            }, 'image/jpeg', 0.92);
+            }, 'image/jpeg', 0.95);
         };
         img.src = this.coverModalImg;
     }
@@ -695,33 +861,45 @@
 
     <!-- AVATAR ADJUSTMENT & PREVIEW MODAL IN SETTINGS -->
     <div x-show="showAvatarModal" x-cloak 
-        class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md"
+        class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md"
         @keydown.escape.window="closeAvatarModal()">
         <div class="bg-white dark:bg-stone-900 rounded-3xl max-w-md w-full p-5 sm:p-6 border border-stone-200 dark:border-stone-800 shadow-2xl space-y-4 relative"
             @click.away="closeAvatarModal()">
             
             <div class="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-stone-800">
                 <div>
-                    <h3 class="text-base sm:text-lg font-black text-stone-900 dark:text-white flex items-center gap-2">
-                        <i data-lucide="camera" class="w-5 h-5 text-amber-500"></i>
-                        Adjust Avatar
+                    <h3 class="page-title text-base sm:text-lg font-black text-amber-500 flex items-center gap-2">
+                        <i data-lucide="crop" class="w-5 h-5 text-amber-500"></i>
+                        Crop & Position Profile Picture
                     </h3>
-                    <p class="text-[11px] sm:text-xs text-stone-500">Scale, rotate, and preview your profile picture.</p>
+                    <p class="text-[11px] sm:text-xs text-stone-500">Drag to reposition, scroll or slider to zoom. Zero stretching.</p>
                 </div>
                 <button type="button" @click="closeAvatarModal()" class="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 transition">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
 
-            <div class="relative w-52 h-52 sm:w-64 sm:h-64 mx-auto rounded-3xl overflow-hidden bg-stone-950 flex items-center justify-center border-2 border-stone-800 shadow-inner group select-none">
-                <img :src="avatarModalImg" 
-                    class="max-w-none origin-center pointer-events-none select-none transition-transform duration-75"
-                    :style="'transform: scale(' + avatarScale + ') rotate(' + avatarRotation + 'deg); width: 100%; height: 100%; object-fit: cover;'">
+            <div class="relative w-64 h-64 sm:w-72 sm:h-72 mx-auto rounded-3xl overflow-hidden bg-stone-950 flex items-center justify-center border-2 border-stone-800 shadow-inner group select-none cursor-grab active:cursor-grabbing touch-none"
+                 @mousedown="startAvatarDrag($event)"
+                 @mousemove="onAvatarDrag($event)"
+                 @mouseup="stopAvatarDrag()"
+                 @mouseleave="stopAvatarDrag()"
+                 @touchstart="startAvatarDrag($event)"
+                 @touchmove="onAvatarDrag($event)"
+                 @touchend="stopAvatarDrag()"
+                 @wheel.prevent="onAvatarWheel($event)">
 
-                <div class="absolute inset-0 rounded-full border-[34px] sm:border-[44px] border-black/60 pointer-events-none shadow-[inset_0_0_0_2px_rgba(245,158,11,0.6)]"></div>
+                <img :src="avatarModalImg" 
+                    class="max-w-none origin-center pointer-events-none select-none absolute"
+                    :style="getAvatarImgStyle()">
+
+                <div class="absolute inset-0 rounded-full pointer-events-none shadow-[inset_0_0_0_9999px_rgba(0,0,0,0.55)] border-2 border-amber-500/80"></div>
                 
-                <span class="absolute bottom-2 text-[10px] font-bold text-white/70 bg-black/50 px-2.5 py-0.5 rounded-full pointer-events-none">
-                    Preview Crop
+                <div class="absolute w-2 h-2 rounded-full bg-amber-400/60 pointer-events-none"></div>
+
+                <span class="absolute bottom-2.5 text-[10px] font-bold text-white bg-black/75 backdrop-blur-md px-3 py-1 rounded-full pointer-events-none flex items-center gap-1.5 border border-white/10 shadow-sm">
+                    <i data-lucide="move" class="w-3 h-3 text-amber-400"></i>
+                    <span>Drag image to position · Scroll to zoom</span>
                 </span>
             </div>
 
@@ -730,35 +908,39 @@
                     <div class="flex items-center justify-between text-xs font-bold text-stone-600 dark:text-stone-300">
                         <span class="flex items-center gap-1.5">
                             <i data-lucide="zoom-in" class="w-3.5 h-3.5 text-amber-500"></i>
-                            Size / Scale
+                            Zoom & Scale
                         </span>
-                        <span class="text-amber-500 font-mono text-[11px]" x-text="Math.round(avatarScale * 100) + '%'"></span>
+                        <span class="text-amber-500 font-mono text-[11px]" x-text="Math.round(avatarScale * 100) + \x27%\x27"></span>
                     </div>
                     <div class="flex items-center gap-2">
                         <button type="button" @click="avatarScale = Math.max(0.5, +(avatarScale - 0.1).toFixed(2))"
                             class="w-7 h-7 rounded-lg bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 flex items-center justify-center font-bold text-stone-700 dark:text-stone-200 text-xs hover:bg-stone-100 active:scale-95">
                             -
                         </button>
-                        <input type="range" min="0.5" max="2.5" step="0.05" x-model.number="avatarScale"
+                        <input type="range" min="0.5" max="3.0" step="0.05" x-model.number="avatarScale"
                             class="w-full accent-amber-500 cursor-pointer h-1.5 bg-stone-200 dark:bg-stone-700 rounded-lg">
-                        <button type="button" @click="avatarScale = Math.min(2.5, +(avatarScale + 0.1).toFixed(2))"
+                        <button type="button" @click="avatarScale = Math.min(3.0, +(avatarScale + 0.1).toFixed(2))"
                             class="w-7 h-7 rounded-lg bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 flex items-center justify-center font-bold text-stone-700 dark:text-stone-200 text-xs hover:bg-stone-100 active:scale-95">
                             +
                         </button>
                     </div>
                 </div>
 
-                <div class="flex items-center justify-between pt-1 border-t border-stone-200/50 dark:border-stone-700/50 text-xs">
-                    <button type="button" @click="avatarRotation = (avatarRotation + 90) % 360"
-                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-100 active:scale-95 text-[11px]">
-                        <i data-lucide="rotate-cw" class="w-3.5 h-3.5 text-amber-500"></i>
-                        Rotate 90°
-                    </button>
+                <div class="flex items-center justify-between pt-1 border-t border-stone-200/50 dark:border-stone-700/50 text-xs flex-wrap gap-2">
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" @click="avatarOffsetX = 0; avatarOffsetY = 0;"
+                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-100 active:scale-95 text-[11px]">
+                            <i data-lucide="crosshair" class="w-3.5 h-3.5 text-amber-500"></i> Center
+                        </button>
+                        <button type="button" @click="avatarRotation = (avatarRotation + 90) % 360"
+                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-100 active:scale-95 text-[11px]">
+                            <i data-lucide="rotate-cw" class="w-3.5 h-3.5 text-amber-500"></i> Rotate 90°
+                        </button>
+                    </div>
 
-                    <button type="button" @click="avatarScale = 1.0; avatarRotation = 0;"
+                    <button type="button" @click="avatarScale = 1.0; avatarRotation = 0; avatarOffsetX = 0; avatarOffsetY = 0;"
                         class="inline-flex items-center gap-1 px-2 py-1.5 rounded-xl text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 font-semibold active:scale-95 text-[11px]">
-                        <i data-lucide="refresh-cw" class="w-3 h-3"></i>
-                        Reset
+                        <i data-lucide="refresh-cw" class="w-3 h-3"></i> Reset
                     </button>
                 </div>
             </div>
@@ -777,7 +959,7 @@
                     class="px-4 sm:px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs sm:text-sm font-bold transition shadow-lg flex items-center gap-2 disabled:opacity-50">
                     <span x-show="!isSavingAvatar" class="flex items-center gap-1.5">
                         <i data-lucide="check" class="w-4 h-4"></i>
-                        Apply Avatar
+                        Crop & Save Photo
                     </span>
                     <span x-show="isSavingAvatar" class="flex items-center gap-1.5">
                         <i data-lucide="loader" class="w-4 h-4 animate-spin"></i>
@@ -791,40 +973,64 @@
 
     <!-- COVER BANNER PREVIEW MODAL IN SETTINGS -->
     <div x-show="showCoverModal" x-cloak 
-        class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md"
+        class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md"
         @keydown.escape.window="closeCoverModal()">
         <div class="bg-white dark:bg-stone-900 rounded-3xl max-w-xl w-full p-5 sm:p-6 border border-stone-200 dark:border-stone-800 shadow-2xl space-y-4 relative"
             @click.away="closeCoverModal()">
             
             <div class="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-stone-800">
                 <div>
-                    <h3 class="text-base sm:text-lg font-black text-stone-900 dark:text-white flex items-center gap-2">
-                        <i data-lucide="image" class="w-5 h-5 text-amber-500"></i>
-                        Preview Cover Banner
+                    <h3 class="page-title text-base sm:text-lg font-black text-amber-500 flex items-center gap-2">
+                        <i data-lucide="crop" class="w-5 h-5 text-amber-500"></i>
+                        Crop & Position Cover Banner
                     </h3>
-                    <p class="text-[11px] sm:text-xs text-stone-500">Check how your banner appears on mobile and desktop.</p>
+                    <p class="text-[11px] sm:text-xs text-stone-500">Drag to position, scroll to zoom. The outline shows avatar overlap.</p>
                 </div>
                 <button type="button" @click="closeCoverModal()" class="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 transition">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
 
-            <div class="relative w-full aspect-[16/7] rounded-2xl overflow-hidden bg-stone-950 flex items-center justify-center border-2 border-stone-800 shadow-inner group select-none">
+            <div class="relative w-full aspect-[4/1] rounded-2xl overflow-hidden bg-stone-950 flex items-center justify-center border-2 border-stone-800 shadow-inner group select-none cursor-grab active:cursor-grabbing touch-none"
+                 @mousedown="startCoverDrag($event)"
+                 @mousemove="onCoverDrag($event)"
+                 @mouseup="stopCoverDrag()"
+                 @mouseleave="stopCoverDrag()"
+                 @touchstart="startCoverDrag($event)"
+                 @touchmove="onCoverDrag($event)"
+                 @touchend="stopCoverDrag()"
+                 @wheel.prevent="onCoverWheel($event)">
+
                 <img :src="coverModalImg" 
-                    class="max-w-none origin-center pointer-events-none select-none transition-transform duration-75"
-                    :style="'transform: scale(' + coverScale + ') translateY(' + coverOffsetY + 'px); width: 100%; height: 100%; object-fit: cover;'">
+                    class="max-w-none origin-center pointer-events-none select-none absolute"
+                    :style="getCoverImgStyle()">
 
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none"></div>
-
-                <div class="absolute bottom-2 left-3 sm:bottom-3 sm:left-5 flex items-end gap-2 pointer-events-none">
-                    <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-2xl border-2 border-white/80 bg-stone-800/80 backdrop-blur-sm overflow-hidden flex items-center justify-center shadow-lg">
-                        <i data-lucide="user" class="w-5 h-5 text-white/70"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-white drop-shadow pb-0.5 hidden sm:inline">Profile Position</span>
+                <div class="absolute inset-0 pointer-events-none grid grid-cols-3 grid-rows-3 border border-amber-500/30">
+                    <div class="border-r border-b border-white/15"></div>
+                    <div class="border-r border-b border-white/15"></div>
+                    <div class="border-b border-white/15"></div>
+                    <div class="border-r border-b border-white/15"></div>
+                    <div class="border-r border-b border-white/15"></div>
+                    <div class="border-b border-white/15"></div>
+                    <div class="border-r border-white/15"></div>
+                    <div class="border-r border-white/15"></div>
+                    <div></div>
                 </div>
 
-                <span class="absolute top-2 right-2 text-[10px] font-bold text-white/80 bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-full pointer-events-none">
-                    Header Preview
+                <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 pointer-events-none"></div>
+
+                <div class="absolute bottom-2 left-3 sm:bottom-3 sm:left-4 flex items-end gap-1.5 pointer-events-none">
+                    <div class="w-8 h-8 sm:w-11 sm:h-11 rounded-2xl border-2 border-amber-400 bg-stone-900/80 backdrop-blur-md overflow-hidden flex items-center justify-center shadow-lg">
+                        <i data-lucide="user" class="w-4 h-4 sm:w-5 sm:h-5 text-amber-400"></i>
+                    </div>
+                    <span class="text-[10px] font-bold text-amber-300 drop-shadow pb-0.5 bg-black/60 px-2 py-0.5 rounded-md hidden sm:inline">
+                        Avatar overlap area
+                    </span>
+                </div>
+
+                <span class="absolute top-2 right-2 text-[10px] font-bold text-white bg-black/75 backdrop-blur-md px-3 py-1 rounded-full pointer-events-none flex items-center gap-1.5 border border-white/10 shadow-sm">
+                    <i data-lucide="move" class="w-3 h-3 text-amber-400"></i>
+                    <span>Drag anywhere to position · Scroll to zoom</span>
                 </span>
             </div>
 
@@ -835,36 +1041,40 @@
                             <i data-lucide="zoom-in" class="w-3.5 h-3.5 text-amber-500"></i>
                             Banner Zoom
                         </span>
-                        <span class="text-amber-500 font-mono text-[11px]" x-text="Math.round(coverScale * 100) + '%'"></span>
+                        <span class="text-amber-500 font-mono text-[11px]" x-text="Math.round(coverScale * 100) + \x27%\x27"></span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button type="button" @click="coverScale = Math.max(0.8, +(coverScale - 0.1).toFixed(2))"
+                        <button type="button" @click="coverScale = Math.max(0.6, +(coverScale - 0.1).toFixed(2))"
                             class="w-7 h-7 rounded-lg bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 flex items-center justify-center font-bold text-stone-700 dark:text-stone-200 text-xs hover:bg-stone-100 active:scale-95">
                             -
                         </button>
-                        <input type="range" min="0.8" max="2.0" step="0.05" x-model.number="coverScale"
+                        <input type="range" min="0.6" max="3.0" step="0.05" x-model.number="coverScale"
                             class="w-full accent-amber-500 cursor-pointer h-1.5 bg-stone-200 dark:bg-stone-700 rounded-lg">
-                        <button type="button" @click="coverScale = Math.min(2.0, +(coverScale + 0.1).toFixed(2))"
+                        <button type="button" @click="coverScale = Math.min(3.0, +(coverScale + 0.1).toFixed(2))"
                             class="w-7 h-7 rounded-lg bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 flex items-center justify-center font-bold text-stone-700 dark:text-stone-200 text-xs hover:bg-stone-100 active:scale-95">
                             +
                         </button>
                     </div>
                 </div>
 
-                <div class="flex items-center justify-between pt-1 border-t border-stone-200/50 dark:border-stone-700/50 text-xs">
+                <div class="flex items-center justify-between pt-1 border-t border-stone-200/50 dark:border-stone-700/50 text-xs flex-wrap gap-2">
                     <div class="flex items-center gap-1.5">
-                        <button type="button" @click="coverOffsetY = Math.min(50, coverOffsetY + 10)"
-                            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-100 active:scale-95 text-[11px]">
-                            <i data-lucide="arrow-up" class="w-3.5 h-3.5"></i> Up
+                        <button type="button" @click="coverOffsetX = 0; coverOffsetY = 0;"
+                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-100 active:scale-95 text-[11px]">
+                            <i data-lucide="crosshair" class="w-3.5 h-3.5 text-amber-500"></i> Center
                         </button>
-                        <button type="button" @click="coverOffsetY = Math.max(-50, coverOffsetY - 10)"
-                            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-100 active:scale-95 text-[11px]">
-                            <i data-lucide="arrow-down" class="w-3.5 h-3.5"></i> Down
+                        <button type="button" @click="coverOffsetY = 40;"
+                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-100 active:scale-95 text-[11px]">
+                            <i data-lucide="arrow-up" class="w-3.5 h-3.5"></i> Top
+                        </button>
+                        <button type="button" @click="coverOffsetY = -40;"
+                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 font-semibold text-stone-700 dark:text-stone-200 hover:bg-stone-100 active:scale-95 text-[11px]">
+                            <i data-lucide="arrow-down" class="w-3.5 h-3.5"></i> Bottom
                         </button>
                     </div>
 
-                    <button type="button" @click="coverScale = 1.0; coverOffsetY = 0;"
-                        class="inline-flex items-center gap-1 px-2 py-1 rounded-xl text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 font-semibold active:scale-95 text-[11px]">
+                    <button type="button" @click="coverScale = 1.0; coverOffsetX = 0; coverOffsetY = 0;"
+                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 font-semibold active:scale-95 text-[11px]">
                         <i data-lucide="refresh-cw" class="w-3 h-3"></i> Reset
                     </button>
                 </div>
@@ -884,7 +1094,7 @@
                     class="px-4 sm:px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs sm:text-sm font-bold transition shadow-lg flex items-center gap-2 disabled:opacity-50">
                     <span x-show="!isSavingCover" class="flex items-center gap-1.5">
                         <i data-lucide="check" class="w-4 h-4"></i>
-                        Apply Banner
+                        Crop & Save Banner
                     </span>
                     <span x-show="isSavingCover" class="flex items-center gap-1.5">
                         <i data-lucide="loader" class="w-4 h-4 animate-spin"></i>

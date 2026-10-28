@@ -195,4 +195,34 @@ class Culture extends Model
     {
         $this->decrement('locked_in_count');
     }
+
+    /**
+     * Map cultural category to a matching Lucide icon.
+     */
+    public static function getCategoryIcon(?string $category): string
+    {
+        $normalized = strtolower(trim($category ?? ''));
+        return match ($normalized) {
+            'all' => 'globe',
+            'oral traditions', 'traditions' => 'scroll',
+            'traditional crafts', 'crafts' => 'hammer',
+            'music & dance', 'music', 'dance' => 'music',
+            'culinary heritage', 'culinary', 'food' => 'utensils',
+            'religious practices', 'religion', 'religious' => 'flame',
+            'festivals & ceremonies', 'festivals', 'ceremonies' => 'party-popper',
+            'language & literature', 'language', 'literature' => 'languages',
+            'architecture & design', 'architecture', 'design' => 'landmark',
+            'agricultural practices', 'agriculture', 'agricultural' => 'sprout',
+            'healing traditions', 'healing', 'medicine' => 'heart-pulse',
+            'social customs', 'customs', 'social' => 'users',
+            'art & aesthetics', 'art', 'aesthetics' => 'palette',
+            'clothing & textiles', 'clothing', 'textiles' => 'shirt',
+            default => 'sparkles',
+        };
+    }
+
+    public function getCategoryIconAttribute(): string
+    {
+        return self::getCategoryIcon($this->category);
+    }
 }

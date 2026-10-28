@@ -33,6 +33,7 @@ class RegistrationTest extends TestCase
             'email' => 'basic@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'terms' => '1',
         ]);
 
         $this->assertAuthenticated();
@@ -69,6 +70,7 @@ class RegistrationTest extends TestCase
             'local_government_id' => $josNorth->id,
             'language_ids' => [$hausa->id, $berom->id],
             'new_languages' => ['Afizere Dialect'],
+            'terms' => '1',
         ]);
 
         $this->assertAuthenticated();
@@ -111,6 +113,7 @@ class RegistrationTest extends TestCase
             'password_confirmation' => 'password',
             'country_id' => $ghana->id,
             'local_area' => 'Osu, Greater Accra',
+            'terms' => '1',
         ]);
 
         $this->assertAuthenticated();
@@ -148,6 +151,7 @@ class RegistrationTest extends TestCase
             'password' => 'password',
             'password_confirmation' => 'password',
             'avatar' => $avatar,
+            'terms' => '1',
         ]);
 
         $this->assertAuthenticated();
@@ -162,5 +166,45 @@ class RegistrationTest extends TestCase
         $this->assertEquals('Amara Kalu', $flyer['name']);
         $this->assertEquals('amarak', $flyer['username']);
         $this->assertStringContainsString($user->avatar, $flyer['avatar_url']);
+    }
+
+
+    public function test_registration_requires_accepted_terms(): void
+    {
+        $response = $this->post('/register', [
+            'name' => 'Unconsenting User',
+            'username' => 'unconsenting',
+            'email' => 'unconsenting@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            // Missing 'terms' => '1'
+        ]);
+
+        $this->assertGuest();
+        $response->assertSessionHasErrors(['terms']);
+        $this->assertNull(User::where('email', 'unconsenting@example.com')->first());
+    }
+
+    public function test_terms_page_can_be_rendered(): void
+    {
+        $response = $this->get('/terms');
+
+        $response->assertStatus(200);
+        $response->assertSee('Terms of Service & Community Agreement', false);
+        $response->assertSee('You Own Your Content');
+        $response->assertSee('Locked-In Circles');
+        $response->assertSee('Cultural Dignity First');
+        $response->assertSee('Acceptance & User Eligibility', false);
+    }
+
+    public function test_registration_screen_shows_terms_modal_and_checkbox(): void
+    {
+        $response = $this->get('/register');
+
+        $response->assertStatus(200);
+        $response->assertSee('Terms of Service');
+        $response->assertSee('Privacy Policy');
+        $response->assertSee('termsAccepted');
+        $response->assertSee('showTermsModal');
     }
 }
