@@ -21,6 +21,7 @@ class TimelineController extends Controller
 
         $query = Post::with([
             'user',
+            'sharedPost.user',
             'taps',
             'resonances.user',
             'resonances.replies.user',
@@ -35,7 +36,7 @@ class TimelineController extends Controller
         // Filter by Tag
         if ($request->filled('tag')) {
             $tag = mb_strtolower(ltrim($request->tag, '#'));
-            $query->where(function($q) use ($tag) {
+            $query->where(function ($q) use ($tag) {
                 $q->whereJsonContains('tags', $tag)
                   ->orWhere('content', 'like', "%#{$tag}%");
             });
@@ -45,12 +46,12 @@ class TimelineController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $cleanSearch = mb_strtolower(ltrim($search, '#'));
-            $query->where(function($q) use ($search, $cleanSearch) {
+            $query->where(function ($q) use ($search, $cleanSearch) {
                 $q->where('content', 'like', "%{$search}%")
                   ->orWhere('location', 'like', "%{$search}%")
                   ->orWhere('chapter', 'like', "%{$search}%")
                   ->orWhereJsonContains('tags', $cleanSearch)
-                  ->orWhereHas('user', function($uq) use ($search) {
+                  ->orWhereHas('user', function ($uq) use ($search) {
                       $uq->where('name', 'like', "%{$search}%")
                          ->orWhere('username', 'like', "%{$search}%");
                   });
@@ -64,13 +65,59 @@ class TimelineController extends Controller
 
             switch ($filter) {
                 case 'lockedin':
-                    // Posts from users the current user has locked-in to + their own posts
-                    $lockedInUsers = Auth::user()->interactions()
-                        ->where('type', 'lockin')
-                        ->where('interactable_type', User::class)
-                        ->pluck('interactable_id')
-                        ->push(Auth::id());
-                    $query->whereIn('user_id', $lockedInUsers);
+                    $authUser = Auth::user();
+                    $authId = (int) $authUser->id;
+                    $lockedInIds = $authUser->lockedInUserIds();
+
+                    // Vibed profiles: see their updates occasionally / not frequently
+                    $vibedUserIds = array_values(array_diff($authUser->vibedUserIds(), $lockedInIds));
+                    $infrequentPostIds = [];
+
+                    if (!empty($vibedUserIds)) {
+                        $vibedPosts = Post::public()
+                            ->whereIn('user_id', $vibedUserIds)
+                            ->latest()
+                            ->take(2)
+                            ->pluck('id')
+                            ->all();
+                        $infrequentPostIds = array_merge($infrequentPostIds, $vibedPosts);
+                    }
+
+                    // Seamless AI suggested users embedded within timeline without him even knowing
+                    try {
+                        $recService = app(\App\Services\MetaAI\CulturalConnectionRecommendationService::class);
+                        $recData = $recService->recommendUsers($authUser, 3);
+                        $suggestedUserIds = [];
+                        foreach (($recData['recommendations'] ?? []) as $rec) {
+                            $rId = (int) ($rec['user']['id'] ?? 0);
+                            if ($rId > 0 && $rId !== $authId && !in_array($rId, $lockedInIds, true) && !in_array($rId, $vibedUserIds, true)) {
+                                $suggestedUserIds[] = $rId;
+                            }
+                        }
+                        if (!empty($suggestedUserIds)) {
+                            $aiSuggestedPosts = Post::public()
+                                ->whereIn('user_id', array_slice($suggestedUserIds, 0, 2))
+                                ->latest()
+                                ->take(2)
+                                ->pluck('id')
+                                ->all();
+                            $infrequentPostIds = array_merge($infrequentPostIds, $aiSuggestedPosts);
+                        }
+                    } catch (\Throwable $e) {
+                        // Silently skip suggestions if recommendation service is unavailable
+                    }
+
+                    $infrequentPostIds = array_values(array_unique($infrequentPostIds));
+
+                    $query->where(function ($q) use ($lockedInIds, $authId, $infrequentPostIds) {
+                        $q->whereIn('user_id', $lockedInIds)
+                          ->orWhere('user_id', $authId)
+                          ->orWhereJsonContains('tagged_users', $authId);
+
+                        if (!empty($infrequentPostIds)) {
+                            $q->orWhereIn('id', $infrequentPostIds);
+                        }
+                    });
                     break;
                 case 'cultural':
                     $query->whereNotNull('chapter')
@@ -96,6 +143,8 @@ class TimelineController extends Controller
             'privacy' => 'in:public,private,vault',
             'type' => 'nullable|in:text,image,video,audio',
             'tags' => 'nullable|array',
+            'tagged_users' => 'nullable|array',
+            'tagged_users.*' => 'integer|exists:users,id',
             'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:10240',
             'video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
             'audio' => 'nullable|file|mimes:mp3,wav,ogg,m4a|max:20480',
@@ -117,6 +166,20 @@ class TimelineController extends Controller
             $post->tags = $mergedTags;
         }
 
+        // Resolve tagged users (Owner can tag anyone via explicit picker or @username mentions)
+        $mentionedUsers = ContentParserService::getMentionedUsers($post->content);
+        $explicitTaggedIds = is_array($request->tagged_users)
+            ? array_map('intval', $request->tagged_users)
+            : [];
+        $allTaggedIds = array_values(array_unique(array_filter(
+            array_merge($explicitTaggedIds, $mentionedUsers->pluck('id')->map(fn ($id) => (int) $id)->all()),
+            fn ($id) => $id > 0 && $id !== (int) Auth::id()
+        )));
+
+        if (!empty($allTaggedIds)) {
+            $post->tagged_users = $allTaggedIds;
+        }
+
         // Handle Media Uploads
         if ($request->hasFile('image')) {
             $post->image = $request->file('image')->store('posts', 'public');
@@ -134,21 +197,23 @@ class TimelineController extends Controller
         // Update user's posts count
         Auth::user()->increment('posts_count');
 
-        // Dispatch notifications for mentioned users
-        $mentionedUsers = ContentParserService::getMentionedUsers($post->content);
-        foreach ($mentionedUsers as $mentionedUser) {
-            if ($mentionedUser->id !== Auth::id()) {
-                $mentionedUser->notifications()->create([
-                    'from_user_id' => Auth::id(),
-                    'type' => 'mention',
-                    'title' => 'Mentioned in a Story',
-                    'message' => Auth::user()->name . ' mentioned you in a story: "' . Str::limit($post->content, 60) . '"',
-                    'data' => [
-                        'post_id' => $post->id,
-                        'author_name' => Auth::user()->name,
-                        'url' => route('timeline.index') . '#post-' . $post->id,
-                    ],
-                ]);
+        // Dispatch notifications for all tagged & mentioned users
+        if (!empty($allTaggedIds)) {
+            $taggedUserModels = User::whereIn('id', $allTaggedIds)->get();
+            foreach ($taggedUserModels as $taggedUser) {
+                if ($taggedUser->id !== Auth::id()) {
+                    $this->safeNotify($taggedUser, [
+                        'from_user_id' => Auth::id(),
+                        'type' => 'mention',
+                        'title' => 'Tagged in a Story',
+                        'message' => Auth::user()->name . ' tagged you in a story: "' . Str::limit($post->content, 60) . '"',
+                        'data' => [
+                            'post_id' => $post->id,
+                            'author_name' => Auth::user()->name,
+                            'url' => route('timeline.show', $post->id),
+                        ],
+                    ]);
+                }
             }
         }
 
@@ -172,6 +237,7 @@ class TimelineController extends Controller
 
         $post->load([
             'user',
+            'sharedPost.user',
             'taps',
             'resonances.user',
             'resonances.replies.user',
@@ -207,6 +273,12 @@ class TimelineController extends Controller
                 'language' => $post->language,
                 'privacy' => $post->privacy,
                 'tags' => $post->tags,
+                'tagged_users' => $post->tagged_users_models->map(fn ($u) => [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'username' => $u->username,
+                    'avatar' => $u->profile_photo_url,
+                ])->values(),
                 'image_url' => $post->image ? Storage::url($post->image) : null,
                 'video_url' => $post->video ? Storage::url($post->video) : null,
                 'audio_url' => $post->audio ? Storage::url($post->audio) : null,
@@ -230,6 +302,8 @@ class TimelineController extends Controller
             'language' => 'nullable|string|max:60',
             'privacy' => 'nullable|in:public,private,vault',
             'tags' => 'nullable|array',
+            'tagged_users' => 'nullable|array',
+            'tagged_users.*' => 'integer|exists:users,id',
             'remove_image' => 'nullable|boolean',
             'remove_video' => 'nullable|boolean',
             'remove_audio' => 'nullable|boolean',
@@ -237,6 +311,10 @@ class TimelineController extends Controller
             'video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
             'audio' => 'nullable|file|mimes:mp3,wav,ogg,m4a|max:20480',
         ]);
+
+        $previousTaggedIds = is_array($post->tagged_users)
+            ? array_map('intval', $post->tagged_users)
+            : [];
 
         $post->content = $request->input('content');
         if ($request->has('chapter')) $post->chapter = $request->input('chapter');
@@ -249,6 +327,39 @@ class TimelineController extends Controller
         $manualTags = is_array($request->tags) ? $request->tags : [];
         $mergedTags = array_values(array_unique(array_merge($manualTags, $extractedTags)));
         $post->tags = !empty($mergedTags) ? $mergedTags : null;
+
+        // Update tagged users if provided or mentioned in content
+        if ($request->has('tagged_users') || ContentParserService::extractMentionUsernames($post->content)) {
+            $mentionedIds = ContentParserService::getMentionedUsers($post->content)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+            $explicitIds = $request->has('tagged_users')
+                ? array_map('intval', (array) $request->input('tagged_users', []))
+                : $previousTaggedIds;
+            $updatedTaggedIds = array_values(array_unique(array_filter(
+                array_merge($explicitIds, $mentionedIds),
+                fn ($id) => $id > 0 && $id !== (int) $post->user_id
+            )));
+            $post->tagged_users = !empty($updatedTaggedIds) ? $updatedTaggedIds : null;
+
+            $newlyTaggedIds = array_diff($updatedTaggedIds, $previousTaggedIds);
+            if (!empty($newlyTaggedIds)) {
+                foreach (User::whereIn('id', $newlyTaggedIds)->get() as $newTaggedUser) {
+                    $this->safeNotify($newTaggedUser, [
+                        'from_user_id' => Auth::id(),
+                        'type' => 'mention',
+                        'title' => 'Tagged in a Story',
+                        'message' => Auth::user()->name . ' tagged you in a story: "' . Str::limit($post->content, 60) . '"',
+                        'data' => [
+                            'post_id' => $post->id,
+                            'author_name' => Auth::user()->name,
+                            'url' => route('timeline.show', $post->id),
+                        ],
+                    ]);
+                }
+            }
+        }
 
         // Handle Media Removal
         if ($request->boolean('remove_image') && $post->image) {
@@ -298,6 +409,12 @@ class TimelineController extends Controller
                     'language' => $post->language,
                     'privacy' => $post->privacy,
                     'tags' => $post->tags,
+                    'tagged_users' => $post->fresh()->tagged_users_models->map(fn ($u) => [
+                        'id' => $u->id,
+                        'name' => $u->name,
+                        'username' => $u->username,
+                        'avatar' => $u->profile_photo_url,
+                    ])->values(),
                     'image' => $post->image ? Storage::url($post->image) : null,
                     'video' => $post->video ? Storage::url($post->video) : null,
                     'audio' => $post->audio ? Storage::url($post->audio) : null,
@@ -306,6 +423,316 @@ class TimelineController extends Controller
         }
 
         return redirect()->back()->with('success', 'Story updated successfully!');
+    }
+
+    /**
+     * Search taggable users, prioritizing users the current member is Locked-In with.
+     */
+    public function taggableUsers(Request $request)
+    {
+        $user = Auth::user();
+        $q = trim((string) $request->get('q', ''));
+
+        $connectedIds = $user->lockedInUserIds();
+
+        // Also include users who are co-tagged on the user's posts or who tagged the user
+        $coTaggedIds = Post::where(function ($sub) use ($user) {
+                $sub->where('user_id', $user->id)
+                    ->orWhereJsonContains('tagged_users', (int) $user->id);
+            })
+            ->whereNotNull('tagged_users')
+            ->pluck('tagged_users')
+            ->flatten()
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0 && $id !== (int) $user->id)
+            ->unique()
+            ->all();
+
+        $allowedIds = array_values(array_unique(array_merge($connectedIds, $coTaggedIds)));
+
+        // Only include AI suggestions if user has no locked-in/tagged connections or is searching
+        $suggestedIds = [];
+        if (empty($allowedIds) || $q !== '') {
+            try {
+                $recService = app(\App\Services\MetaAI\CulturalConnectionRecommendationService::class);
+                $recData = $recService->recommendUsers($user, 3);
+                foreach (($recData['recommendations'] ?? []) as $rec) {
+                    $recId = (int) ($rec['user']['id'] ?? 0);
+                    if ($recId > 0 && $recId !== (int) $user->id && !in_array($recId, $allowedIds, true)) {
+                        $suggestedIds[] = $recId;
+                    }
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        $allTargetIds = array_values(array_unique(array_merge($allowedIds, $suggestedIds)));
+
+        $query = User::whereIn('id', $allTargetIds);
+
+        if ($q !== '') {
+            $cleanQ = ltrim($q, '@');
+            $query->where(function ($sub) use ($cleanQ) {
+                $sub->where('name', 'like', "%{$cleanQ}%")
+                    ->orWhere('username', 'like', "%{$cleanQ}%");
+            });
+        }
+
+        $candidates = $query->limit(20)->get(['id', 'name', 'username', 'avatar']);
+
+        $formatted = $candidates->map(function (User $candidate) use ($connectedIds, $suggestedIds) {
+            $isLockedIn = in_array((int) $candidate->id, $connectedIds, true);
+            $isSuggested = in_array((int) $candidate->id, $suggestedIds, true);
+            return [
+                'id' => $candidate->id,
+                'name' => $candidate->name,
+                'username' => $candidate->username,
+                'avatar' => $candidate->profile_photo_url,
+                'is_locked_in' => $isLockedIn,
+                'is_suggestion' => $isSuggested,
+            ];
+        })->sortByDesc('is_locked_in')->values();
+
+        return response()->json([
+            'success' => true,
+            'users' => $formatted,
+        ]);
+    }
+
+    /**
+     * Repost / Quote-Share a post to the user's Kulturegram Timeline.
+     * Allowed for the Post Owner and members who have Locked-In to the poster.
+     * Non-Locked-In members receive 403 and must Lock-In first.
+     */
+    public function repost(Request $request, Post $post)
+    {
+        $user = Auth::user();
+
+        if ($post->privacy !== 'public' && !$post->isOwnedBy($user)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Only public stories can be shared.',
+            ], 403);
+        }
+
+        if (!$post->canRepostAndTag($user)) {
+            return response()->json([
+                'success' => false,
+                'requires_lockin' => true,
+                'author_id' => $post->user_id,
+                'author_name' => $post->user->name,
+                'author_username' => $post->user->username,
+                'error' => "You must Lock-In to {$post->user->name} (@{$post->user->username}) before reposting their story to your timeline or tagging members on it.",
+            ], 403);
+        }
+
+        $request->validate([
+            'content' => 'nullable|string|max:2000',
+            'tagged_users' => 'nullable|array',
+            'tagged_users.*' => 'integer|exists:users,id',
+        ]);
+
+        $targetPost = $post->shared_post_id ? ($post->sharedPost ?: $post) : $post;
+        $quoteText = trim((string) $request->input('content', ''));
+
+        $mentionedUsers = ContentParserService::getMentionedUsers($quoteText);
+        $explicitTaggedIds = is_array($request->tagged_users)
+            ? array_map('intval', $request->tagged_users)
+            : [];
+        $allTaggedIds = array_values(array_unique(array_filter(
+            array_merge($explicitTaggedIds, $mentionedUsers->pluck('id')->map(fn ($id) => (int) $id)->all()),
+            fn ($id) => $id > 0 && $id !== (int) $user->id
+        )));
+
+        $extractedTags = ContentParserService::extractHashtags($quoteText);
+        $mergedTags = !empty($extractedTags) ? $extractedTags : $targetPost->tags;
+
+        $repost = Post::create([
+            'user_id' => $user->id,
+            'shared_post_id' => $targetPost->id,
+            'content' => $quoteText !== '' ? $quoteText : ('Shared a story by @' . $targetPost->user->username),
+            'chapter' => $targetPost->chapter,
+            'language' => $user->getPreferredLanguage(),
+            'privacy' => 'public',
+            'type' => 'text',
+            'tags' => $mergedTags,
+            'tagged_users' => !empty($allTaggedIds) ? $allTaggedIds : null,
+        ]);
+
+        $targetPost->increment('shares_count');
+        if ($post->id !== $targetPost->id) {
+            $post->increment('shares_count');
+        }
+        $user->increment('posts_count');
+
+        // Notify original post owner if not self
+        if ($targetPost->user_id !== $user->id) {
+            $this->safeNotify($targetPost->user, [
+                'from_user_id' => $user->id,
+                'type' => 'share',
+                'title' => 'Story Shared on Timeline',
+                'message' => $user->name . ' shared your story on their timeline' . ($quoteText !== '' ? ': "' . Str::limit($quoteText, 50) . '"' : '.'),
+                'data' => [
+                    'post_id' => $repost->id,
+                    'original_post_id' => $targetPost->id,
+                    'author_name' => $user->name,
+                    'url' => route('timeline.show', $repost->id),
+                ],
+            ]);
+        }
+
+        // Notify any tagged users on the repost
+        if (!empty($allTaggedIds)) {
+            foreach (User::whereIn('id', $allTaggedIds)->get() as $taggedUser) {
+                if ($taggedUser->id !== $user->id) {
+                    $this->safeNotify($taggedUser, [
+                        'from_user_id' => $user->id,
+                        'type' => 'mention',
+                        'title' => 'Tagged in a Shared Story',
+                        'message' => $user->name . ' tagged you while sharing ' . $targetPost->user->name . '\'s story.',
+                        'data' => [
+                            'post_id' => $repost->id,
+                            'original_post_id' => $targetPost->id,
+                            'author_name' => $user->name,
+                            'url' => route('timeline.show', $repost->id),
+                        ],
+                    ]);
+                }
+            }
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Story shared to your timeline!',
+                'repost_id' => $repost->id,
+                'shares_count' => $targetPost->fresh()->shares_count,
+            ]);
+        }
+
+        return redirect()->route('timeline.index')->with('success', 'Story shared to your timeline!');
+    }
+
+    /**
+     * Add or update tagged users on a post.
+     * - Post Owner can set the full list of tagged users (add or remove).
+     * - Locked-In members can tag additional people on the post.
+     * - Non-Locked-In members cannot tag people on the post (403).
+     */
+    public function updateTags(Request $request, Post $post)
+    {
+        $user = Auth::user();
+
+        if (!$post->canRepostAndTag($user)) {
+            return response()->json([
+                'success' => false,
+                'requires_lockin' => true,
+                'author_id' => $post->user_id,
+                'author_name' => $post->user->name,
+                'author_username' => $post->user->username,
+                'error' => "You must Lock-In to {$post->user->name} (@{$post->user->username}) before tagging people on their story.",
+            ], 403);
+        }
+
+        $request->validate([
+            'tagged_users' => 'present|array',
+            'tagged_users.*' => 'integer|exists:users,id',
+        ]);
+
+        $previousIds = is_array($post->tagged_users)
+            ? array_map('intval', $post->tagged_users)
+            : [];
+        $incomingIds = array_values(array_unique(array_filter(
+            array_map('intval', (array) $request->input('tagged_users', [])),
+            fn ($id) => $id > 0 && $id !== (int) $post->user_id
+        )));
+
+        if ($post->isOwnedBy($user) || $user->is_admin) {
+            // Owner replaces the full tag list
+            $finalIds = $incomingIds;
+        } else {
+            // Locked-In member merges new tags with existing tags
+            $finalIds = array_values(array_unique(array_merge($previousIds, $incomingIds)));
+        }
+
+        $post->tagged_users = !empty($finalIds) ? $finalIds : null;
+        $post->save();
+
+        $newlyAddedIds = array_diff($finalIds, $previousIds);
+        if (!empty($newlyAddedIds)) {
+            foreach (User::whereIn('id', $newlyAddedIds)->get() as $taggedUser) {
+                if ($taggedUser->id !== $user->id) {
+                    $this->safeNotify($taggedUser, [
+                        'from_user_id' => $user->id,
+                        'type' => 'mention',
+                        'title' => 'Tagged in a Story',
+                        'message' => $user->name . ' tagged you in ' . ($post->isOwnedBy($user) ? 'their' : $post->user->name . '\'s') . ' story: "' . Str::limit($post->content, 50) . '"',
+                        'data' => [
+                            'post_id' => $post->id,
+                            'author_name' => $user->name,
+                            'url' => route('timeline.show', $post->id),
+                        ],
+                    ]);
+                }
+            }
+
+            // If a Locked-In member tagged someone on the owner's post, also notify the post owner
+            if (!$post->isOwnedBy($user) && $post->user_id !== $user->id) {
+                $this->safeNotify($post->user, [
+                    'from_user_id' => $user->id,
+                    'type' => 'mention',
+                    'title' => 'Members Tagged on Your Story',
+                    'message' => $user->name . ' tagged ' . count($newlyAddedIds) . ' member(s) on your story.',
+                    'data' => [
+                        'post_id' => $post->id,
+                        'author_name' => $user->name,
+                        'url' => route('timeline.show', $post->id),
+                    ],
+                ]);
+            }
+        }
+
+        $freshPost = $post->fresh();
+        return response()->json([
+            'success' => true,
+            'message' => 'Tagged members updated!',
+            'tagged_users' => $freshPost->tagged_users_models->map(fn ($u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'username' => $u->username,
+                'avatar' => $u->profile_photo_url,
+            ])->values(),
+        ]);
+    }
+
+    /**
+     * Allow a tagged user to untag themselves from a post (or allow the post owner to remove a specific tag).
+     */
+    public function removeSelfTag(Request $request, Post $post)
+    {
+        $user = Auth::user();
+        $targetUserId = $request->filled('user_id') && ($post->isOwnedBy($user) || $user->is_admin)
+            ? (int) $request->input('user_id')
+            : (int) $user->id;
+
+        $currentIds = is_array($post->tagged_users)
+            ? array_map('intval', $post->tagged_users)
+            : [];
+
+        $updatedIds = array_values(array_filter($currentIds, fn ($id) => $id !== $targetUserId));
+        $post->tagged_users = !empty($updatedIds) ? $updatedIds : null;
+        $post->save();
+
+        $freshPost = $post->fresh();
+        return response()->json([
+            'success' => true,
+            'message' => 'Tag removed.',
+            'tagged_users' => $freshPost->tagged_users_models->map(fn ($u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'username' => $u->username,
+                'avatar' => $u->profile_photo_url,
+            ])->values(),
+        ]);
     }
 
     /**
@@ -371,7 +798,7 @@ class TimelineController extends Controller
 
             // Create notification
             if ($post->user_id !== $user->id) {
-                $post->user->notifications()->create([
+                $this->safeNotify($post->user, [
                     'from_user_id' => $user->id,
                     'type' => 'tap',
                     'title' => 'New TAP',
@@ -394,6 +821,22 @@ class TimelineController extends Controller
             'parent_id' => 'nullable|exists:resonances,id',
         ]);
 
+        $user = Auth::user();
+        $content = (string) $request->input('content');
+
+        // Enforce tagging rule: Non-Locked-In members cannot tag people (@username) on a post unless they Lock-In to the poster
+        $extractedMentions = ContentParserService::extractMentionUsernames($content);
+        if (!empty($extractedMentions) && !$post->canRepostAndTag($user)) {
+            return response()->json([
+                'success' => false,
+                'requires_lockin' => true,
+                'author_id' => $post->user_id,
+                'author_name' => $post->user->name,
+                'author_username' => $post->user->username,
+                'error' => "You must Lock-In to {$post->user->name} (@{$post->user->username}) before tagging members (@username) on their story.",
+            ], 403);
+        }
+
         $parentId = $request->input('parent_id');
         $parentResonance = null;
         if ($parentId) {
@@ -404,58 +847,58 @@ class TimelineController extends Controller
         }
 
         $resonance = $post->resonances()->create([
-            'user_id' => Auth::id(),
+            'user_id' => $user->id,
             'parent_id' => $parentResonance ? $parentResonance->id : null,
-            'content' => $request->input('content'),
+            'content' => $content,
         ]);
 
         $post->increment('resonance_count');
 
         // Notify parent resonance author if replying to someone else
-        if ($parentResonance && $parentResonance->user_id !== Auth::id()) {
-            $parentResonance->user->notifications()->create([
-                'from_user_id' => Auth::id(),
+        if ($parentResonance && $parentResonance->user_id !== $user->id) {
+            $this->safeNotify($parentResonance->user, [
+                'from_user_id' => $user->id,
                 'type' => 'resonance_reply',
                 'title' => 'New Reply to Your Resonance',
-                'message' => Auth::user()->name . ' replied to your comment: "' . Str::limit($resonance->content, 60) . '"',
+                'message' => $user->name . ' replied to your comment: "' . Str::limit($resonance->content, 60) . '"',
                 'data' => [
                     'post_id' => $post->id,
                     'resonance_id' => $resonance->id,
                     'parent_id' => $parentResonance->id,
-                    'author_name' => Auth::user()->name,
+                    'author_name' => $user->name,
                 ],
             ]);
         }
 
         // Notify post author if not self and not already notified as parent author
-        if ($post->user_id !== Auth::id() && (!$parentResonance || $parentResonance->user_id !== $post->user_id)) {
-            $post->user->notifications()->create([
-                'from_user_id' => Auth::id(),
+        if ($post->user_id !== $user->id && (!$parentResonance || $parentResonance->user_id !== $post->user_id)) {
+            $this->safeNotify($post->user, [
+                'from_user_id' => $user->id,
                 'type' => 'resonance',
                 'title' => $parentResonance ? 'New Reply on Your Story' : 'New Resonance',
-                'message' => Auth::user()->name . ($parentResonance ? ' replied to a comment on your story: "' : ' resonated with your story: "') . Str::limit($resonance->content, 60) . '"',
+                'message' => $user->name . ($parentResonance ? ' replied to a comment on your story: "' : ' resonated with your story: "') . Str::limit($resonance->content, 60) . '"',
                 'data' => [
                     'post_id' => $post->id,
                     'resonance_id' => $resonance->id,
                     'parent_id' => $parentResonance ? $parentResonance->id : null,
-                    'author_name' => Auth::user()->name,
+                    'author_name' => $user->name,
                 ],
             ]);
         }
 
-        // Notify any users mentioned in this resonance
+        // Notify any users mentioned in this resonance (allowed for Owner and Locked-In members)
         $mentionedUsers = ContentParserService::getMentionedUsers($resonance->content);
         foreach ($mentionedUsers as $mentionedUser) {
-            if ($mentionedUser->id !== Auth::id() && $mentionedUser->id !== $post->user_id && (!$parentResonance || $mentionedUser->id !== $parentResonance->user_id)) {
-                $mentionedUser->notifications()->create([
-                    'from_user_id' => Auth::id(),
+            if ($mentionedUser->id !== $user->id && $mentionedUser->id !== $post->user_id && (!$parentResonance || $mentionedUser->id !== $parentResonance->user_id)) {
+                $this->safeNotify($mentionedUser, [
+                    'from_user_id' => $user->id,
                     'type' => 'mention',
                     'title' => 'Mentioned in a Resonance',
-                    'message' => Auth::user()->name . ' mentioned you in a resonance on a story: "' . Str::limit($resonance->content, 60) . '"',
+                    'message' => $user->name . ' mentioned you in a resonance on a story: "' . Str::limit($resonance->content, 60) . '"',
                     'data' => [
                         'post_id' => $post->id,
                         'resonance_id' => $resonance->id,
-                        'author_name' => Auth::user()->name,
+                        'author_name' => $user->name,
                     ],
                 ]);
             }
@@ -509,7 +952,7 @@ class TimelineController extends Controller
             // Notify comment author if not self
             if ($resonance->user_id !== $user->id) {
                 $isPostAuthor = $resonance->post && $resonance->post->user_id === $user->id;
-                $resonance->user->notifications()->create([
+                $this->safeNotify($resonance->user, [
                     'from_user_id' => $user->id,
                     'type' => 'resonance_tap',
                     'title' => $isPostAuthor ? 'Story Author Liked Your Comment' : 'New Reaction to Your Comment',
@@ -527,11 +970,10 @@ class TimelineController extends Controller
         return response()->json([
             'success' => true,
             'tapped' => $tapped,
-            'count' => (int)$fresh->taps_count,
+            'count' => (int) $fresh->taps_count,
             'is_author_liked' => $fresh->isAuthorLiked(),
         ]);
     }
-
 
     public function checkin(Post $post)
     {
@@ -629,4 +1071,23 @@ class TimelineController extends Controller
         $result['raw_transcript'] = $rawTranscript;
         return response()->json($result);
     }
+    /**
+     * Safely dispatch a user notification without blocking main actions on failure.
+     */
+    protected function safeNotify(?User $recipient, array $payload): void
+    {
+        if (!$recipient || empty($payload)) {
+            return;
+        }
+
+        try {
+            $recipient->notifications()->create($payload);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Notification dispatch skipped: ' . $e->getMessage(), [
+                'recipient_id' => $recipient->id,
+                'type' => $payload['type'] ?? null,
+            ]);
+        }
+    }
+
 }

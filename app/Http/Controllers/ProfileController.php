@@ -88,8 +88,11 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
 
-        $posts = $user->posts()
-            ->with(['taps', 'resonances.user', 'resonances.replies.user', 'resonances.interactions', 'resonances.replies.interactions'])
+        $posts = \App\Models\Post::where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhereJsonContains('tagged_users', (int) $user->id);
+            })
+            ->with(['user', 'sharedPost.user', 'taps', 'resonances.user', 'resonances.replies.user', 'resonances.interactions', 'resonances.replies.interactions'])
             ->latest()
             ->paginate(10);
 
@@ -170,8 +173,12 @@ class ProfileController extends Controller
         $isLockedIn = Auth::check() ? Auth::user()->hasLockedIn($targetUser) : false;
         $hasVibed = Auth::check() ? Auth::user()->hasTapped($targetUser) : false;
 
-        $posts = $targetUser->posts()
-            ->with(['taps', 'resonances.user', 'resonances.replies.user', 'resonances.interactions', 'resonances.replies.interactions'])
+        $posts = \App\Models\Post::where('privacy', 'public')
+            ->where(function ($q) use ($targetUser) {
+                $q->where('user_id', $targetUser->id)
+                  ->orWhereJsonContains('tagged_users', (int) $targetUser->id);
+            })
+            ->with(['user', 'sharedPost.user', 'taps', 'resonances.user', 'resonances.replies.user', 'resonances.interactions', 'resonances.replies.interactions'])
             ->latest()
             ->paginate(10);
 

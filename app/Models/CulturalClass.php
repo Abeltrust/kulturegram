@@ -190,12 +190,32 @@ class CulturalClass extends Model
         return $id ? "https://www.youtube.com/embed/{$id}?rel=0&modestbranding=1&enablejsapi=1" : null;
     }
 
+    public static function resolveMediaUrl(?string $url): ?string
+    {
+        if (!$url || !is_string($url)) {
+            return null;
+        }
+
+        $trimmed = trim($url);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        if (Str::startsWith($trimmed, ['http://', 'https://', 'data:'])) {
+            return $trimmed;
+        }
+
+        if (Str::startsWith($trimmed, ['/storage/', 'storage/'])) {
+            return asset(ltrim($trimmed, '/'));
+        }
+
+        return asset('storage/' . ltrim($trimmed, '/'));
+    }
+
     public function resolvedThumbnailUrl(): ?string
     {
         if ($this->thumbnail_url) {
-            return Str::startsWith($this->thumbnail_url, ['http://', 'https://'])
-                ? $this->thumbnail_url
-                : asset('storage/' . ltrim($this->thumbnail_url, '/'));
+            return static::resolveMediaUrl($this->thumbnail_url);
         }
 
         $ytId = $this->youtubeVideoId();
@@ -204,7 +224,7 @@ class CulturalClass extends Model
         }
 
         if ($this->virtual_background_url) {
-            return $this->virtual_background_url;
+            return static::resolveMediaUrl($this->virtual_background_url);
         }
 
         return null;

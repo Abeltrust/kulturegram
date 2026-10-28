@@ -16,14 +16,16 @@
         
         {{-- Hero Image --}}
         @if($event->image)
-            <div class="w-full h-64 sm:h-80 md:h-96 relative bg-stone-100 dark:bg-stone-800">
-                <img src="{{ asset('storage/' . $event->image) }}" class="w-full h-full object-cover" alt="{{ $event->title }}">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+            <div class="w-full min-h-[320px] max-h-[620px] relative bg-stone-950 flex items-center justify-center overflow-hidden">
+                <div class="absolute inset-0 bg-cover bg-center filter blur-2xl opacity-35 scale-110 pointer-events-none"
+                     style="background-image: url('{{ asset('storage/' . $event->image) }}');"></div>
+                <img src="{{ asset('storage/' . $event->image) }}" class="relative z-10 w-auto h-auto max-w-full max-h-[580px] object-contain mx-auto" alt="{{ $event->title }}">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/30 z-10 pointer-events-none"></div>
                 
                 {{-- Floating Badges --}}
-                <div class="absolute top-4 left-4 flex gap-2">
+                <div class="absolute top-4 left-4 flex gap-2 z-20">
                     <span class="bg-white/90 dark:bg-stone-900/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black uppercase text-stone-800 dark:text-stone-100 shadow-sm border border-stone-200 dark:border-stone-700">
-                        {{ ucfirst($event->type) }}
+                        {{ str_replace('_', ' ', ucfirst($event->type)) }}
                     </span>
                     @if($event->is_online)
                         <span class="bg-blue-500/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black uppercase text-white shadow-sm border border-blue-400">
@@ -32,8 +34,18 @@
                     @endif
                 </div>
 
-                <div class="absolute bottom-6 left-6 right-6">
-                    <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight mb-2">
+                {{-- Download Flyer Action --}}
+                <div class="absolute top-4 right-4 z-20">
+                    <a href="{{ asset('storage/' . $event->image) }}"
+                       download="{{ \Illuminate\Support\Str::slug($event->title ?: 'event-flyer') }}-flyer.{{ pathinfo($event->image, PATHINFO_EXTENSION) ?: 'png' }}"
+                       class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-stone-950 text-xs font-black shadow-lg transition flex items-center gap-1.5">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>Download Flyer</span>
+                    </a>
+                </div>
+
+                <div class="absolute bottom-6 left-6 right-6 z-20">
+                    <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight mb-2 drop-shadow-md">
                         {{ $event->title }}
                     </h1>
                 </div>

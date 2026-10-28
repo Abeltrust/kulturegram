@@ -275,14 +275,14 @@
                                 @click="toggleVoiceStudio()"
                                 class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 transition active:scale-95 shadow-sm">
                             <i data-lucide="mic" class="w-3.5 h-3.5 text-amber-500" :class="isListening ? 'animate-pulse text-red-500' : ''"></i>
-                            <span x-text="isListening ? 'Listening... (Click to stop)' : '🎙️ Speak to AI (Voice Dictation)'"></span>
+                            <span x-text="isListening ? 'Listening... (Click to stop)' : 'Speak to AI (Voice Dictation)'"></span>
                         </button>
                         <button type="button" 
                                 @click="formatSpokenCultureRecord()"
                                 :disabled="!voiceTranscript && !description || isFormattingVoice"
                                 class="inline-flex items-center gap-1.5 text-xs font-bold text-white px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 disabled:opacity-40 transition active:scale-95 shadow-sm">
                             <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                            <span x-text="isFormattingVoice ? 'Formatting...' : '✨ AI Format for Post'"></span>
+                            <span x-text="isFormattingVoice ? 'Formatting...' : 'AI Format for Post'"></span>
                         </button>
                     </div>
                 </div>
@@ -340,7 +340,7 @@
                                 :disabled="!voiceTranscript && !description || isFormattingVoice"
                                 class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs shadow-md flex items-center gap-1.5 disabled:opacity-50 transition active:scale-95">
                             <i data-lucide="sparkles" class="w-4 h-4"></i>
-                            <span x-text="isFormattingVoice ? 'AI Structuring & Formatting...' : '✨ AI Arrange & Format for Post'"></span>
+                            <span x-text="isFormattingVoice ? 'AI Structuring & Formatting...' : 'AI Arrange & Format for Post'"></span>
                         </button>
                     </div>
                 </div>

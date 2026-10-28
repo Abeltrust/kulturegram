@@ -24,7 +24,8 @@ use Inertia\Inertia;
 
 //  Public routes
 Route::get('/', [TimelineController::class, 'index'])->name('timeline.index');
-Route::get('/timeline/{post}', [TimelineController::class, 'show'])->name('timeline.show');
+Route::get('/timeline/taggable-users', [TimelineController::class, 'taggableUsers'])->middleware('auth')->name('timeline.taggable-users');
+Route::get('/timeline/{post}', [TimelineController::class, 'show'])->whereNumber('post')->name('timeline.show');
 Route::get('/cultural-hub', [CulturalHubController::class, 'index'])->name('cultural-hub.index');
 Route::get('/discover', [DiscoverController::class, 'index'])->name('discover.index');
 Route::get('/education', [EducationalHubController::class, 'index'])->name('education.index');
@@ -82,6 +83,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/timeline/{post}/resonance', [TimelineController::class, 'resonance'])->name('timeline.resonance');
     Route::post('/resonances/{resonance}/tap', [TimelineController::class, 'tapResonance'])->name('resonances.tap');
     Route::post('/timeline/{post}/translate', [TimelineController::class, 'translatePost'])->name('timeline.translate');
+    Route::post('/timeline/{post}/repost', [TimelineController::class, 'repost'])->name('timeline.repost');
+    Route::post('/timeline/{post}/tags', [TimelineController::class, 'updateTags'])->name('timeline.tags.update');
+    Route::delete('/timeline/{post}/tags/self', [TimelineController::class, 'removeSelfTag'])->name('timeline.tags.remove-self');
     Route::post('/timeline/ai-voice-format', [TimelineController::class, 'aiVoiceFormat'])->name('timeline.ai-voice-format');
 
 

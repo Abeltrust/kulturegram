@@ -94,7 +94,7 @@
             </div>
 
             {{-- AI-Powered Cultural Connections & Like-Minded Collaborators --}}
-            @include('components.cultural-connections-card')
+            {{-- AI suggested users and authentic stories are now embedded seamlessly inside the timeline feed --}}
         @endauth
 
         @if(request()->filled('tag'))
@@ -117,6 +117,16 @@
                     <div class="w-full">
                         <!-- Post Content -->
                         <div class="w-full">
+                            @if($post->sharedPost && $post->sharedPost->user)
+                                <div class="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-amber-600 dark:text-amber-400 mb-2.5 pb-2 border-b border-stone-100 dark:border-stone-800/80">
+                                    <i data-lucide="repeat-2" class="w-3.5 h-3.5"></i>
+                                    <span>Reposted from</span>
+                                    <a href="{{ route('profile.user', $post->sharedPost->user) }}" class="hover:underline">
+                                        {{ $post->sharedPost->user->name }} ({{ '@' . $post->sharedPost->user->username }})
+                                    </a>
+                                </div>
+                            @endif
+
                             <!-- Header -->
                             <div class="flex items-start justify-between gap-3 mb-3">
                                 <div class="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
@@ -136,6 +146,8 @@
                                                 {{ $post->user->name }}
                                             </a>
                                             <span class="text-stone-400 text-xs sm:text-sm">@ {{ $post->user->username }}</span>
+
+                                            @include('timeline.partials.post-tagged-badge', ['post' => $post])
 
                                             @if($post->user->location)
                                                 <span
@@ -311,15 +323,11 @@
 
                                 @php
                                     $postYoutubeId = $post->video ? \App\Models\CulturalClass::extractYoutubeId($post->video) : null;
-                                    $postImageSrc = $post->image
-                                        ? (\Illuminate\Support\Str::startsWith($post->image, ['http://', 'https://']) ? $post->image : Storage::url($post->image))
-                                        : null;
-                                    $postVideoSrc = $post->video
-                                        ? (\Illuminate\Support\Str::startsWith($post->video, ['http://', 'https://']) ? $post->video : Storage::url($post->video))
-                                        : null;
+                                    $postImageSrc = \App\Models\CulturalClass::resolveMediaUrl($post->image);
+                                    $postVideoSrc = \App\Models\CulturalClass::resolveMediaUrl($post->video);
                                 @endphp
 
-                                @if($postImageSrc && !$postYoutubeId)
+                                @if($postImageSrc && !$postVideoSrc && !$postYoutubeId)
                                     <div class="-mx-4 sm:-mx-6 mt-4 relative overflow-hidden bg-stone-900/5 dark:bg-black/40 border-y border-stone-100 dark:border-stone-800 flex items-center justify-center min-h-[220px] max-h-[720px] group cursor-pointer"
                                          onclick="openImageLightbox('{{ $postImageSrc }}', 'Story photo by {{ addslashes($post->user->name) }}')">
                                         {{-- Ambient blurred backdrop for portrait / non-full-width images --}}
@@ -350,7 +358,10 @@
                                     </div>
                                 @elseif($postVideoSrc)
                                     <div class="-mx-4 sm:-mx-6 mt-4 relative overflow-hidden bg-black border-y border-stone-100 dark:border-stone-800 flex items-center justify-center min-h-[220px]">
-                                        <video src="{{ $postVideoSrc }}" controls class="w-auto h-auto max-w-full max-h-[650px] mx-auto"></video>
+                                        <video src="{{ $postVideoSrc }}{{ !str_contains($postVideoSrc, '#') ? '#t=0.1' : '' }}"
+                                               controls
+                                               preload="metadata"
+                                               class="w-auto h-auto max-w-full max-h-[650px] mx-auto"></video>
                                     </div>
                                 @endif
 
@@ -359,9 +370,21 @@
                                         <audio src="{{ Storage::url($post->audio) }}" controls class="w-full"></audio>
                                     </div>
                                 @endif
+
+                                @include('timeline.partials.quoted-post-card', ['post' => $post])
                             </div>
 
                             <!-- Actions -->
+                            @php
+                                $viewerCanRepostAndTag = auth()->check() && $post->canRepostAndTag(auth()->user());
+                                $viewerIsOwner = auth()->check() && $post->isOwnedBy(auth()->user());
+                                $postTaggedJson = $post->tagged_users_models->map(fn ($u) => [
+                                    'id' => $u->id,
+                                    'name' => $u->name,
+                                    'username' => $u->username,
+                                    'avatar' => $u->profile_photo_url,
+                                ])->values();
+                            @endphp
                             <div
                                 class="flex flex-wrap justify-center items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-stone-100 dark:border-stone-800 text-xs sm:text-sm md:text-base">
                                 @auth
@@ -393,11 +416,24 @@
                                         </span>
                                     </button>
 
-                                    <!-- Share -->
-                                    <button onclick="openShareModal('{{ url('/timeline/' . $post->id) }}')"
-                                        class="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition text-stone-600 hover:bg-stone-100">
+                                    <!-- Tag People (Owner & Locked-In members can tag; others prompted to Lock-In) -->
+                                    <button type="button"
+                                        onclick='openTagPeopleModal({{ $post->id }}, {{ $viewerCanRepostAndTag ? "true" : "false" }}, {{ $viewerIsOwner ? "true" : "false" }}, {{ $post->user_id }}, "{{ addslashes($post->user->name) }}", "{{ addslashes($post->user->username) }}", @json($postTaggedJson))'
+                                        data-tag-btn-post="{{ $post->id }}"
+                                        class="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition {{ $post->tagged_users_models->count() > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-stone-600 hover:bg-stone-100' }}"
+                                        title="{{ $viewerCanRepostAndTag ? 'Tag people on this story' : 'Lock-In to @' . $post->user->username . ' to tag people' }}">
+                                        <i data-lucide="user-plus" class="w-3 h-3 sm:w-4 sm:h-4"></i>
+                                        <span class="font-medium" data-tag-count="{{ $post->id }}">{{ $post->tagged_users_models->count() > 0 ? $post->tagged_users_models->count() : '' }}</span>
+                                    </button>
+
+                                    <!-- Share / Repost -->
+                                    <button type="button"
+                                        onclick="openShareModal('{{ url('/timeline/' . $post->id) }}', {{ $post->id }}, {{ $viewerCanRepostAndTag ? 'true' : 'false' }}, {{ $post->user_id }}, '{{ addslashes($post->user->name) }}', '{{ addslashes($post->user->username) }}')"
+                                        data-share-btn-post="{{ $post->id }}"
+                                        class="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition text-stone-600 hover:bg-stone-100"
+                                        title="Share or Repost story">
                                         <i data-lucide="share-2" class="w-3 h-3 sm:w-4 sm:h-4"></i>
-                                        <span class="font-medium"></span>
+                                        <span class="font-medium" data-share-count="{{ $post->id }}">{{ ($post->shares_count ?? 0) > 0 ? $post->shares_count : '' }}</span>
                                     </button>
                                 @endauth
                             </div>
@@ -535,12 +571,21 @@
 
                                 @auth
                                     <div class="flex items-center mt-2 sm:mt-3 space-x-1 sm:space-x-2">
-                                        <input type="text" id="resonance-input-{{ $post->id }}" placeholder="Write a resonance..."
+                                        <input type="text" id="resonance-input-{{ $post->id }}"
+                                            placeholder="{{ $viewerCanRepostAndTag ? 'Write a resonance... (use @username to tag)' : 'Write a resonance... (Lock-In to @' . $post->user->username . ' to tag @members)' }}"
                                             class="flex-1 border dark:border-stone-700 bg-white dark:bg-stone-900 dark:text-stone-200 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none"
                                             onkeydown="if(event.key === 'Enter') submitResonance({{ $post->id }})">
                                         <button onclick="submitResonance({{ $post->id }})"
                                             class="p-2 sm:p-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition flex items-center justify-center">
                                             <i data-lucide="send" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                                        </button>
+                                    </div>
+                                    <div id="resonance-lockin-notice-{{ $post->id }}" class="hidden mt-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-800 dark:text-amber-300 items-center justify-between gap-2">
+                                        <span id="resonance-lockin-text-{{ $post->id }}">You must Lock-In to {{ '@' . $post->user->username }} to tag members on their story.</span>
+                                        <button type="button"
+                                                onclick="quickLockInAuthor({{ $post->user_id }}, {{ $post->id }})"
+                                                class="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shrink-0 transition cursor-pointer">
+                                            Lock-In to {{ '@' . $post->user->username }}
                                         </button>
                                     </div>
                                 @endauth
@@ -564,52 +609,193 @@
         @endif
     </div>
 
-    <!-- Share Modal -->
+    <!-- Share & Repost Modal -->
     <div id="shareModal"
-        class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-3 sm:p-0 animate-backdrop-fade">
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-3 sm:p-4 animate-backdrop-fade">
         <div
-            class="animate-modal-pop-up bg-white dark:bg-stone-900 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md p-4 sm:p-6 relative text-xs sm:text-sm border dark:border-stone-800">
+            class="animate-modal-pop-up bg-white dark:bg-stone-900 rounded-2xl shadow-2xl w-full max-w-md p-4 sm:p-6 relative text-xs sm:text-sm border border-stone-200 dark:border-stone-800 max-h-[90vh] overflow-y-auto">
             <!-- Close Button -->
-            <button onclick="closeShareModal()"
-                class="absolute top-2 right-2 sm:top-3 sm:right-3 text-gray-500 hover:text-gray-700">
+            <button type="button" onclick="closeShareModal()"
+                class="absolute top-3 right-3 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 p-1 rounded-lg">
                 <i data-lucide="x" class="w-4 h-4 sm:w-5 sm:h-5"></i>
             </button>
 
             <!-- Header -->
-            <h2
-                class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-stone-800 dark:text-stone-100">
-                <i data-lucide="share-2" class="w-4 h-4 sm:w-5 sm:h-5"></i>
-                Share this story
+            <h2 class="text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2 text-stone-800 dark:text-stone-100">
+                <i data-lucide="share-2" class="w-4 h-4 sm:w-5 sm:h-5 text-amber-500"></i>
+                <span>Share Story</span>
             </h2>
 
-            <!-- Share Options -->
-            <div class="space-y-2 sm:space-y-3">
-                <button onclick="copyLink()"
-                    class="flex items-center gap-2 sm:gap-3 w-full bg-gray-100 dark:bg-stone-800 hover:bg-gray-200 dark:hover:bg-stone-700 p-2 sm:p-3 rounded-lg transition text-stone-700 dark:text-stone-300">
-                    <i data-lucide="copy" class="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-stone-400"></i>
-                    <span class="text-xs sm:text-sm">Copy Link</span>
+            @auth
+                <!-- Section A: Repost to Kulturegram Timeline (Owner & Locked-In Members) -->
+                <div id="shareRepostUnlockedSection" class="mb-4 pb-4 border-b border-stone-100 dark:border-stone-800 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                            <i data-lucide="repeat-2" class="w-3.5 h-3.5"></i>
+                            <span>Repost to Your Kulturegram Timeline</span>
+                        </span>
+                    </div>
+
+                    <textarea id="repostQuoteInput"
+                              rows="2"
+                              placeholder="Add your thoughts or cultural reflection... (optional, use @username to tag)"
+                              class="w-full rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-950 p-2.5 text-xs sm:text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none resize-none"></textarea>
+
+                    <!-- Tag People on Repost -->
+                    <div class="space-y-1.5 relative">
+                        <label class="block text-[11px] font-bold text-stone-600 dark:text-stone-400">
+                            Tag People on Your Repost (Optional)
+                        </label>
+                        <div id="repostSelectedTags" class="flex flex-wrap gap-1.5 empty:hidden"></div>
+                        <div class="relative">
+                            <i data-lucide="user-plus" class="w-3.5 h-3.5 text-stone-400 absolute left-3 top-2.5"></i>
+                            <input type="text"
+                                   id="repostTagSearchInput"
+                                   onfocus="searchShareTagUsers(this.value)"
+                                   oninput="searchShareTagUsers(this.value)"
+                                   placeholder="Search Locked-In connections or @username..."
+                                   class="w-full rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-950 pl-8 pr-3 py-1.5 text-xs text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none">
+                        </div>
+                        <div id="repostTagDropdown" class="hidden max-h-36 overflow-y-auto rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-lg p-1 space-y-0.5"></div>
+                    </div>
+
+                    <button type="button"
+                            id="submitRepostBtn"
+                            onclick="submitRepost()"
+                            class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                        <i data-lucide="repeat-2" class="w-4 h-4"></i>
+                        <span>Repost to My Timeline</span>
+                    </button>
+                </div>
+
+                <!-- Section B: Lock-In Required Gate (For Non-Locked-In Members) -->
+                <div id="shareRepostLockedGate" class="hidden mb-4 pb-4 border-b border-stone-100 dark:border-stone-800">
+                    <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2.5">
+                        <div class="flex items-start gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                                <i data-lucide="lock" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-xs sm:text-sm text-stone-900 dark:text-white">Lock-In to Repost & Tag</h4>
+                                <p id="shareLockedGateDesc" class="text-[11px] text-stone-600 dark:text-stone-300 leading-relaxed mt-0.5">
+                                    Only members who are Locked-In to this story's author can repost it to their Kulturegram Timeline or tag members on it. You can still share the link externally below.
+                                </p>
+                            </div>
+                        </div>
+                        <button type="button"
+                                id="shareModalLockInBtn"
+                                onclick="lockInFromShareModal()"
+                                class="w-full py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                            <i data-lucide="user-check" class="w-3.5 h-3.5"></i>
+                            <span id="shareModalLockInBtnText">Lock-In to Author to Unlock Repost</span>
+                        </button>
+                    </div>
+                </div>
+            @endauth
+
+            <!-- Section C: External Share Options (Available to All on Public Posts) -->
+            <div class="space-y-2">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-stone-400 mb-1">Share Externally</div>
+                <button type="button" onclick="copyLink()"
+                    class="flex items-center gap-2 sm:gap-3 w-full bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 p-2.5 rounded-xl transition text-stone-700 dark:text-stone-200 cursor-pointer">
+                    <i data-lucide="copy" class="w-4 h-4 text-stone-500 dark:text-stone-400"></i>
+                    <span class="text-xs sm:text-sm font-medium">Copy Story Link</span>
                 </button>
 
                 <a id="wa-share" href="#" target="_blank"
-                    class="flex items-center gap-2 sm:gap-3 w-full bg-green-100 hover:bg-green-200 p-2 sm:p-3 rounded-lg transition">
-                    <i data-lucide="message-circle" class="w-4 h-4 sm:w-5 sm:h-5 text-green-600"></i>
-                    <span class="text-xs sm:text-sm">Share on WhatsApp</span>
+                    class="flex items-center gap-2 sm:gap-3 w-full bg-green-500/10 hover:bg-green-500/20 text-green-700 dark:text-green-400 p-2.5 rounded-xl transition">
+                    <i data-lucide="message-circle" class="w-4 h-4 text-green-600"></i>
+                    <span class="text-xs sm:text-sm font-medium">Share on WhatsApp</span>
                 </a>
 
                 <a id="fb-share" href="#" target="_blank"
-                    class="flex items-center gap-2 sm:gap-3 w-full bg-blue-100 hover:bg-blue-200 p-2 sm:p-3 rounded-lg transition">
-                    <i data-lucide="facebook" class="w-4 h-4 sm:w-5 sm:h-5 text-blue-600"></i>
-                    <span class="text-xs sm:text-sm">Share on Facebook</span>
+                    class="flex items-center gap-2 sm:gap-3 w-full bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-400 p-2.5 rounded-xl transition">
+                    <i data-lucide="facebook" class="w-4 h-4 text-blue-600"></i>
+                    <span class="text-xs sm:text-sm font-medium">Share on Facebook</span>
                 </a>
 
                 <a id="tw-share" href="#" target="_blank"
-                    class="flex items-center gap-2 sm:gap-3 w-full bg-sky-100 hover:bg-sky-200 p-2 sm:p-3 rounded-lg transition">
-                    <i data-lucide="twitter" class="w-4 h-4 sm:w-5 sm:h-5 text-sky-600"></i>
-                    <span class="text-xs sm:text-sm">Share on Twitter</span>
+                    class="flex items-center gap-2 sm:gap-3 w-full bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-400 p-2.5 rounded-xl transition">
+                    <i data-lucide="twitter" class="w-4 h-4 text-sky-600"></i>
+                    <span class="text-xs sm:text-sm font-medium">Share on X / Twitter</span>
                 </a>
             </div>
         </div>
     </div>
+
+    <!-- Tag People on Story Modal -->
+    @auth
+    <div id="tagPeopleModal"
+         class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-3 sm:p-4 animate-backdrop-fade">
+        <div class="animate-modal-pop-up bg-white dark:bg-stone-900 rounded-2xl shadow-2xl w-full max-w-md p-4 sm:p-6 relative text-xs sm:text-sm border border-stone-200 dark:border-stone-800">
+            <button type="button" onclick="closeTagPeopleModal()"
+                    class="absolute top-3 right-3 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 p-1 rounded-lg">
+                <i data-lucide="x" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+            </button>
+
+            <h2 class="text-base sm:text-lg font-bold mb-1 flex items-center gap-2 text-stone-800 dark:text-stone-100">
+                <i data-lucide="user-plus" class="w-4 h-4 sm:w-5 sm:h-5 text-amber-500"></i>
+                <span>Tag People on Story</span>
+            </h2>
+            <p id="tagPeopleModalSubtitle" class="text-[11px] text-stone-500 dark:text-stone-400 mb-4">
+                Tagged members will be notified and shown in the story header.
+            </p>
+
+            <!-- Unlocked Tag Picker (Owner & Locked-In Members) -->
+            <div id="tagPeopleUnlockedSection" class="space-y-3">
+                <div id="postModalSelectedTags" class="flex flex-wrap gap-1.5 min-h-[28px]"></div>
+
+                <div class="relative">
+                    <i data-lucide="search" class="w-3.5 h-3.5 text-stone-400 absolute left-3 top-2.5"></i>
+                    <input type="text"
+                           id="postModalTagSearchInput"
+                           onfocus="searchPostModalTagUsers(this.value)"
+                           oninput="searchPostModalTagUsers(this.value)"
+                           placeholder="Search Locked-In members or @username..."
+                           class="w-full rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-950 pl-8 pr-3 py-2 text-xs text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none">
+                </div>
+
+                <div id="postModalTagDropdown" class="max-h-44 overflow-y-auto rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50/50 dark:bg-stone-950/60 p-1.5 space-y-1"></div>
+
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeTagPeopleModal()"
+                            class="px-3.5 py-2 rounded-xl text-xs font-bold text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800 transition cursor-pointer">
+                        Cancel
+                    </button>
+                    <button type="button" id="savePostTagsBtn" onclick="submitPostTaggedUsers()"
+                            class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-md transition flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        <span>Save Tagged People</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Locked Gate (Non-Locked-In Members) -->
+            <div id="tagPeopleLockedGate" class="hidden">
+                <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
+                    <div class="flex items-start gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                            <i data-lucide="lock" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xs sm:text-sm text-stone-900 dark:text-white">Lock-In Required to Tag Members</h4>
+                            <p id="tagPeopleLockedDesc" class="text-[11px] text-stone-600 dark:text-stone-300 leading-relaxed mt-0.5">
+                                Only the story owner and members who have Locked-In to the author can tag people on this story.
+                            </p>
+                        </div>
+                    </div>
+                    <button type="button"
+                            id="tagModalLockInBtn"
+                            onclick="lockInFromTagModal()"
+                            class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                        <i data-lucide="user-check" class="w-4 h-4"></i>
+                        <span id="tagModalLockInBtnText">Lock-In to Author to Tag People</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endauth
 
 @endsection
 
@@ -618,19 +804,66 @@
         document.addEventListener("DOMContentLoaded", () => lucide.createIcons());
 
         let currentShareUrl = "";
+        let currentSharePostId = null;
+        let currentShareAuthorId = null;
+        let currentShareAuthorName = "";
+        let currentShareAuthorUsername = "";
+        let shareSelectedTaggedUsers = [];
 
-        // Open modal
-        function openShareModal(url) {
+        let currentTagPostId = null;
+        let currentTagIsOwner = false;
+        let currentTagAuthorId = null;
+        let currentTagAuthorName = "";
+        let currentTagAuthorUsername = "";
+        let postModalSelectedTaggedUsers = [];
+
+        // Open Share & Repost modal
+        function openShareModal(url, postId = null, canRepost = false, authorId = null, authorName = '', authorUsername = '') {
             currentShareUrl = url;
+            currentSharePostId = postId;
+            currentShareAuthorId = authorId;
+            currentShareAuthorName = authorName;
+            currentShareAuthorUsername = authorUsername;
+            shareSelectedTaggedUsers = [];
+
+            const quoteInput = document.getElementById('repostQuoteInput');
+            if (quoteInput) quoteInput.value = '';
+            const tagInput = document.getElementById('repostTagSearchInput');
+            if (tagInput) tagInput.value = '';
+            const tagDrop = document.getElementById('repostTagDropdown');
+            if (tagDrop) tagDrop.classList.add('hidden');
+            renderShareSelectedTags();
+
+            const unlockedSection = document.getElementById('shareRepostUnlockedSection');
+            const lockedGate = document.getElementById('shareRepostLockedGate');
+            if (unlockedSection && lockedGate) {
+                if (canRepost && postId) {
+                    unlockedSection.classList.remove('hidden');
+                    lockedGate.classList.add('hidden');
+                } else if (postId) {
+                    unlockedSection.classList.add('hidden');
+                    lockedGate.classList.remove('hidden');
+                    const desc = document.getElementById('shareLockedGateDesc');
+                    if (desc) {
+                        desc.textContent = `Only ${authorName} (@${authorUsername}) and members who Locked-In to them can repost this story to their Kulturegram Timeline or tag members on it.`;
+                    }
+                    const btnText = document.getElementById('shareModalLockInBtnText');
+                    if (btnText) {
+                        btnText.textContent = `Lock-In to @${authorUsername} to Repost & Tag`;
+                    }
+                }
+            }
+
             document.getElementById("shareModal").classList.remove("hidden");
             document.getElementById("shareModal").classList.add("flex");
 
             document.getElementById("wa-share").href = `https://wa.me/?text=${encodeURIComponent(url)}`;
             document.getElementById("fb-share").href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
             document.getElementById("tw-share").href = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}`;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        // Close modal
+        // Close Share modal
         function closeShareModal() {
             document.getElementById("shareModal").classList.add("hidden");
             document.getElementById("shareModal").classList.remove("flex");
@@ -640,6 +873,376 @@
         function copyLink() {
             navigator.clipboard.writeText(currentShareUrl).then(() => {
                 alert("Link copied to clipboard!");
+            });
+        }
+
+        function searchShareTagUsers(query) {
+            const dropdown = document.getElementById('repostTagDropdown');
+            if (!dropdown) return;
+            fetch('/timeline/taggable-users?q=' + encodeURIComponent(query || ''), {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) return;
+                const available = data.users.filter(u => !shareSelectedTaggedUsers.some(s => s.id === u.id));
+                if (available.length === 0) {
+                    dropdown.classList.add('hidden');
+                    return;
+                }
+                dropdown.innerHTML = available.map(u => `
+                    <button type="button"
+                            onclick='addShareTaggedUser(${JSON.stringify(u).replace(/'/g, "&#39;")})'
+                            class="w-full flex items-center justify-between gap-2 p-1.5 rounded-lg hover:bg-amber-500/10 text-left transition cursor-pointer">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <img src="${u.avatar}" class="w-6 h-6 rounded-full object-cover shrink-0" alt="">
+                            <div class="min-w-0 truncate">
+                                <div class="text-xs font-bold text-stone-800 dark:text-stone-100 truncate">${u.name}</div>
+                                <div class="text-[10px] text-stone-400 truncate">@${u.username}</div>
+                            </div>
+                        </div>
+                        ${u.is_locked_in ? '<span class="px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[9px] font-black uppercase shrink-0">Locked-In</span>' : ''}
+                    </button>
+                `).join('');
+                dropdown.classList.remove('hidden');
+            });
+        }
+
+        function addShareTaggedUser(user) {
+            if (!shareSelectedTaggedUsers.some(u => u.id === user.id)) {
+                shareSelectedTaggedUsers.push(user);
+            }
+            const input = document.getElementById('repostTagSearchInput');
+            if (input) input.value = '';
+            const dropdown = document.getElementById('repostTagDropdown');
+            if (dropdown) dropdown.classList.add('hidden');
+            renderShareSelectedTags();
+        }
+
+        function removeShareTaggedUser(userId) {
+            shareSelectedTaggedUsers = shareSelectedTaggedUsers.filter(u => u.id !== userId);
+            renderShareSelectedTags();
+        }
+
+        function renderShareSelectedTags() {
+            const container = document.getElementById('repostSelectedTags');
+            if (!container) return;
+            container.innerHTML = shareSelectedTaggedUsers.map(u => `
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-[11px] font-semibold">
+                    <span>@${u.username}</span>
+                    <button type="button" onclick="removeShareTaggedUser(${u.id})" class="hover:text-red-500 ml-0.5 cursor-pointer">&times;</button>
+                </span>
+            `).join('');
+        }
+
+        function submitRepost() {
+            if (!currentSharePostId) return;
+            const btn = document.getElementById('submitRepostBtn');
+            const quoteInput = document.getElementById('repostQuoteInput');
+            const content = quoteInput ? quoteInput.value.trim() : '';
+            const taggedIds = shareSelectedTaggedUsers.map(u => u.id);
+
+            if (btn) btn.disabled = true;
+
+            fetch(`/timeline/${currentSharePostId}/repost`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    content: content,
+                    tagged_users: taggedIds
+                })
+            })
+            .then(async res => {
+                const data = await res.json();
+                return { status: res.status, data };
+            })
+            .then(({ status, data }) => {
+                if (status === 403 && data.requires_lockin) {
+                    document.getElementById('shareRepostUnlockedSection')?.classList.add('hidden');
+                    document.getElementById('shareRepostLockedGate')?.classList.remove('hidden');
+                    if (typeof window.showPlatformError === 'function') {
+                        window.showPlatformError(data.error || 'Lock-In required to repost story.', 'Lock-In Required', {
+                            label: 'Lock-In to @' + (data.author_username || 'Author'),
+                            onClick: () => lockInFromShareModal()
+                        });
+                    }
+                    return;
+                }
+                if (data.success) {
+                    const shareCountEl = document.querySelector(`[data-share-count="${currentSharePostId}"]`);
+                    if (shareCountEl) {
+                        shareCountEl.textContent = data.shares_count > 0 ? data.shares_count : '';
+                    }
+                    closeShareModal();
+                    window.location.reload();
+                } else {
+                    if (typeof window.showPlatformError === 'function') {
+                    window.showPlatformError(data.error || 'Could not share story.', 'Unable to Share');
+                } else {
+                    alert(data.error || 'Could not share story.');
+                }
+                }
+            })
+            .catch(err => {
+                console.error('Repost error:', err);
+                if (typeof window.showPlatformError === 'function') {
+                window.showPlatformError('Could not share story. Please check your connection and try again.', 'Unable to Share');
+            } else {
+                alert('Could not share story. Please try again.');
+            }
+            })
+            .finally(() => {
+                if (btn) btn.disabled = false;
+            });
+        }
+
+        function lockInFromShareModal() {
+            if (!currentShareAuthorId) return;
+            const btn = document.getElementById('shareModalLockInBtn');
+            if (btn) btn.disabled = true;
+
+            fetch(`/users/${currentShareAuthorId}/lockin`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.lockedIn) {
+                    document.getElementById('shareRepostLockedGate')?.classList.add('hidden');
+                    document.getElementById('shareRepostUnlockedSection')?.classList.remove('hidden');
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                }
+            })
+            .finally(() => {
+                if (btn) btn.disabled = false;
+            });
+        }
+
+        // Open Tag People Modal
+        function openTagPeopleModal(postId, canTag, isOwner, authorId, authorName, authorUsername, existingTags = []) {
+            currentTagPostId = postId;
+            currentTagIsOwner = isOwner;
+            currentTagAuthorId = authorId;
+            currentTagAuthorName = authorName;
+            currentTagAuthorUsername = authorUsername;
+            postModalSelectedTaggedUsers = Array.isArray(existingTags) ? [...existingTags] : [];
+
+            const unlocked = document.getElementById('tagPeopleUnlockedSection');
+            const locked = document.getElementById('tagPeopleLockedGate');
+            if (unlocked && locked) {
+                if (canTag) {
+                    unlocked.classList.remove('hidden');
+                    locked.classList.add('hidden');
+                    renderPostModalSelectedTags();
+                    searchPostModalTagUsers('');
+                } else {
+                    unlocked.classList.add('hidden');
+                    locked.classList.remove('hidden');
+                    const desc = document.getElementById('tagPeopleLockedDesc');
+                    if (desc) {
+                        desc.textContent = `Only ${authorName} (@${authorUsername}) and members who Locked-In to them can tag people on this story.`;
+                    }
+                    const btnText = document.getElementById('tagModalLockInBtnText');
+                    if (btnText) {
+                        btnText.textContent = `Lock-In to @${authorUsername} to Tag People`;
+                    }
+                }
+            }
+
+            const modal = document.getElementById('tagPeopleModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function closeTagPeopleModal() {
+            const modal = document.getElementById('tagPeopleModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        function searchPostModalTagUsers(query) {
+            const dropdown = document.getElementById('postModalTagDropdown');
+            if (!dropdown) return;
+            fetch('/timeline/taggable-users?q=' + encodeURIComponent(query || ''), {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) return;
+                const available = data.users.filter(u => !postModalSelectedTaggedUsers.some(s => s.id === u.id));
+                if (available.length === 0) {
+                    dropdown.innerHTML = `<div class="p-2 text-center text-[11px] text-stone-400">No matching members found.</div>`;
+                    return;
+                }
+                dropdown.innerHTML = available.map(u => `
+                    <button type="button"
+                            onclick='addPostModalTaggedUser(${JSON.stringify(u).replace(/'/g, "&#39;")})'
+                            class="w-full flex items-center justify-between gap-2 p-2 rounded-xl hover:bg-amber-500/10 text-left transition cursor-pointer">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <img src="${u.avatar}" class="w-7 h-7 rounded-full object-cover shrink-0" alt="">
+                            <div class="min-w-0 truncate">
+                                <div class="text-xs font-bold text-stone-800 dark:text-stone-100 truncate">${u.name}</div>
+                                <div class="text-[10px] text-stone-400 truncate">@${u.username}</div>
+                            </div>
+                        </div>
+                        ${u.is_locked_in ? '<span class="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[9px] font-black uppercase shrink-0">Locked-In</span>' : ''}
+                    </button>
+                `).join('');
+            });
+        }
+
+        function addPostModalTaggedUser(user) {
+            if (!postModalSelectedTaggedUsers.some(u => u.id === user.id)) {
+                postModalSelectedTaggedUsers.push(user);
+            }
+            const input = document.getElementById('postModalTagSearchInput');
+            if (input) input.value = '';
+            renderPostModalSelectedTags();
+            searchPostModalTagUsers('');
+        }
+
+        function removePostModalTaggedUser(userId) {
+            postModalSelectedTaggedUsers = postModalSelectedTaggedUsers.filter(u => u.id !== userId);
+            renderPostModalSelectedTags();
+            searchPostModalTagUsers(document.getElementById('postModalTagSearchInput')?.value || '');
+        }
+
+        function renderPostModalSelectedTags() {
+            const container = document.getElementById('postModalSelectedTags');
+            if (!container) return;
+            if (postModalSelectedTaggedUsers.length === 0) {
+                container.innerHTML = `<span class="text-[11px] text-stone-400 italic">No members tagged yet. Select members below to tag them.</span>`;
+                return;
+            }
+            container.innerHTML = postModalSelectedTaggedUsers.map(u => `
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-semibold">
+                    <img src="${u.avatar}" class="w-4 h-4 rounded-full object-cover" alt="">
+                    <span>@${u.username}</span>
+                    <button type="button" onclick="removePostModalTaggedUser(${u.id})" class="hover:text-red-500 ml-0.5 cursor-pointer">&times;</button>
+                </span>
+            `).join('');
+        }
+
+        function submitPostTaggedUsers() {
+            if (!currentTagPostId) return;
+            const btn = document.getElementById('savePostTagsBtn');
+            if (btn) btn.disabled = true;
+
+            fetch(`/timeline/${currentTagPostId}/tags`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    tagged_users: postModalSelectedTaggedUsers.map(u => u.id)
+                })
+            })
+            .then(async res => {
+                const data = await res.json();
+                return { status: res.status, data };
+            })
+            .then(({ status, data }) => {
+                if (status === 403 && data.requires_lockin) {
+                    document.getElementById('tagPeopleUnlockedSection')?.classList.add('hidden');
+                    document.getElementById('tagPeopleLockedGate')?.classList.remove('hidden');
+                    return;
+                }
+                if (data.success) {
+                    closeTagPeopleModal();
+                    window.location.reload();
+                } else {
+                    if (typeof window.showPlatformError === 'function') {
+                    window.showPlatformError(data.error || 'Could not update tagged people.', 'Tagging Failed');
+                } else {
+                    alert(data.error || 'Could not update tagged people.');
+                }
+                }
+            })
+            .finally(() => {
+                if (btn) btn.disabled = false;
+            });
+        }
+
+        function lockInFromTagModal() {
+            if (!currentTagAuthorId) return;
+            const btn = document.getElementById('tagModalLockInBtn');
+            if (btn) btn.disabled = true;
+
+            fetch(`/users/${currentTagAuthorId}/lockin`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.lockedIn) {
+                    document.getElementById('tagPeopleLockedGate')?.classList.add('hidden');
+                    document.getElementById('tagPeopleUnlockedSection')?.classList.remove('hidden');
+                    renderPostModalSelectedTags();
+                    searchPostModalTagUsers('');
+                }
+            })
+            .finally(() => {
+                if (btn) btn.disabled = false;
+            });
+        }
+
+        function removeSelfTagFromPost(postId, userId = null) {
+            fetch(`/timeline/${postId}/tags/self`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(userId ? { user_id: userId } : {})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                }
+            });
+        }
+
+        function quickLockInAuthor(authorId, postId) {
+            fetch(`/users/${authorId}/lockin`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.lockedIn) {
+                    const notice = document.getElementById(`resonance-lockin-notice-${postId}`);
+                    if (notice) {
+                        notice.classList.add('hidden');
+                        notice.classList.remove('flex');
+                    }
+                    const input = document.getElementById(`resonance-input-${postId}`);
+                    if (input) {
+                        input.placeholder = 'Write a resonance... (use @username to tag)';
+                        input.focus();
+                    }
+                }
             });
         }
 
@@ -760,6 +1363,16 @@
             })
                 .then(res => res.json())
                 .then(data => {
+                    if (data.requires_lockin) {
+                        const notice = document.getElementById(`resonance-lockin-notice-${postId}`);
+                        if (notice) {
+                            notice.classList.remove('hidden');
+                            notice.classList.add('flex');
+                        } else {
+                            alert(data.error);
+                        }
+                        return;
+                    }
                     if (data.success) {
                         const list = document.getElementById(`resonance-list-${postId}`);
                         if (list) {
@@ -923,6 +1536,16 @@
             })
             .then(res => res.json())
             .then(data => {
+                if (data.requires_lockin) {
+                    const notice = document.getElementById(`resonance-lockin-notice-${postId}`);
+                    if (notice) {
+                        notice.classList.remove('hidden');
+                        notice.classList.add('flex');
+                    } else {
+                        alert(data.error);
+                    }
+                    return;
+                }
                 if (data.success) {
                     const repliesList = document.getElementById(`resonance-replies-list-${resonanceId}`);
                     if (repliesList) {

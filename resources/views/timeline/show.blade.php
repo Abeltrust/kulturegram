@@ -24,6 +24,16 @@
     <article id="post-{{ $post->id }}"
              class="bg-white dark:bg-stone-900 rounded-3xl p-5 sm:p-7 shadow-sm border border-stone-100 dark:border-stone-800 space-y-5">
         
+        @if($post->sharedPost && $post->sharedPost->user)
+            <div class="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 pb-2 border-b border-stone-100 dark:border-stone-800">
+                <i data-lucide="repeat-2" class="w-4 h-4"></i>
+                <span>Reposted from</span>
+                <a href="{{ route('profile.user', $post->sharedPost->user) }}" class="hover:underline">
+                    {{ $post->sharedPost->user->name }} ({{ '@' . $post->sharedPost->user->username }})
+                </a>
+            </div>
+        @endif
+
         <!-- Header -->
         <div class="flex items-start justify-between gap-3">
             <div class="flex items-start gap-3 min-w-0 flex-1">
@@ -36,6 +46,7 @@
                             {{ $post->user->name }}
                         </a>
                         <span class="text-xs text-stone-400">@ {{ $post->user->username }}</span>
+                        @include('timeline.partials.post-tagged-badge', ['post' => $post])
                         @if($post->user->location)
                             <span class="text-xs bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 px-2 py-0.5 rounded-full">
                                 {{ $post->user->location }}
@@ -156,12 +167,17 @@
             @endif
 
             <!-- Media -->
-            @if($post->image)
+            @php
+                $showPostYoutubeId = $post->video ? \App\Models\CulturalClass::extractYoutubeId($post->video) : null;
+                $showPostImageSrc = \App\Models\CulturalClass::resolveMediaUrl($post->image);
+                $showPostVideoSrc = \App\Models\CulturalClass::resolveMediaUrl($post->video);
+            @endphp
+            @if($showPostImageSrc && !$showPostVideoSrc && !$showPostYoutubeId)
                 <div class="relative rounded-2xl overflow-hidden bg-stone-900/5 dark:bg-black/40 border border-stone-100 dark:border-stone-800 flex items-center justify-center min-h-[240px] max-h-[780px] group cursor-pointer"
-                     onclick="openImageLightbox('{{ Storage::url($post->image) }}', 'Story photo by {{ addslashes($post->user->name) }}')">
+                     onclick="openImageLightbox('{{ $showPostImageSrc }}', 'Story photo by {{ addslashes($post->user->name) }}')">
                     <div class="absolute inset-0 bg-cover bg-center filter blur-xl opacity-25 dark:opacity-20 scale-110 pointer-events-none"
-                         style="background-image: url('{{ Storage::url($post->image) }}');"></div>
-                    <img src="{{ Storage::url($post->image) }}" alt="Story Image" class="relative z-10 w-auto h-auto max-w-full max-h-[740px] object-contain mx-auto transition-transform duration-300 group-hover:scale-[1.01]">
+                         style="background-image: url('{{ $showPostImageSrc }}');"></div>
+                    <img src="{{ $showPostImageSrc }}" alt="Story Image" class="relative z-10 w-auto h-auto max-w-full max-h-[740px] object-contain mx-auto transition-transform duration-300 group-hover:scale-[1.01]">
                     <span class="absolute bottom-3 right-3 z-20 px-2.5 py-1 rounded-lg bg-black/65 backdrop-blur-md text-white text-[11px] font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 pointer-events-none">
                         <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
                         <span>View full</span>
@@ -169,9 +185,20 @@
                 </div>
             @endif
 
-            @if($post->video)
+            @if($showPostYoutubeId)
+                <div class="relative rounded-2xl overflow-hidden bg-black border border-stone-100 dark:border-stone-800 aspect-video">
+                    <iframe src="https://www.youtube.com/embed/{{ $showPostYoutubeId }}?rel=0&modestbranding=1"
+                            class="w-full h-full"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen></iframe>
+                </div>
+            @elseif($showPostVideoSrc)
                 <div class="rounded-2xl overflow-hidden bg-black border border-stone-100 dark:border-stone-800 flex items-center justify-center min-h-[220px]">
-                    <video src="{{ Storage::url($post->video) }}" controls class="w-auto h-auto max-w-full max-h-[650px] mx-auto"></video>
+                    <video src="{{ $showPostVideoSrc }}{{ !str_contains($showPostVideoSrc, '#') ? '#t=0.1' : '' }}"
+                           controls
+                           preload="metadata"
+                           class="w-auto h-auto max-w-full max-h-[650px] mx-auto"></video>
                 </div>
             @endif
 
@@ -180,6 +207,8 @@
                     <audio src="{{ Storage::url($post->audio) }}" controls class="w-full"></audio>
                 </div>
             @endif
+
+            @include('timeline.partials.quoted-post-card', ['post' => $post])
         </div>
 
         <!-- Action Bar -->
@@ -277,11 +306,28 @@
             },
             body: JSON.stringify({ content })
         })
-        .then(res => res.json())
-        .then(data => {
+        .then(async res => {
+            const data = await res.json();
+            return { status: res.status, data };
+        })
+        .then(({ status, data }) => {
+            if (status === 403 && data.requires_lockin) {
+                if (typeof window.showPlatformError === 'function') {
+                    window.showPlatformError(data.error || 'Lock-In required to tag members.', 'Lock-In Required');
+                } else {
+                    alert(data.error || 'Lock-In required.');
+                }
+                return;
+            }
             if (data.success) {
                 input.value = '';
                 window.location.reload();
+            } else {
+                if (typeof window.showPlatformError === 'function') {
+                    window.showPlatformError(data.error || 'Unable to submit resonance.', 'Notice');
+                } else {
+                    alert(data.error || 'Unable to submit resonance.');
+                }
             }
         });
     }

@@ -11,6 +11,7 @@ class Post extends Model
 
     protected $fillable = [
         'user_id',
+        'shared_post_id',
         'content',
         'language',
         'oral_transcript',
@@ -24,19 +25,35 @@ class Post extends Model
         'privacy',
         'type',
         'tags',
+        'tagged_users',
+        'shares_count',
         'is_featured',
     ];
 
     protected $casts = [
         'tags' => 'array',
+        'tagged_users' => 'array',
+        'shares_count' => 'integer',
         'is_featured' => 'boolean',
         'is_ai_formatted' => 'boolean',
     ];
+
+    protected ?\Illuminate\Support\Collection $resolvedTaggedUsers = null;
 
     // Relationships
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function sharedPost()
+    {
+        return $this->belongsTo(Post::class, 'shared_post_id');
+    }
+
+    public function reposts()
+    {
+        return $this->hasMany(Post::class, 'shared_post_id');
     }
 
     public function community()
@@ -70,7 +87,6 @@ class Post extends Model
     {
         return $this->morphMany(Comment::class, 'commentable');
     }
-
 
     public function lockIns()
     {
@@ -122,5 +138,50 @@ class Post extends Model
     public function decrementTaps()
     {
         $this->decrement('taps_count');
+    }
+
+    public function isOwnedBy(?User $user): bool
+    {
+        return $user !== null && (int) $this->user_id === (int) $user->id;
+    }
+
+    public function isLockedInBy(?User $user): bool
+    {
+        if (!$user || !$this->user) {
+            return false;
+        }
+
+        return $user->hasLockedIn($this->user);
+    }
+
+    /**
+     * Post Owners and members who Locked-In to the poster can repost to timeline and tag people.
+     * Others who have not Locked-In can only share externally and cannot tag people on the post.
+     */
+    public function canRepostAndTag(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        return $this->isOwnedBy($user) || $this->isLockedInBy($user);
+    }
+
+    public function getTaggedUsersModelsAttribute(): \Illuminate\Support\Collection
+    {
+        if ($this->resolvedTaggedUsers !== null) {
+            return $this->resolvedTaggedUsers;
+        }
+
+        $ids = is_array($this->tagged_users)
+            ? array_values(array_unique(array_filter(array_map('intval', $this->tagged_users))))
+            : [];
+
+        if (empty($ids)) {
+            return $this->resolvedTaggedUsers = collect();
+        }
+
+        return $this->resolvedTaggedUsers = User::whereIn('id', $ids)
+            ->get(['id', 'name', 'username', 'avatar']);
     }
 }

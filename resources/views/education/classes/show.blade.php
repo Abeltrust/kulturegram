@@ -66,12 +66,11 @@
         <div class="lg:col-span-7 space-y-6">
 
             {{-- Cinematic Video Player Container --}}
+            @php
+                $videoSrc = $resolvedVideoSrc;
+                $posterSrc = $class->resolvedThumbnailUrl();
+            @endphp
             <div class="relative rounded-3xl overflow-hidden bg-stone-950 border border-stone-800 shadow-2xl aspect-video group">
-                @php
-                    $videoSrc = $resolvedVideoSrc;
-                    $posterSrc = $class->resolvedThumbnailUrl();
-                @endphp
-
                 @if ($youtubeEmbedUrl)
                     <iframe id="culturalYoutubeIframe"
                             src="{{ $youtubeEmbedUrl }}"
@@ -84,12 +83,11 @@
                            class="w-full h-full object-contain"
                            controls
                            preload="metadata"
-                           poster="{{ $posterSrc }}"
                            @loadedmetadata="onVideoMetadata($event)"
                            @timeupdate="onTimeUpdate($event)"
                            @play="isPlaying = true"
                            @pause="isPlaying = false">
-                        <source src="{{ $videoSrc }}">
+                        <source src="{{ $videoSrc }}{{ !str_contains($videoSrc, '#') ? '#t=0.1' : '' }}">
                         <track kind="subtitles" 
                                src="{{ route('education.classes.subtitles', $class) }}" 
                                srclang="en" 

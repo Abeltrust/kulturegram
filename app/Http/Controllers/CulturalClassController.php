@@ -236,7 +236,7 @@ class CulturalClassController extends Controller
             'video_url' => $videoPath,
             'preview_video_url' => $videoPath,
             'thumbnail_url' => $thumbnailPath,
-            'virtual_background_url' => $request->virtual_background_url,
+            'virtual_background_url' => $request->virtual_background_url ?: $thumbnailPath,
             'duration_seconds' => $aiData['duration_seconds'] ?? ($videoDuration > 0 ? (int) ceil($videoDuration) : 0),
             'transcript' => $aiData['transcript'] ?? ($request->raw_transcript ?: null),
             'subtitles_vtt' => $aiData['subtitles_vtt'] ?? null,
@@ -262,7 +262,7 @@ class CulturalClassController extends Controller
                 $timelinePost = Post::create([
                     'user_id' => auth()->id(),
                     'content' => $teaserText,
-                    'image' => $class->thumbnail_url,
+                    'image' => $class->video_url ? null : $class->thumbnail_url,
                     'video' => $class->video_url,
                     'privacy' => 'public',
                     'type' => $class->video_url ? 'video' : ($class->thumbnail_url ? 'image' : 'text'),

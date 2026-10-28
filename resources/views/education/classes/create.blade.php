@@ -854,57 +854,6 @@
                     </div>
                 </div>
 
-                {{-- Virtual Cultural Studio Backdrops --}}
-                <div class="bg-white dark:bg-stone-900 rounded-3xl p-6 sm:p-7 border border-stone-200 dark:border-stone-800 shadow-sm space-y-4">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-sm sm:text-base font-black text-stone-800 dark:text-stone-100 flex items-center gap-2">
-                            <i data-lucide="palette" class="w-4 h-4 text-amber-500"></i>
-                            <span>Studio Cover Backdrop (Optional)</span>
-                        </h3>
-                    </div>
-
-                    <input type="hidden" name="virtual_background_url" :value="selectedBackgroundUrl">
-
-                    <div class="grid grid-cols-2 gap-2.5">
-                        @foreach ($presets as $preset)
-                            <div @click="selectedBackgroundUrl = '{{ $preset['image_url'] }}'"
-                                 class="relative rounded-xl overflow-hidden border-2 cursor-pointer transition-all aspect-video group"
-                                 :class="selectedBackgroundUrl === '{{ $preset['image_url'] }}' ? 'border-amber-500 ring-2 ring-amber-500/40' : 'border-stone-200 dark:border-stone-800 opacity-80 hover:opacity-100'">
-                                <img src="{{ $preset['image_url'] }}" class="w-full h-full object-cover" alt="{{ $preset['name'] }}">
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-2">
-                                    <span class="text-[10px] font-bold text-white line-clamp-1">{{ $preset['name'] }}</span>
-                                </div>
-                                <div x-show="selectedBackgroundUrl === '{{ $preset['image_url'] }}'"
-                                     class="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px]">
-                                    <i data-lucide="check" class="w-3 h-3"></i>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-
-                    <div class="pt-2 border-t border-stone-100 dark:border-stone-800 space-y-2">
-                        <label class="block text-xs font-bold text-stone-700 dark:text-stone-300">
-                            Or Generate Custom Backdrop with AI
-                        </label>
-                        <div class="flex gap-2">
-                            <input type="text" x-model="customBackdropPrompt"
-                                   placeholder="e.g. Traditional Zaria mud relief wall"
-                                   class="flex-1 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-3 py-2 text-xs text-stone-800 dark:text-stone-200 focus:ring-2 focus:ring-amber-500 outline-none">
-                            <button type="button" @click="generateCustomBackdrop()" :disabled="isGeneratingBackdrop"
-                                    class="px-3.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer">
-                                <span x-show="!isGeneratingBackdrop">Generate</span>
-                                <span x-show="isGeneratingBackdrop" class="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                            </button>
-                        </div>
-
-                        <div x-show="backdropStatusNotice" x-transition class="p-3 rounded-xl text-xs flex items-center gap-2"
-                             :class="backdropStatusNotice?.type === 'success' ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border border-red-500/30 text-red-400'">
-                            <i data-lucide="check-circle-2" class="w-4 h-4 shrink-0"></i>
-                            <span class="font-medium" x-text="backdropStatusNotice?.text"></span>
-                        </div>
-                    </div>
-                </div>
-
                 {{-- Submit Action Card --}}
                 <div class="bg-white dark:bg-stone-900 rounded-3xl p-6 border border-stone-200 dark:border-stone-800 shadow-sm space-y-3">
                     <div x-show="isSubmitting && uploadProgress > 0" class="space-y-1.5">

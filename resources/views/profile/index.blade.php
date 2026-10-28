@@ -704,12 +704,28 @@
                     @foreach($posts as $post)
                         <div id="post-{{ $post->id }}" class="bg-white dark:bg-stone-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-stone-200/80 dark:border-stone-800 shadow-sm space-y-3 sm:space-y-4">
                             
+                            @if($post->sharedPost && $post->sharedPost->user)
+                                <div class="flex items-center gap-1.5 text-[11px] font-bold text-amber-600 dark:text-amber-400 pb-2 border-b border-stone-100 dark:border-stone-800">
+                                    <i data-lucide="repeat-2" class="w-3.5 h-3.5"></i>
+                                    <span>Reposted from</span>
+                                    <a href="{{ route('profile.user', $post->sharedPost->user) }}" class="hover:underline">
+                                        {{ $post->sharedPost->user->name }} ({{ '@' . $post->sharedPost->user->username }})
+                                    </a>
+                                </div>
+                            @endif
+
                             {{-- Post Author Header --}}
                             <div class="flex items-start justify-between gap-3">
                                 <div class="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
-                                    <img src="{{ $user->profile_photo_url }}" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover user-avatar-sync flex-shrink-0 mt-0.5">
+                                    <img src="{{ ($post->user ?? $user)->profile_photo_url }}" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover flex-shrink-0 mt-0.5">
                                     <div class="min-w-0 flex-1">
-                                        <h3 class="font-bold text-stone-900 dark:text-white text-xs sm:text-sm truncate">{{ $user->name }}</h3>
+                                        <div class="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                                            <a href="{{ route('profile.user', $post->user ?? $user) }}" class="font-bold text-stone-900 dark:text-white text-xs sm:text-sm truncate hover:text-amber-600 transition">
+                                                {{ ($post->user ?? $user)->name }}
+                                            </a>
+                                            <span class="text-[11px] text-stone-400">{{ '@' . ($post->user ?? $user)->username }}</span>
+                                            @include('timeline.partials.post-tagged-badge', ['post' => $post])
+                                        </div>
                                         <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
                                             <p class="text-[11px] sm:text-xs text-stone-400">{{ $post->created_at->diffForHumans() }}</p>
                                             @if($post->chapter)
@@ -770,12 +786,17 @@
                             @endif
 
                             {{-- Media Attachment (Full viewable, not sliced) --}}
-                            @if($post->image)
+                            @php
+                                $profilePostYoutubeId = $post->video ? \App\Models\CulturalClass::extractYoutubeId($post->video) : null;
+                                $profilePostImageSrc = \App\Models\CulturalClass::resolveMediaUrl($post->image);
+                                $profilePostVideoSrc = \App\Models\CulturalClass::resolveMediaUrl($post->video);
+                            @endphp
+                            @if($profilePostImageSrc && !$profilePostVideoSrc && !$profilePostYoutubeId)
                                 <div class="relative rounded-xl sm:rounded-2xl overflow-hidden bg-stone-900/5 dark:bg-black/40 border border-stone-100 dark:border-stone-800 group cursor-pointer flex items-center justify-center min-h-[220px] max-h-[700px]"
-                                     onclick="openImageLightbox('{{ asset('storage/' . $post->image) }}', 'Story photo by {{ addslashes($post->user->name) }}')">
+                                     onclick="openImageLightbox('{{ $profilePostImageSrc }}', 'Story photo by {{ addslashes($post->user->name) }}')">
                                     <div class="absolute inset-0 bg-cover bg-center filter blur-xl opacity-25 dark:opacity-20 scale-110 pointer-events-none"
-                                         style="background-image: url('{{ asset('storage/' . $post->image) }}');"></div>
-                                    <img src="{{ asset('storage/' . $post->image) }}" 
+                                         style="background-image: url('{{ $profilePostImageSrc }}');"></div>
+                                    <img src="{{ $profilePostImageSrc }}" 
                                          alt="Story photo"
                                          class="relative z-10 w-auto h-auto max-w-full max-h-[650px] object-contain rounded-xl sm:rounded-2xl mx-auto transition-transform duration-300 group-hover:scale-[1.01]" 
                                          loading="lazy">
@@ -787,9 +808,20 @@
                             @endif
 
                             {{-- Video Attachment --}}
-                            @if($post->video)
+                            @if($profilePostYoutubeId)
+                                <div class="relative rounded-xl sm:rounded-2xl overflow-hidden bg-black border border-stone-100 dark:border-stone-800 aspect-video">
+                                    <iframe src="https://www.youtube.com/embed/{{ $profilePostYoutubeId }}?rel=0&modestbranding=1"
+                                            class="w-full h-full"
+                                            frameborder="0"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                            allowfullscreen></iframe>
+                                </div>
+                            @elseif($profilePostVideoSrc)
                                 <div class="rounded-xl sm:rounded-2xl overflow-hidden bg-black border border-stone-100 dark:border-stone-800 flex items-center justify-center min-h-[200px]">
-                                    <video src="{{ asset('storage/' . $post->video) }}" controls class="w-auto h-auto max-w-full max-h-[600px] mx-auto"></video>
+                                    <video src="{{ $profilePostVideoSrc }}{{ !str_contains($profilePostVideoSrc, '#') ? '#t=0.1' : '' }}"
+                                           controls
+                                           preload="metadata"
+                                           class="w-auto h-auto max-w-full max-h-[600px] mx-auto"></video>
                                 </div>
                             @endif
 
@@ -799,6 +831,8 @@
                                     <audio src="{{ asset('storage/' . $post->audio) }}" controls class="w-full"></audio>
                                 </div>
                             @endif
+
+                            @include('timeline.partials.quoted-post-card', ['post' => $post])
 
                             {{-- Reactions Bar --}}
                             <div class="pt-2.5 sm:pt-3 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between text-xs text-stone-500 dark:text-stone-400">

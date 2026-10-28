@@ -12,7 +12,14 @@ class MessageController extends Controller
 {
     public function index()
     {
-        $conversations = Auth::user()->conversations()
+        $user = Auth::user();
+        $lockedInIds = $user->lockedInUserIds();
+
+        $conversations = $user->conversations()
+            ->whereHas('participants', function ($q) use ($lockedInIds, $user) {
+                $q->where('user_id', '!=', $user->id)
+                  ->whereIn('user_id', $lockedInIds);
+            })
             ->with(['participants', 'latestMessage.user'])
             ->latest('updated_at')
             ->get();
@@ -25,8 +32,17 @@ class MessageController extends Controller
 
     public function show(Conversation $conversation)
     {
-        if (!$conversation->participants()->where('user_id', Auth::id())->exists()) {
+        $user = Auth::user();
+        $lockedInIds = $user->lockedInUserIds();
+
+        if (!$conversation->participants()->where('user_id', $user->id)->exists()) {
             abort(403);
+        }
+
+        $otherUser = $conversation->participants()->where('user_id', '!=', $user->id)->first();
+        if ($otherUser && !in_array((int) $otherUser->id, $lockedInIds, true)) {
+            return redirect()->route('messages.index')
+                ->with('error', "You can only interact with members you are Locked-In with. Please Lock-In to {$otherUser->name} first.");
         }
 
         $messages = $conversation->messages()
@@ -38,7 +54,7 @@ class MessageController extends Controller
 
         // Mark as read
         $conversation->messages()
-            ->where('user_id', '!=', Auth::id())
+            ->where('user_id', '!=', $user->id)
             ->where('status', '!=', 'read')
             ->update(['status' => 'read']);
 
@@ -46,24 +62,32 @@ class MessageController extends Controller
             'selectedConversation' => $conversation,
             'messages' => $messages,
             'activeUsers' => $this->getActiveUsers(),
+            'otherUser' => $otherUser,
         ]);
     }
 
     protected function getActiveUsers()
     {
-        return User::where('id', '!=', Auth::id())
+        $user = Auth::user();
+        $lockedInIds = $user->lockedInUserIds();
+
+        if (empty($lockedInIds)) {
+            return collect();
+        }
+
+        return User::whereIn('id', $lockedInIds)
             ->get()
-            ->map(function ($user) {
-                $lastMsg = Message::where(function ($q) use ($user) {
-                    $q->where('user_id', Auth::id())->whereHas('conversation', function ($c) use ($user) {
-                        $c->whereHas('participants', function ($p) use ($user) {
-                            $p->where('user_id', $user->id);
+            ->map(function ($targetUser) use ($user) {
+                $lastMsg = Message::where(function ($q) use ($targetUser, $user) {
+                    $q->where('user_id', $user->id)->whereHas('conversation', function ($c) use ($targetUser) {
+                        $c->whereHas('participants', function ($p) use ($targetUser) {
+                            $p->where('user_id', $targetUser->id);
                         });
                     });
-                })->orWhere(function ($q) use ($user) {
-                    $q->where('user_id', $user->id)->whereHas('conversation', function ($c) {
-                        $c->whereHas('participants', function ($p) {
-                            $p->where('user_id', Auth::id());
+                })->orWhere(function ($q) use ($targetUser, $user) {
+                    $q->where('user_id', $targetUser->id)->whereHas('conversation', function ($c) use ($user) {
+                        $c->whereHas('participants', function ($p) use ($user) {
+                            $p->where('user_id', $user->id);
                         });
                     });
                 })
@@ -71,12 +95,13 @@ class MessageController extends Controller
                     ->first();
 
                 return (object) [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'avatar' => $user->avatar,
-                    'profile_photo_url' => $user->profile_photo_url,
-                    'status' => $user->is_online ? 'online' : 'offline',
-                    'last_seen' => $user->last_seen,
+                    'id' => $targetUser->id,
+                    'name' => $targetUser->name,
+                    'username' => $targetUser->username,
+                    'avatar' => $targetUser->avatar,
+                    'profile_photo_url' => $targetUser->profile_photo_url,
+                    'status' => $targetUser->is_online ? 'online' : 'offline',
+                    'last_seen' => $targetUser->last_seen,
                     'last_message' => $lastMsg?->content ?? '',
                     'last_status' => $lastMsg?->status ?? null,
                 ];
@@ -90,8 +115,22 @@ class MessageController extends Controller
             'attachment.*' => 'nullable|file|max:51200',
         ]);
 
-        if (!$conversation->participants()->where('user_id', Auth::id())->exists()) {
+        $user = Auth::user();
+
+        if (!$conversation->participants()->where('user_id', $user->id)->exists()) {
             abort(403);
+        }
+
+        $otherUser = $conversation->participants()->where('user_id', '!=', $user->id)->first();
+        if ($otherUser && !$user->isLockedInWith($otherUser)) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => "You can only interact with members you are Locked-In with. Please Lock-In to {$otherUser->name} first.",
+                ], 403);
+            }
+            return redirect()->back()
+                ->with('error', "You can only interact with members you are Locked-In with.");
         }
 
         $content = trim((string) $request->input('content'));
@@ -103,7 +142,7 @@ class MessageController extends Controller
         }
 
         $message = $conversation->messages()->create([
-            'user_id' => Auth::id(),
+            'user_id' => $user->id,
             'content' => $content,
             'status' => 'sent',
         ]);
@@ -128,7 +167,7 @@ class MessageController extends Controller
                     'id' => $message->id,
                     'content' => $message->content,
                     'user_id' => $message->user_id,
-                    'user_name' => Auth::user()->name,
+                    'user_name' => $user->name,
                     'is_me' => true,
                     'time' => $message->created_at->format('H:i'),
                     'full_time' => $message->created_at->format('M d, H:i'),
@@ -142,8 +181,15 @@ class MessageController extends Controller
 
     public function updates(Conversation $conversation, Request $request)
     {
-        if (!$conversation->participants()->where('user_id', Auth::id())->exists()) {
+        $user = Auth::user();
+
+        if (!$conversation->participants()->where('user_id', $user->id)->exists()) {
             abort(403);
+        }
+
+        $otherUser = $conversation->participants()->where('user_id', '!=', $user->id)->first();
+        if ($otherUser && !$user->isLockedInWith($otherUser)) {
+            return response()->json(['messages' => []]);
         }
 
         $afterId = (int) $request->query('after_id', 0);
@@ -157,7 +203,7 @@ class MessageController extends Controller
         // Mark incoming messages as read
         $conversation->messages()
             ->where('id', '>', $afterId)
-            ->where('user_id', '!=', Auth::id())
+            ->where('user_id', '!=', $user->id)
             ->where('status', '!=', 'read')
             ->update(['status' => 'read']);
 
@@ -179,7 +225,19 @@ class MessageController extends Controller
 
     public function startConversation(User $user)
     {
-        $existingConversation = Auth::user()->conversations()
+        $authUser = Auth::user();
+
+        if ($authUser->id === $user->id) {
+            return redirect()->route('messages.index')
+                ->with('error', 'You cannot message yourself.');
+        }
+
+        if (!$authUser->isLockedInWith($user)) {
+            return redirect()->route('profile.user', $user)
+                ->with('error', "You can only interact in messages with members you are Locked-In with. Click 'Lock In' to connect first.");
+        }
+
+        $existingConversation = $authUser->conversations()
             ->whereHas('participants', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
@@ -191,7 +249,7 @@ class MessageController extends Controller
         }
 
         $conversation = Conversation::create(['type' => 'direct']);
-        $conversation->participants()->attach([Auth::id(), $user->id]);
+        $conversation->participants()->attach([$authUser->id, $user->id]);
 
         return redirect()->route('messages.show', $conversation);
     }

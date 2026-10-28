@@ -867,6 +867,87 @@
                 </div>
             </div>
 
+            <!-- Tag People (Locked-In Connections Prioritized) -->
+            <div x-data="{
+                tagQuery: '',
+                tagResults: [],
+                selectedTaggedUsers: [],
+                isSearchingTags: false,
+                showTagDropdown: false,
+                searchTaggable() {
+                    this.isSearchingTags = true;
+                    fetch('/timeline/taggable-users?q=' + encodeURIComponent(this.tagQuery), {
+                        headers: { 'Accept': 'application/json' }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.tagResults = data.users.filter(u => !this.selectedTaggedUsers.some(s => s.id === u.id));
+                        }
+                    })
+                    .finally(() => { this.isSearchingTags = false; });
+                },
+                addTaggedUser(user) {
+                    if (!this.selectedTaggedUsers.some(u => u.id === user.id)) {
+                        this.selectedTaggedUsers.push(user);
+                    }
+                    this.tagResults = this.tagResults.filter(u => u.id !== user.id);
+                    this.tagQuery = '';
+                    this.showTagDropdown = false;
+                },
+                removeTaggedUser(userId) {
+                    this.selectedTaggedUsers = this.selectedTaggedUsers.filter(u => u.id !== userId);
+                }
+            }" class="relative">
+                <label class="block text-xs md:text-sm font-medium text-stone-700 dark:text-stone-300 mb-1 md:mb-1.5">
+                    Tag People (Optional)
+                </label>
+
+                <div x-show="selectedTaggedUsers.length > 0" class="flex flex-wrap gap-1.5 mb-2">
+                    <template x-for="u in selectedTaggedUsers" :key="u.id">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-semibold">
+                            <input type="hidden" name="tagged_users[]" :value="u.id">
+                            <img :src="u.avatar" class="w-4 h-4 rounded-full object-cover" alt="">
+                            <span x-text="'@' + u.username"></span>
+                            <button type="button" @click="removeTaggedUser(u.id)" class="text-amber-600 hover:text-red-500 ml-0.5 cursor-pointer">&times;</button>
+                        </span>
+                    </template>
+                </div>
+
+                <div class="relative">
+                    <i data-lucide="user-plus" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-stone-400 dark:text-stone-500"></i>
+                    <input type="text"
+                           x-model="tagQuery"
+                           @focus="showTagDropdown = true; searchTaggable()"
+                           @input.debounce.250ms="showTagDropdown = true; searchTaggable()"
+                           @click.away="showTagDropdown = false"
+                           placeholder="Search Locked-In connections or @username to tag..."
+                           class="w-full pl-9 pr-3 py-2 border-2 border-stone-200 dark:border-stone-700 bg-transparent text-stone-800 dark:text-stone-100 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 hover:border-amber-500 transition-all text-xs md:text-sm">
+                </div>
+
+                <div x-show="showTagDropdown && tagResults.length > 0"
+                     x-cloak
+                     class="absolute left-0 right-0 top-full mt-1 z-50 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl shadow-xl max-h-48 overflow-y-auto p-1.5 space-y-1">
+                    <template x-for="candidate in tagResults" :key="candidate.id">
+                        <button type="button"
+                                @mousedown.prevent="addTaggedUser(candidate)"
+                                class="w-full flex items-center justify-between gap-2 p-2 rounded-xl hover:bg-amber-500/10 text-left transition cursor-pointer">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <img :src="candidate.avatar" class="w-7 h-7 rounded-full object-cover shrink-0" alt="">
+                                <div class="min-w-0 truncate">
+                                    <div class="text-xs font-bold text-stone-800 dark:text-stone-100 truncate" x-text="candidate.name"></div>
+                                    <div class="text-[11px] text-stone-400 truncate" x-text="'@' + candidate.username"></div>
+                                </div>
+                            </div>
+                            <span x-show="candidate.is_locked_in"
+                                  class="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase shrink-0">
+                                Locked-In
+                            </span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+
             <!-- Privacy -->
             <div>
                 <label class="block text-xs md:text-sm font-medium text-stone-700 dark:text-stone-300 mb-1 md:mb-2">Privacy</label>
@@ -1281,6 +1362,7 @@
     @include('partials.edit-post-modal')
     @include('partials.welcome-flyer')
     @include('partials.image-lightbox')
+    @include('partials.error-notification-modal')
 
     @stack('scripts')
 </body>

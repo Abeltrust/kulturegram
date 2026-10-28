@@ -232,6 +232,62 @@ class User extends Authenticatable
             ->exists();
     }
 
+    /**
+     * Get IDs of users the current user is locked-in with (either initiated or received).
+     *
+     * @return array<int>
+     */
+    public function lockedInUserIds(): array
+    {
+        $outgoing = $this->interactions()
+            ->where('type', 'lockin')
+            ->where('interactable_type', self::class)
+            ->pluck('interactable_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $incoming = \App\Models\Interaction::where('type', 'lockin')
+            ->where('interactable_type', self::class)
+            ->where('interactable_id', $this->id)
+            ->pluck('user_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        return array_values(array_unique(array_filter(
+            array_merge($outgoing, $incoming),
+            fn ($id) => $id > 0 && $id !== (int) $this->id
+        )));
+    }
+
+    /**
+     * Check if this user is locked-in with another user.
+     */
+    public function isLockedInWith(User $user): bool
+    {
+        if ($this->id === $user->id) {
+            return true;
+        }
+
+        return $this->hasLockedIn($user) || $user->hasLockedIn($this);
+    }
+
+    /**
+     * Get IDs of user profiles the current user has vibed (tapped).
+     *
+     * @return array<int>
+     */
+    public function vibedUserIds(): array
+    {
+        return $this->interactions()
+            ->where('type', 'tap')
+            ->where('interactable_type', self::class)
+            ->pluck('interactable_id')
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0 && $id !== (int) $this->id)
+            ->values()
+            ->all();
+    }
+
     public function hasResonated($model)
     {
         return $this->interactions()
@@ -300,7 +356,6 @@ class User extends Authenticatable
         if ($this->is_online) {
             return 'online';
         }
-
 
         if ($this->last_seen && $this->last_seen->gt(Carbon::now()->subMinutes(5))) {
             return 'recent';

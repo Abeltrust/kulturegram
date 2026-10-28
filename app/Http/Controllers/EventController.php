@@ -119,7 +119,7 @@ class EventController extends Controller
             'accepts_contributions' => 'boolean',
         ]);
 
-        $event = new Event($request->except(['image', 'is_hosted', 'accepts_contributions', 'virtual_room_id', 'meeting_link', 'reach_tags', 'ai_reach_metadata']));
+        $event = new Event($request->except(['image', 'is_hosted', 'accepts_contributions', 'virtual_room_id', 'meeting_link', 'reach_tags', 'ai_reach_metadata', 'ai_flyer_path']));
         $event->organizer_id = Auth::id();
         $event->price = $request->input('price', 0) ?: 0;
         $event->is_hosted = $request->boolean('is_hosted');
@@ -184,13 +184,41 @@ class EventController extends Controller
             'description' => 'nullable|string',
             'type' => 'nullable|string|max:100',
             'cultural_context' => 'nullable|string|max:255',
+            'subtitle' => 'nullable|string|max:255',
+            'occasion_label' => 'nullable|string|max:150',
+            'event_date' => 'nullable|string|max:150',
+            'event_time' => 'nullable|string|max:100',
+            'location' => 'nullable|string|max:255',
+            'dress_code' => 'nullable|string|max:255',
+            'rsvp' => 'nullable|string|max:255',
+            'theme_palette' => 'nullable|string|max:100',
+            'subject_photo_data_url' => 'nullable|string',
+            'logo_data_url' => 'nullable|string',
+            'rendered_flyer_data_url' => 'nullable|string',
+            'skip_remote_ai' => 'nullable|boolean',
+        ]);
+
+        $details = $request->only([
+            'subtitle',
+            'occasion_label',
+            'event_date',
+            'event_time',
+            'location',
+            'dress_code',
+            'rsvp',
+            'theme_palette',
+            'subject_photo_data_url',
+            'logo_data_url',
+            'rendered_flyer_data_url',
+            'skip_remote_ai',
         ]);
 
         $res = $imageService->generateFlyer(
             $request->input('title'),
             $request->input('description'),
             $request->input('type', 'Cultural Gathering'),
-            $request->input('cultural_context')
+            $request->input('cultural_context'),
+            $details
         );
 
         return response()->json($res);

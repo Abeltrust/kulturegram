@@ -14,6 +14,7 @@
                 $otherUser = $selectedConversation->participants
                     ->where('id', '!=', auth()->id())
                     ->first();
+                $isLockedInWithOther = $otherUser ? auth()->user()->isLockedInWith($otherUser) : false;
             @endphp
 
             <!-- CHAT HEADER -->
@@ -32,8 +33,16 @@
                     </div>
 
                     <div class="truncate">
-                        <h2 class="font-black text-stone-900 dark:text-stone-100 text-sm md:text-base tracking-tight leading-tight">
-                            {{ $otherUser->name ?? 'Unknown' }}</h2>
+                        <div class="flex items-center gap-2">
+                            <h2 class="font-black text-stone-900 dark:text-stone-100 text-sm md:text-base tracking-tight leading-tight">
+                                {{ $otherUser->name ?? 'Unknown' }}
+                            </h2>
+                            @if($isLockedInWithOther)
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                    Locked-In
+                                </span>
+                            @endif
+                        </div>
                         <span class="text-[10px] font-bold text-stone-400 dark:text-stone-500 uppercase tracking-widest truncate block mt-0.5">
                             {{ $otherUser->is_online ? 'Active Now' : ($otherUser->last_seen ? 'Seen ' . $otherUser->last_seen->diffForHumans() : 'Offline') }}
                         </span>
@@ -41,15 +50,10 @@
                 </div>
 
                 <div class="flex items-center gap-1">
-                    <button class="p-2.5 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl text-amber-600 dark:text-amber-400 transition-all active:scale-95 group">
-                        <i data-lucide="phone" class="w-4 h-4 group-hover:rotate-12 transition-transform"></i>
-                    </button>
-                    <button class="p-2.5 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl text-amber-600 dark:text-amber-400 transition-all active:scale-95 group">
-                        <i data-lucide="video" class="w-4 h-4 group-hover:scale-110 transition-transform"></i>
-                    </button>
-                    <button class="p-2.5 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl text-stone-400 dark:text-stone-500 transition-all">
-                        <i data-lucide="more-vertical" class="w-4 h-4"></i>
-                    </button>
+                    <a href="{{ route('profile.user', $otherUser) }}" class="px-3 py-1.5 text-xs font-bold text-stone-600 dark:text-stone-300 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl transition-colors flex items-center gap-1.5">
+                        <i data-lucide="user" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Profile</span>
+                    </a>
                 </div>
             </header>
 
@@ -58,7 +62,7 @@
                 <!-- Message Group Timestamp -->
                 <div class="flex justify-center my-4">
                     <span class="px-3 py-1 rounded-full bg-stone-200/50 dark:bg-stone-800/50 text-[10px] font-bold text-stone-500 dark:text-stone-400 uppercase tracking-widest backdrop-blur-sm">
-                        Today
+                        Conversation
                     </span>
                 </div>
 
@@ -104,36 +108,46 @@
 
             <!-- CHAT INPUT -->
             <div class="p-3 md:p-4 bg-white dark:bg-stone-900 border-t border-stone-100 dark:border-stone-800 sticky bottom-0 z-20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)]">
-                <form id="chat-form" action="{{ route('messages.store', $selectedConversation->id) }}" method="POST"
-                    class="flex items-end gap-2 max-w-6xl mx-auto">
-                    @csrf
-                    
-                    <input type="file" id="chat-file-input" name="attachment[]" class="hidden" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx">
+                @if($isLockedInWithOther)
+                    <form id="chat-form" action="{{ route('messages.store', $selectedConversation->id) }}" method="POST"
+                        class="flex items-end gap-2 max-w-6xl mx-auto">
+                        @csrf
+                        
+                        <input type="file" id="chat-file-input" name="attachment[]" class="hidden" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx">
 
-                    <div class="flex-shrink-0 flex gap-1 mb-1">
-                        <button type="button" onclick="document.getElementById('chat-file-input').click()"
-                            class="p-2 text-stone-400 dark:text-stone-500 hover:text-amber-500 transition-colors rounded-xl hover:bg-amber-50 dark:hover:bg-stone-800"
-                            title="Attach files">
-                            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                        <div class="flex-shrink-0 flex gap-1 mb-1">
+                            <button type="button" onclick="document.getElementById('chat-file-input').click()"
+                                class="p-2 text-stone-400 dark:text-stone-500 hover:text-amber-500 transition-colors rounded-xl hover:bg-amber-50 dark:hover:bg-stone-800"
+                                title="Attach files">
+                                <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+
+                        <div class="flex-1 relative">
+                            <textarea id="chat-textarea" name="content" rows="1" placeholder="Write a message..."
+                                class="w-full bg-stone-100 dark:bg-stone-800/80 border-0 rounded-2xl px-4 py-3 pr-10 text-sm md:text-base text-stone-900 dark:text-stone-100 placeholder-stone-500 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none transition-all custom-scrollbar overflow-hidden"
+                                oninput="this.style.height = ''; this.style.height = Math.min(this.scrollHeight, 120) + 'px'"></textarea>
+                        </div>
+
+                        <button type="submit" id="chat-send-btn"
+                            class="bg-amber-500 hover:bg-amber-600 text-white rounded-2xl p-3 shadow-lg shadow-amber-500/30 transition-all hover:scale-105 active:scale-95 flex-shrink-0 mb-1 cursor-pointer">
+                            <i data-lucide="send" class="w-5 h-5"></i>
                         </button>
-                        <button type="button" onclick="document.getElementById('chat-file-input').click()"
-                            class="hidden sm:block p-2 text-stone-400 dark:text-stone-500 hover:text-amber-500 transition-colors rounded-xl hover:bg-amber-50 dark:hover:bg-stone-800"
-                            title="Attach photo/video">
-                            <i data-lucide="image" class="w-5 h-5"></i>
-                        </button>
+                    </form>
+                @else
+                    <div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-center space-y-2">
+                        <p class="text-xs font-bold text-stone-800 dark:text-stone-200">
+                            Lock-In required to interact with {{ $otherUser->name ?? 'this user' }}
+                        </p>
+                        <p class="text-[11px] text-stone-500">
+                            Direct messages are reserved for members you have Locked-In with.
+                        </p>
+                        <a href="{{ route('profile.user', $otherUser) }}" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md transition">
+                            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                            <span>Lock-In to Connect</span>
+                        </a>
                     </div>
-
-                    <div class="flex-1 relative">
-                        <textarea id="chat-textarea" name="content" rows="1" placeholder="Write a message..."
-                            class="w-full bg-stone-100 dark:bg-stone-800/80 border-0 rounded-2xl px-4 py-3 pr-10 text-sm md:text-base text-stone-900 dark:text-stone-100 placeholder-stone-500 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none transition-all custom-scrollbar overflow-hidden"
-                            oninput="this.style.height = ''; this.style.height = Math.min(this.scrollHeight, 120) + 'px'"></textarea>
-                    </div>
-
-                    <button type="submit" id="chat-send-btn"
-                        class="bg-amber-500 hover:bg-amber-600 text-white rounded-2xl p-3 shadow-lg shadow-amber-500/30 transition-all hover:scale-105 active:scale-95 flex-shrink-0 mb-1 cursor-pointer">
-                        <i data-lucide="send" class="w-5 h-5"></i>
-                    </button>
-                </form>
+                @endif
             </div>
         </div>
     </div>
@@ -228,6 +242,7 @@
 
             // AJAX message submit (no page reload)
             async function sendMessage() {
+                if (!textarea) return;
                 const text = (textarea.value || '').trim();
                 const fileInput = document.getElementById('chat-file-input');
                 const hasFiles = fileInput && fileInput.files && fileInput.files.length > 0;
@@ -257,9 +272,13 @@
                             appendMessage(data.message);
                         }
                     } else {
-                        // Fallback in case of server error
                         const err = await response.json().catch(() => null);
-                        alert(err?.error || err?.message || 'Failed to send message. Please try again.');
+                        const errMsg = err?.error || err?.message || 'Failed to send message. Please try again.';
+                        if (typeof window.showPlatformError === 'function') {
+                            window.showPlatformError(errMsg, 'Message Restriction');
+                        } else {
+                            alert(errMsg);
+                        }
                     }
                 } catch (e) {
                     console.error('Message send error:', e);
@@ -298,7 +317,6 @@
                         const data = await response.json();
                         if (data && data.messages && data.messages.length > 0) {
                             data.messages.forEach(msg => {
-                                // Only append messages not already rendered
                                 if (!document.querySelector(`[data-msg-id="${msg.id}"]`)) {
                                     appendMessage(msg);
                                 }

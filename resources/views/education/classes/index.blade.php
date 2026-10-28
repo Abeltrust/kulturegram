@@ -17,7 +17,7 @@
             <a href="{{ route('education.classes.create') }}" 
                class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-xs sm:text-sm shadow-lg shadow-amber-500/20 transition-all flex items-center gap-2 hover:scale-[1.02]">
                 <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                <span>Teach a Cultural Class</span>
+                <span>Host a Class</span>
             </a>
         @else
             <a href="{{ route('login') }}" 
@@ -36,7 +36,7 @@
         <div class="relative z-10 max-w-3xl">
             <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold mb-4">
                 <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                <span>AI Synchronized Subtitles & Bilingual Cultural Studio</span>
+                <span>AI Subtitles & Bilingual Cultural Studio</span>
             </div>
             <h1 class="text-3xl sm:text-5xl font-black text-white leading-tight tracking-tight mb-4">
                 Learn Heritage Languages, <span class="bg-gradient-to-r from-amber-400 via-orange-400 to-amber-200 bg-clip-text text-transparent italic font-serif">Word by Word</span>
