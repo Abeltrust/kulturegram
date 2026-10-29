@@ -929,6 +929,7 @@ class TimelineController extends Controller
                     'name' => $resonance->user->name,
                     'username' => $resonance->user->username,
                     'profile_photo_url' => $resonance->user->profile_photo_url,
+                    'profile_url' => $resonance->user->profile_url,
                 ],
                 'time' => $resonance->created_at->diffForHumans(),
             ],

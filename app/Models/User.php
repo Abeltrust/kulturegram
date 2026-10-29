@@ -40,6 +40,11 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $appends = [
+        'profile_photo_url',
+        'profile_url',
+    ];
+
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
@@ -326,6 +331,19 @@ class User extends Authenticatable
         return $this->avatar
             ? asset('storage/avatars/' . $this->avatar)
             : 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=F59E0B&background=FEF3C7';
+    }
+
+    public function getProfileUrlAttribute(): string
+    {
+        try {
+            if (auth()->check() && auth()->id() === $this->id) {
+                return route('profile.show');
+            }
+
+            return route('profile.user', $this->username ?: $this->id);
+        } catch (\Throwable $e) {
+            return '/profile/' . ($this->username ?: $this->id);
+        }
     }
 
     public function getCoverPhotoUrlAttribute()

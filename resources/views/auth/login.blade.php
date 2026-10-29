@@ -3,28 +3,18 @@
 @section('title', 'Login - Kulturegram')
 
 @section('content')
-<div class="relative min-h-[calc(100vh-160px)] flex items-center justify-center py-12 px-4 overflow-hidden bg-gradient-to-br from-[#fdfbf7] via-[#faf4eb] to-[#f4e9da] dark:from-[#120d0a] dark:via-[#19120e] dark:to-[#0f0c0a] transition-colors">
-    {{-- Cultural Geometric Tapestry & Ambient Sunset Glows --}}
+<div class="relative min-h-[calc(100vh-160px)] flex items-center justify-center py-12 px-4 overflow-hidden bg-stone-50 dark:bg-stone-900 transition-colors">
+    {{-- Subtle Cultural Geometric Tapestry --}}
     @include('partials.cultural-background')
 
-    <div class="relative w-full max-w-md bg-white/95 dark:bg-[#181310]/95 backdrop-blur-xl p-8 sm:p-10 rounded-3xl shadow-2xl border border-amber-500/30 dark:border-amber-500/25 z-10 transition-all overflow-hidden">
-        {{-- Traditional Cultural Geometric Ribbon at Top of Card --}}
-        <!-- <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-600 via-yellow-500 via-orange-500 via-amber-500 to-amber-700"></div> -->
-
+    <div class="relative w-full max-w-md bg-white dark:bg-stone-900 p-8 sm:p-10 rounded-3xl shadow-xl border border-stone-200 dark:border-stone-800 z-10 transition-all">
         {{-- Cultural Brand Medallion & Logo Header --}}
         <div class="text-center mb-6 pt-1">
             <div class="relative inline-block mb-3.5">
-                <div class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-amber-600/20 border-2 border-amber-500/40 p-2 shadow-xl shadow-amber-500/20 flex items-center justify-center backdrop-blur-sm group hover:scale-105 transition-transform duration-300">
-                    <img src="{{ asset('images/logo.png') }}" alt="Kulturegram Logo" class="w-full h-full object-contain rounded-xl drop-shadow-sm">
+                <div class="w-20 h-20 mx-auto rounded-2xl bg-amber-500/10 dark:bg-stone-800 border border-amber-500/30 p-2 shadow-sm flex items-center justify-center group hover:scale-105 transition-transform duration-300">
+                    <img src="{{ asset('images/logo.png') }}" alt="Kulturegram Logo" class="w-full h-full object-contain rounded-xl">
                 </div>
-                <!-- <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px] shadow-md border-2 border-white dark:border-stone-900" title="Living Heritage">
-                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                </div> -->
             </div>
-
-            <!-- <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25 mb-2.5">
-                <span>Living Heritage & Storytelling</span>
-            </div> -->
 
             <h2 class="text-2xl sm:text-3xl font-black text-amber-500 tracking-tight">
                 Welcome Back
@@ -112,8 +102,8 @@
 
             <!-- Sign In Submit Button -->
             <button type="submit"
-                class="w-full bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-600 hover:to-orange-700 active:scale-[0.99] text-white font-extrabold py-3.5 rounded-xl shadow-lg shadow-amber-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer text-sm">
-                <span>Sign In to Legacy</span>
+                class="w-full bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer text-sm">
+                <span>Sign In</span>
                 <i data-lucide="arrow-right" class="w-4 h-4"></i>
             </button>
         </form>

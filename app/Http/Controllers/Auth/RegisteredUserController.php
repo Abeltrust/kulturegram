@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use App\Services\UserOriginService;
+use App\Services\WelcomeFlyerService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,7 +30,7 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request, UserOriginService $origin): RedirectResponse
+    public function store(Request $request, UserOriginService $origin, WelcomeFlyerService $flyerService): RedirectResponse
     {
         if (!$request->filled('username') && $request->filled('name')) {
             $request->merge([
@@ -73,6 +74,9 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
+        // Generate welcome cultural flyer & first-time introduction post on timeline
+        $welcomePost = $flyerService->createWelcomePost($user);
+
         // Flash cultural flyer payload for the automatic welcome popup modal
         $user->load(['country', 'state', 'localGovernment', 'spokenLanguages']);
         $locationParts = array_filter([
@@ -89,6 +93,9 @@ class RegisteredUserController extends Controller
             'location' => $locationText,
             'country_flag' => $user->country?->flag ?? '🌍',
             'languages' => $user->spokenLanguages->pluck('name')->all(),
+            'flyer_path' => $welcomePost?->image,
+            'flyer_url' => $welcomePost ? asset('storage/' . $welcomePost->image) : null,
+            'post_id' => $welcomePost?->id,
         ]);
 
         return redirect(RouteServiceProvider::HOME);

@@ -344,6 +344,35 @@
                                             <span>View full</span>
                                         </span>
                                     </div>
+
+                                    @if(str_contains($post->image, 'flyers/') || (!empty($post->tags) && in_array('CulturalPassport', (array)$post->tags)))
+                                        <div class="mt-2.5 p-2.5 sm:p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-wrap items-center justify-between gap-2.5">
+                                            <div class="flex items-center gap-2 min-w-0">
+                                                <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                                                    <i data-lucide="award" class="w-4 h-4 text-amber-500"></i>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <p class="text-xs font-bold text-stone-900 dark:text-stone-100 truncate">Official Cultural Welcome Flyer</p>
+                                                    <p class="text-[11px] text-stone-500 dark:text-stone-400">Download and share to celebrate cultural identity</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-2 shrink-0">
+                                                <a href="{{ $postImageSrc }}" download="kulturegram_{{ Str::slug($post->user->name) }}_flyer"
+                                                   class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95"
+                                                   title="Download Welcome Flyer">
+                                                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                                    <span>Download Flyer</span>
+                                                </a>
+                                                <button type="button" 
+                                                        onclick="shareFlyer('{{ addslashes($post->user->name) }}', '{{ route('timeline.show', $post->id) }}')"
+                                                        class="px-3 py-1.5 rounded-xl bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 text-xs font-semibold transition flex items-center gap-1.5 active:scale-95"
+                                                        title="Share Story & Flyer">
+                                                    <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+                                                    <span class="hidden sm:inline">Share</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @endif
                                 @endif
 
                                 @if($postYoutubeId)
@@ -445,15 +474,15 @@
                                             <!-- Author Header -->
                                             <div class="flex items-center justify-between gap-2">
                                                 <div class="flex items-center gap-2 min-w-0">
-                                                    <img src="{{ $resonance->user->profile_photo_url }}" 
-                                                         class="w-6 h-6 rounded-full object-cover border border-stone-200 dark:border-stone-700 shrink-0" 
-                                                         alt="{{ $resonance->user->name }}">
-                                                    <div class="flex items-center gap-1.5 min-w-0 truncate">
-                                                        <span class="font-bold text-stone-900 dark:text-stone-100 truncate">{{ $resonance->user->name }}</span>
-                                                        @if($resonance->user_id === $post->user_id)
-                                                            <span class="px-1.5 py-0.2 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider shrink-0 border border-amber-500/20">Author</span>
-                                                        @endif
-                                                    </div>
+                                                    <a href="{{ $resonance->user->profile_url }}" class="flex items-center gap-2 min-w-0 hover:opacity-85 transition group">
+                                                        <img src="{{ $resonance->user->profile_photo_url }}" 
+                                                             class="w-6 h-6 rounded-full object-cover border border-stone-200 dark:border-stone-700 shrink-0 group-hover:ring-2 group-hover:ring-amber-500/40" 
+                                                             alt="{{ $resonance->user->name }}">
+                                                        <span class="font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition truncate">{{ $resonance->user->name }}</span>
+                                                    </a>
+                                                    @if($resonance->user_id === $post->user_id)
+                                                        <span class="px-1.5 py-0.2 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider shrink-0 border border-amber-500/20">Author</span>
+                                                    @endif
                                                 </div>
                                                 <span class="text-[10px] sm:text-xs text-stone-400 shrink-0">{{ $resonance->created_at->diffForHumans() }}</span>
                                             </div>
@@ -527,10 +556,12 @@
                                                     <div id="resonance-item-{{ $reply->id }}" class="p-2 bg-white/70 dark:bg-stone-900/60 rounded-xl border border-stone-100 dark:border-stone-800 text-xs space-y-1">
                                                         <div class="flex items-center justify-between gap-2">
                                                             <div class="flex items-center gap-1.5 min-w-0">
-                                                                <img src="{{ $reply->user->profile_photo_url }}" 
-                                                                     class="w-5 h-5 rounded-full object-cover border border-stone-200 dark:border-stone-700 shrink-0" 
-                                                                     alt="{{ $reply->user->name }}">
-                                                                <span class="font-bold text-stone-900 dark:text-stone-100 truncate">{{ $reply->user->name }}</span>
+                                                                <a href="{{ $reply->user->profile_url }}" class="flex items-center gap-1.5 min-w-0 hover:opacity-85 transition group">
+                                                                    <img src="{{ $reply->user->profile_photo_url }}" 
+                                                                         class="w-5 h-5 rounded-full object-cover border border-stone-200 dark:border-stone-700 shrink-0 group-hover:ring-2 group-hover:ring-amber-500/40" 
+                                                                         alt="{{ $reply->user->name }}">
+                                                                    <span class="font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition truncate">{{ $reply->user->name }}</span>
+                                                                </a>
                                                                 @if($reply->user_id === $post->user_id)
                                                                     <span class="px-1 py-0.2 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] font-black uppercase tracking-wider shrink-0 border border-amber-500/20">Author</span>
                                                                 @endif
@@ -1383,11 +1414,11 @@
                                 <div id="resonance-item-${res.id}" class="p-2.5 sm:p-3 bg-stone-50 dark:bg-stone-800/60 rounded-xl border border-stone-100 dark:border-stone-800 text-xs sm:text-sm space-y-1.5 transition-all">
                                     <div class="flex items-center justify-between gap-2">
                                         <div class="flex items-center gap-2 min-w-0">
-                                            <img src="${res.user.profile_photo_url}" class="w-6 h-6 rounded-full object-cover border border-stone-200 dark:border-stone-700 shrink-0" alt="${res.user.name}">
-                                            <div class="flex items-center gap-1.5 min-w-0 truncate">
-                                                <span class="font-bold text-stone-900 dark:text-stone-100 truncate">${res.user.name}</span>
-                                                ${authorBadgeHtml}
-                                            </div>
+                                            <a href="${res.user.profile_url || '/profile/' + (res.user.username || res.user.id)}" class="flex items-center gap-2 min-w-0 hover:opacity-85 transition group">
+                                                <img src="${res.user.profile_photo_url}" class="w-6 h-6 rounded-full object-cover border border-stone-200 dark:border-stone-700 shrink-0 group-hover:ring-2 group-hover:ring-amber-500/40" alt="${res.user.name}">
+                                                <span class="font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition truncate">${res.user.name}</span>
+                                            </a>
+                                            ${authorBadgeHtml}
                                         </div>
                                         <span class="text-[10px] sm:text-xs text-stone-400 shrink-0">${res.time}</span>
                                     </div>
@@ -1554,8 +1585,10 @@
                             <div id="resonance-item-${reply.id}" class="p-2 bg-white/70 dark:bg-stone-900/60 rounded-xl border border-stone-100 dark:border-stone-800 text-xs space-y-1">
                                 <div class="flex items-center justify-between gap-2">
                                     <div class="flex items-center gap-1.5 min-w-0">
-                                        <img src="${reply.user.profile_photo_url}" class="w-5 h-5 rounded-full object-cover border border-stone-200 dark:border-stone-700 shrink-0" alt="${reply.user.name}">
-                                        <span class="font-bold text-stone-900 dark:text-stone-100 truncate">${reply.user.name}</span>
+                                        <a href="${reply.user.profile_url || '/profile/' + (reply.user.username || reply.user.id)}" class="flex items-center gap-1.5 min-w-0 hover:opacity-85 transition group">
+                                            <img src="${reply.user.profile_photo_url}" class="w-5 h-5 rounded-full object-cover border border-stone-200 dark:border-stone-700 shrink-0 group-hover:ring-2 group-hover:ring-amber-500/40" alt="${reply.user.name}">
+                                            <span class="font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition truncate">${reply.user.name}</span>
+                                        </a>
                                         ${authorBadgeHtml}
                                     </div>
                                     <span class="text-[9px] sm:text-[10px] text-stone-400 shrink-0">${reply.time}</span>
@@ -1589,6 +1622,22 @@
                 }
             })
             .catch(err => console.error('Error replying to resonance:', err));
+        }
+
+        // Welcome Cultural Flyer Share Handler
+        function shareFlyer(name, postUrl) {
+            const text = `✨ Check out ${name}'s Cultural Welcome Flyer on Kulturegram! Connect, celebrate living heritage, and explore diverse traditions: ${postUrl}`;
+            if (navigator.share) {
+                navigator.share({
+                    title: `${name} on Kulturegram`,
+                    text: text,
+                    url: postUrl
+                }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('✓ Invitation link copied to clipboard! You can now share it.');
+                });
+            }
         }
 
         // Post Translation Handlers

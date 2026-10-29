@@ -166,6 +166,14 @@ class RegistrationTest extends TestCase
         $this->assertEquals('Amara Kalu', $flyer['name']);
         $this->assertEquals('amarak', $flyer['username']);
         $this->assertStringContainsString($user->avatar, $flyer['avatar_url']);
+
+        // Verify that the first-time welcome post was created on timeline with flyer
+        $welcomePost = \App\Models\Post::where('user_id', $user->id)->first();
+        $this->assertNotNull($welcomePost);
+        $this->assertStringContainsString('Hi everyone! I am now on Kulturegram!', $welcomePost->content);
+        $this->assertNotNull($welcomePost->image);
+        $this->assertStringContainsString('flyers/welcome_flyer_', $welcomePost->image);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($welcomePost->image);
     }
 
 

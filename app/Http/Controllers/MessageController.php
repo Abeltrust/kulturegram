@@ -196,16 +196,24 @@ class MessageController extends Controller
 
         $newMessages = $conversation->messages()
             ->where('id', '>', $afterId)
-            ->with('user')
+            ->with('user:id,name,username,avatar')
             ->orderBy('id', 'asc')
             ->get();
 
-        // Mark incoming messages as read
-        $conversation->messages()
-            ->where('id', '>', $afterId)
-            ->where('user_id', '!=', $user->id)
+        if ($newMessages->isEmpty()) {
+            return response()->json(['messages' => []]);
+        }
+
+        // Mark incoming messages as read ONLY when unread messages from counterparty exist
+        $unreadIncomingIds = $newMessages->where('user_id', '!=', $user->id)
             ->where('status', '!=', 'read')
-            ->update(['status' => 'read']);
+            ->pluck('id');
+
+        if ($unreadIncomingIds->isNotEmpty()) {
+            $conversation->messages()
+                ->whereIn('id', $unreadIncomingIds)
+                ->update(['status' => 'read']);
+        }
 
         return response()->json([
             'messages' => $newMessages->map(function ($msg) {

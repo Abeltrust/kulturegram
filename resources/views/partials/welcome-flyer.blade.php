@@ -8,6 +8,7 @@
         'shareText' => $shareText,
         'profileUrl' => $profileUrl,
         'userName' => $flyer['name'] ?? 'Cultural Preserver',
+        'flyerUrl' => $flyer['flyer_url'] ?? null,
     ]))" 
     x-show="open" 
     x-cloak 
@@ -74,7 +75,7 @@
                     </p>
                 </div>
 
-                {{-- The User's Cultural Declaration (Exact wording required) --}}
+                {{-- The User's Cultural Declaration --}}
                 <div class="px-4 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/20">
                     <p class="text-sm sm:text-base font-extrabold text-stone-900 dark:text-stone-100 leading-snug">
                         &ldquo;Hello, I'm from <span class="text-amber-600 dark:text-amber-400">{{ $flyer['location'] }}</span>! This is my culture, follow me on Kulturegram!&rdquo;
@@ -105,23 +106,23 @@
 
             {{-- Action Buttons --}}
             <div class="space-y-2 pt-1">
-                {{-- Copy Share Text Button --}}
+                {{-- Download Flyer Button --}}
+                <button type="button" @click="downloadFlyer()"
+                    class="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-[0.99] cursor-pointer shadow-md">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span x-text="downloading ? 'Preparing Image...' : 'Download Cultural Flyer'"></span>
+                </button>
+
+                {{-- Copy / Native Share Button --}}
                 <button type="button" @click="copyShare()"
                     class="w-full py-3 px-4 rounded-xl bg-stone-900 dark:bg-stone-100 hover:bg-stone-800 dark:hover:bg-white text-white dark:text-stone-900 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-[0.99] cursor-pointer shadow-sm">
                     <i data-lucide="share-2" class="w-4 h-4"></i>
-                    <span x-text="copied ? '✓ Copied Invitation!' : 'Copy Invitation & Link'"></span>
-                </button>
-
-                {{-- Download Flyer Button --}}
-                <button type="button" @click="downloadFlyer()"
-                    class="w-full py-3 px-4 rounded-xl bg-stone-100 hover:bg-stone-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-[0.99] cursor-pointer">
-                    <i data-lucide="download" class="w-4 h-4"></i>
-                    <span x-text="downloading ? 'Preparing Image...' : 'Save Cultural Flyer'"></span>
+                    <span x-text="copied ? '✓ Copied Invitation!' : 'Share Invitation & Link'"></span>
                 </button>
 
                 {{-- Continue to Timeline --}}
                 <button type="button" @click="open = false"
-                    class="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-[0.99] cursor-pointer shadow-sm">
+                    class="w-full py-2.5 px-4 rounded-xl text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition">
                     <span>Continue to Timeline</span>
                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </button>
@@ -139,12 +140,23 @@
             copied: false,
             downloading: false,
             async copyShare() {
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: 'Welcome to Kulturegram!',
+                            text: config.shareText,
+                            url: config.profileUrl
+                        });
+                        return;
+                    } catch (e) {
+                        // User cancelled or share failed, fallback to clipboard
+                    }
+                }
                 try {
                     await navigator.clipboard.writeText(config.shareText);
                     this.copied = true;
                     setTimeout(() => { this.copied = false; }, 3000);
                 } catch (e) {
-                    // Fallback
                     const el = document.createElement('textarea');
                     el.value = config.shareText;
                     document.body.appendChild(el);
@@ -157,6 +169,17 @@
             },
             async downloadFlyer() {
                 this.downloading = true;
+                if (config.flyerUrl) {
+                    const a = document.createElement('a');
+                    a.href = config.flyerUrl;
+                    a.download = (config.userName || 'kulturegram').toLowerCase().replace(/\s+/g, '_') + '_cultural_flyer.svg';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    this.downloading = false;
+                    return;
+                }
+
                 const card = document.getElementById('cultural-flyer-card');
                 if (!card) {
                     this.downloading = false;

@@ -303,9 +303,19 @@
                 });
             }
 
-            // Background polling for real-time conversation updates without refresh
+            // Adaptive background polling with idle backoff and visibility pausing
+            let pollTimer = null;
+            let idleStreak = 0;
+            let currentDelay = 3500;
+
+            function scheduleNextPoll(delay) {
+                if (pollTimer) clearTimeout(pollTimer);
+                if (document.hidden) return; // Pause completely while tab is hidden
+                pollTimer = setTimeout(pollNewMessages, delay);
+            }
+
             async function pollNewMessages() {
-                if (document.hidden) return; // Save bandwidth when tab inactive
+                if (document.hidden) return;
                 try {
                     const response = await fetch(`${updatesUrl}?after_id=${maxMsgId}`, {
                         headers: {
@@ -316,19 +326,47 @@
                     if (response.ok) {
                         const data = await response.json();
                         if (data && data.messages && data.messages.length > 0) {
+                            idleStreak = 0;
+                            currentDelay = 3000; // Fast interval when conversation is active
                             data.messages.forEach(msg => {
                                 if (!document.querySelector(`[data-msg-id="${msg.id}"]`)) {
                                     appendMessage(msg);
                                 }
                             });
+                        } else {
+                            idleStreak++;
+                            // Gradually back off when idle: 3.5s -> 6s -> 10s -> max 14s
+                            if (idleStreak > 6) {
+                                currentDelay = 14000;
+                            } else if (idleStreak > 3) {
+                                currentDelay = 8000;
+                            } else {
+                                currentDelay = 4000;
+                            }
                         }
                     }
                 } catch (e) {
-                    // Silently ignore network blips
+                    currentDelay = 10000; // Backoff on network hiccup
+                } finally {
+                    scheduleNextPoll(currentDelay);
                 }
             }
 
-            setInterval(pollNewMessages, 3500);
+            function wakeUpPolling() {
+                idleStreak = 0;
+                currentDelay = 3000;
+                scheduleNextPoll(100);
+            }
+
+            // Immediately poll and reset to fast interval when user interacts or returns to tab
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) wakeUpPolling();
+            });
+            window.addEventListener('focus', wakeUpPolling);
+            if (textarea) textarea.addEventListener('input', wakeUpPolling);
+
+            // Start initial poll
+            scheduleNextPoll(3500);
         });
     </script>
 @endsection

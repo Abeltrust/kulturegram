@@ -39,27 +39,35 @@
                     class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 p-4 bg-white dark:bg-stone-900 rounded-xl border border-stone-100 dark:border-stone-800 shadow-sm hover:bg-stone-50 dark:hover:bg-stone-800 transition">
 
                     <!-- LEFT SIDE -->
-                    <div class="flex items-start gap-3">
+                    <div class="flex items-start gap-3 min-w-0">
                         <!-- AVATAR / ICON -->
-                        <div
-                            class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 relative
-                                        {{ $notification->read ? 'bg-gray-200 dark:bg-stone-800 text-gray-500 dark:text-stone-500' : 'bg-amber-500 text-white' }}">
-                            <span class="font-bold text-sm">
-                                {{ strtoupper(substr($notification->fromUser->name ?? 'N/A', 0, 2)) }}
-                            </span>
-                            @if($notification->type === 'mention')
-                                <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center text-[9px] font-bold">@</span>
-                            @elseif($notification->type === 'tap')
-                                <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[9px]"><i data-lucide="heart" class="w-2.5 h-2.5 fill-current"></i></span>
-                            @elseif($notification->type === 'resonance')
-                                <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-purple-500 text-white rounded-full flex items-center justify-center text-[9px]"><i data-lucide="message-circle" class="w-2.5 h-2.5"></i></span>
-                            @endif
-                        </div>
+                        @if($notification->fromUser)
+                            <a href="{{ $notification->fromUser->profile_url }}" class="shrink-0 relative block group" title="View {{ $notification->fromUser->name }}'s profile">
+                                <img src="{{ $notification->fromUser->profile_photo_url }}" 
+                                     alt="{{ $notification->fromUser->name }}"
+                                     class="w-10 h-10 rounded-full object-cover border border-stone-200 dark:border-stone-700 group-hover:ring-2 group-hover:ring-amber-500/50 transition">
+                                @if($notification->type === 'mention')
+                                    <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center text-[9px] font-bold shadow-sm">@</span>
+                                @elseif($notification->type === 'tap')
+                                    <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[9px] shadow-sm"><i data-lucide="heart" class="w-2.5 h-2.5 fill-current"></i></span>
+                                @elseif($notification->type === 'resonance' || $notification->type === 'resonance_reply')
+                                    <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-purple-500 text-white rounded-full flex items-center justify-center text-[9px] shadow-sm"><i data-lucide="message-circle" class="w-2.5 h-2.5"></i></span>
+                                @elseif($notification->type === 'lockin')
+                                    <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-amber-500 text-white rounded-full flex items-center justify-center text-[9px] shadow-sm"><i data-lucide="shield-check" class="w-2.5 h-2.5"></i></span>
+                                @endif
+                            </a>
+                        @else
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 relative {{ $notification->read ? 'bg-gray-200 dark:bg-stone-800 text-gray-500 dark:text-stone-500' : 'bg-amber-500 text-white' }}">
+                                <span class="font-bold text-sm">
+                                    <i data-lucide="bell" class="w-4 h-4"></i>
+                                </span>
+                            </div>
+                        @endif
 
                         <!-- MESSAGE -->
-                        <div>
-                            <p class="text-sm sm:text-base text-gray-800 dark:text-stone-200">
-                                {!! $notification->message !!}
+                        <div class="min-w-0">
+                            <p class="text-sm sm:text-base text-gray-800 dark:text-stone-200 leading-snug">
+                                {!! $notification->formatted_message !!}
                             </p>
                             @if(isset($notification->data['post_id']))
                                 <a href="{{ route('timeline.index') }}#post-{{ $notification->data['post_id'] }}" class="inline-block mt-1 text-xs text-amber-600 dark:text-amber-400 font-semibold hover:underline">

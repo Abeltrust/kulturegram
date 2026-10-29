@@ -21,34 +21,24 @@
 @endphp
 
 @section('content')
-<div class="relative min-h-[calc(100vh-160px)] flex items-center justify-center py-10 px-4 overflow-hidden bg-gradient-to-br from-[#fdfbf7] via-[#faf4eb] to-[#f4e9da] dark:from-[#120d0a] dark:via-[#19120e] dark:to-[#0f0c0a] transition-colors">
-    {{-- Cultural Geometric Tapestry & Ambient Sunset Glows --}}
+<div class="relative min-h-[calc(100vh-160px)] flex items-center justify-center py-10 px-4 overflow-hidden bg-stone-50 dark:bg-stone-900 transition-colors">
+    {{-- Subtle Cultural Geometric Tapestry --}}
     @include('partials.cultural-background')
 
-    <div class="relative w-full max-w-lg bg-white/95 dark:bg-[#181310]/95 backdrop-blur-xl shadow-2xl rounded-3xl p-6 sm:p-9 border border-amber-500/30 dark:border-amber-500/25 z-10 transition-all overflow-hidden"
+    <div class="relative w-full max-w-lg bg-white dark:bg-stone-900 shadow-xl rounded-3xl p-6 sm:p-9 border border-stone-200 dark:border-stone-800 z-10 transition-all"
         x-data="registerForm(@js($initialState))">
-
-        {{-- Traditional Cultural Geometric Ribbon at Top of Card --}}
-        <!-- <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-600 via-yellow-500 via-orange-500 via-amber-500 to-amber-700"></div> -->
 
         {{-- Cultural Brand Medallion & Logo Header --}}
         <div class="text-center mb-6 pt-1">
             <div class="relative inline-block mb-3.5">
-                <div class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-amber-600/20 border-2 border-amber-500/40 p-2 shadow-xl shadow-amber-500/20 flex items-center justify-center backdrop-blur-sm group hover:scale-105 transition-transform duration-300">
-                    <img src="{{ asset('images/logo.png') }}" alt="Kulturegram Logo" class="w-full h-full object-contain rounded-xl drop-shadow-sm">
+                <div class="w-20 h-20 mx-auto rounded-2xl bg-amber-500/10 dark:bg-stone-800 border border-amber-500/30 p-2 shadow-sm flex items-center justify-center group hover:scale-105 transition-transform duration-300">
+                    <img src="{{ asset('images/logo.png') }}" alt="Kulturegram Logo" class="w-full h-full object-contain rounded-xl">
                 </div>
-                <!-- <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px] shadow-md border-2 border-white dark:border-stone-900" title="Living Heritage">
-                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                </div> -->
-            </div>
-
-            <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25 mb-2.5">
-                <span>Living Heritage & Storytelling</span>
             </div>
 
             <h2 class="text-2xl sm:text-3xl font-black text-amber-500 tracking-tight">
-                <span x-show="step === 1">Join Kulturegram</span>
-                <span x-show="step === 2" x-cloak>Your Cultural Roots</span>
+                <span x-show="step === 1">Register</span>
+                <span x-show="step === 2" x-cloak>Your roots</span>
             </h2>
             <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-300 mt-1 leading-relaxed">
                 <span x-show="step === 1">Create your profile to celebrate heritage and connect with your circle.</span>
@@ -286,7 +276,7 @@
                     <x-search-select model="countryId" source="countries" input-id="origin-country"
                         placeholder="Search for your country" icon="globe" />
                     <p x-show="detected" x-cloak class="text-xs text-stone-500 dark:text-stone-400 mt-1">
-                        📍 Suggested from your device. Change it if needed.
+                        Suggested from your device. Change it if needed.
                     </p>
                     @error('country_id')
                         <p class="text-sm text-red-500 mt-1">{{ $message }}</p>

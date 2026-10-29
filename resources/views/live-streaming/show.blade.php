@@ -484,14 +484,32 @@
                     window.vibeMessage = (btn) => this.vibeMessage(btn);
                     window.initiateReplyFromGlobal = (author) => this.initiateReply(author);
 
-                    // Fetch existing messages and start polling
+                    // Fetch existing messages and start polling with tab-visibility awareness
                     this.fetchMessages();
-                    setInterval(() => this.fetchMessages(), 3000);
+                    setInterval(() => {
+                        if (!document.hidden && !this.streamEnded) {
+                            this.fetchMessages();
+                        }
+                    }, 3000);
 
                     @if(auth()->id() === $stream->user_id || auth()->user()?->is_admin)
                     this.fetchFlagged();
-                    setInterval(() => this.fetchFlagged(), 5000);
+                    setInterval(() => {
+                        if (!document.hidden && !this.streamEnded) {
+                            this.fetchFlagged();
+                        }
+                    }, 5000);
                     @endif
+
+                    // Resume immediately when returning to tab
+                    document.addEventListener('visibilitychange', () => {
+                        if (!document.hidden && !this.streamEnded) {
+                            this.fetchMessages();
+                            @if(auth()->id() === $stream->user_id || auth()->user()?->is_admin)
+                            this.fetchFlagged();
+                            @endif
+                        }
+                    });
                 },
 
                 endStreamBeacon() {
