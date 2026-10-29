@@ -50,7 +50,7 @@ class RegisteredUserController extends Controller
             'terms.accepted' => 'You must review and agree to the Kulturegram Terms of Service and Community Guidelines before signing up.',
         ], $origin->messages()));
 
-        $user = DB::transaction(function () use ($request, $validated, $origin) {
+        $user = DB::transaction(function () use ($request, $validated, $origin, $flyerService) {
             $user = User::create([
                 'name' => $request->name,
                 'username' => $request->username, 
@@ -63,6 +63,9 @@ class RegisteredUserController extends Controller
                 $request->file('avatar')->storeAs('avatars', $avatarName, 'public');
                 $user->avatar = $avatarName;
                 $user->save();
+            } else {
+                // If user didn't upload a picture, assign an authentic cultural avatar as their profile picture
+                $flyerService->assignCulturalAvatar($user);
             }
 
             $origin->save($user, $validated);

@@ -251,17 +251,12 @@
             {{-- Authorized Cover Artwork / Photographic Record --}}
             @if($culture->image)
                 <div class="relative bg-stone-100 dark:bg-stone-950 border-t border-stone-200/80 dark:border-stone-800">
-                    <div class="relative w-full min-h-[240px] max-h-[520px] flex items-center justify-center overflow-hidden group cursor-pointer"
-                         onclick="openImageLightbox('{{ Storage::url($culture->image) }}', '{{ addslashes($culture->name) }} - Archival Record')">
+                    <div class="relative w-full min-h-[240px] max-h-[520px] flex items-center justify-center overflow-hidden group">
                         <div class="absolute inset-0 bg-cover bg-center filter blur-xl opacity-25 dark:opacity-20 scale-110 pointer-events-none"
                              style="background-image: url('{{ Storage::url($culture->image) }}');"></div>
                         <img src="{{ Storage::url($culture->image) }}" 
                              alt="{{ $culture->name }}"
-                             class="relative z-10 w-auto h-auto max-w-full max-h-[520px] object-contain mx-auto transition-transform duration-300 group-hover:scale-[1.01]">
-                        <span class="absolute bottom-3 right-3 z-20 px-2.5 py-1 rounded-lg bg-black/65 backdrop-blur-md text-white text-[11px] font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 pointer-events-none">
-                            <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
-                            <span>View full</span>
-                        </span>
+                             class="relative z-10 w-auto h-auto max-w-full max-h-[520px] object-contain mx-auto">
                     </div>
                     <div class="px-4 py-2 bg-stone-50/90 dark:bg-stone-900/90 border-t border-stone-200/60 dark:border-stone-800 text-[11px] text-stone-600 dark:text-stone-400 flex flex-wrap items-center justify-between gap-2">
                         <span class="flex items-center gap-1.5 font-medium">
@@ -961,15 +956,10 @@
                     {{-- Primary Cover Image --}}
                     @if($culture->image)
                         <div x-show="mediaSectionFilter === 'all' || mediaSectionFilter === 'overview'" class="rounded-2xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900">
-                            <div class="relative overflow-hidden bg-stone-900/5 dark:bg-black/40 flex items-center justify-center min-h-[220px] max-h-[520px] group cursor-pointer"
-                                 onclick="openImageLightbox('{{ Storage::url($culture->image) }}', '{{ addslashes($culture->name) }} - Primary Archival Record')">
+                            <div class="relative overflow-hidden bg-stone-900/5 dark:bg-black/40 flex items-center justify-center min-h-[220px] max-h-[520px] group">
                                 <div class="absolute inset-0 bg-cover bg-center filter blur-xl opacity-25 dark:opacity-20 scale-110 pointer-events-none"
                                      style="background-image: url('{{ Storage::url($culture->image) }}');"></div>
-                                <img src="{{ Storage::url($culture->image) }}" alt="{{ $culture->name }}" class="relative z-10 w-auto h-auto max-w-full max-h-[500px] object-contain mx-auto transition-transform duration-300 group-hover:scale-[1.01]">
-                                <span class="absolute bottom-3 right-3 z-20 px-2.5 py-1 rounded-lg bg-black/65 backdrop-blur-md text-white text-[11px] font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 pointer-events-none">
-                                    <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
-                                    <span>View full photograph</span>
-                                </span>
+                                <img src="{{ Storage::url($culture->image) }}" alt="{{ $culture->name }}" class="relative z-10 w-auto h-auto max-w-full max-h-[500px] object-contain mx-auto">
                             </div>
                             <div class="p-3.5 text-xs flex flex-wrap justify-between items-center gap-2 text-stone-600 dark:text-stone-400 bg-stone-50/80 dark:bg-stone-900/80 border-t border-stone-200 dark:border-stone-800">
                                 <div class="flex items-center gap-2">

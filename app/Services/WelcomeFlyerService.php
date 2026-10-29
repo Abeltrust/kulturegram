@@ -10,12 +10,143 @@ use Illuminate\Support\Str;
 class WelcomeFlyerService
 {
     /**
+     * Assign a unique cultural avatar to the user if they did not upload one,
+     * and save it as their official profile picture in storage and database.
+     */
+    public function assignCulturalAvatar(User $user): string
+    {
+        $filename = 'cultural_avatar_' . $user->id . '_' . time() . '.svg';
+        $svg = $this->generateCulturalAvatarSvg($user);
+
+        Storage::disk('public')->put('avatars/' . $filename, $svg);
+
+        $user->avatar = $filename;
+        $user->save();
+
+        return $filename;
+    }
+
+    /**
+     * Generate a rich, authentic cultural avatar SVG based on user identity.
+     */
+    public function generateCulturalAvatarSvg(User $user): string
+    {
+        $initials = strtoupper(substr($user->name ?: 'KG', 0, 2));
+        $seed = ($user->id ?: crc32($user->email ?: 'kulturegram')) % 6;
+
+        $themes = [
+            0 => [ // Ancestral Bronze & Gold
+                'bg1' => '#1c1917', 'bg2' => '#292524',
+                'primary' => '#f59e0b', 'secondary' => '#d97706', 'accent' => '#fbbf24',
+                'patternColor' => '#f59e0b',
+            ],
+            1 => [ // Royal Indigo & Terracotta
+                'bg1' => '#0f172a', 'bg2' => '#1e1b4b',
+                'primary' => '#c2410c', 'secondary' => '#b45309', 'accent' => '#fb923c',
+                'patternColor' => '#60a5fa',
+            ],
+            2 => [ // Emerald Heritage & Brass
+                'bg1' => '#064e3b', 'bg2' => '#022c22',
+                'primary' => '#f59e0b', 'secondary' => '#059669', 'accent' => '#fde047',
+                'patternColor' => '#34d399',
+            ],
+            3 => [ // Coral Kingdom (Benin / Ife inspired)
+                'bg1' => '#450a0a', 'bg2' => '#292524',
+                'primary' => '#dc2626', 'secondary' => '#ea580c', 'accent' => '#fca5a5',
+                'patternColor' => '#f87171',
+            ],
+            4 => [ // Golden Savannah & Ochre
+                'bg1' => '#18181b', 'bg2' => '#27272a',
+                'primary' => '#eab308', 'secondary' => '#ca8a04', 'accent' => '#fef08a',
+                'patternColor' => '#eab308',
+            ],
+            5 => [ // Nile Azure & Amun Gold
+                'bg1' => '#111827', 'bg2' => '#1f2937',
+                'primary' => '#f59e0b', 'secondary' => '#0284c7', 'accent' => '#38bdf8',
+                'patternColor' => '#38bdf8',
+            ],
+        ];
+
+        $theme = $themes[$seed] ?? $themes[0];
+
+        return <<<SVG
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+    <defs>
+        <linearGradient id="avatarBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="{$theme['bg1']}" />
+            <stop offset="100%" stop-color="{$theme['bg2']}" />
+        </linearGradient>
+
+        <linearGradient id="avatarGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="{$theme['accent']}" />
+            <stop offset="50%" stop-color="{$theme['primary']}" />
+            <stop offset="100%" stop-color="{$theme['secondary']}" />
+        </linearGradient>
+
+        <pattern id="avatarPat" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M 0 10 L 10 0 L 20 10 L 10 20 Z" fill="none" stroke="{$theme['patternColor']}" stroke-width="0.8" opacity="0.15" />
+        </pattern>
+
+        <clipPath id="circleClip">
+            <circle cx="200" cy="200" r="190" />
+        </clipPath>
+    </defs>
+
+    <!-- Base Circular Container -->
+    <g clip-path="url(#circleClip)">
+        <rect width="400" height="400" fill="url(#avatarBgGrad)" />
+        <rect width="400" height="400" fill="url(#avatarPat)" />
+
+        <!-- Radial Decorative Sunburst / Aura -->
+        <circle cx="200" cy="200" r="160" fill="none" stroke="{$theme['primary']}" stroke-width="1.5" stroke-dasharray="8 6" opacity="0.3" />
+        <circle cx="200" cy="200" r="140" fill="none" stroke="{$theme['accent']}" stroke-width="1" opacity="0.2" />
+
+        <!-- Cultural Headwear / Headdress Geometry -->
+        <g transform="translate(200, 105)">
+            <path d="M -70 50 Q 0 -20 70 50 Q 0 25 -70 50 Z" fill="url(#avatarGoldGrad)" opacity="0.9" />
+            <circle cx="0" cy="18" r="8" fill="{$theme['accent']}" />
+            <polygon points="-40,40 -20,20 0,35 20,20 40,40 0,55" fill="{$theme['secondary']}" opacity="0.85" />
+        </g>
+
+        <!-- Central Medallion Shield -->
+        <circle cx="200" cy="210" r="75" fill="{$theme['bg1']}" stroke="url(#avatarGoldGrad)" stroke-width="5" />
+        <circle cx="200" cy="210" r="66" fill="none" stroke="{$theme['accent']}" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.7" />
+
+        <!-- Initials -->
+        <text x="200" y="228" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="52" fill="{$theme['accent']}" text-anchor="middle" letter-spacing="2">{$initials}</text>
+
+        <!-- Cultural Ceremonial Beaded Collar / Torq -->
+        <g transform="translate(200, 295)">
+            <path d="M -110 30 Q 0 85 110 30" fill="none" stroke="url(#avatarGoldGrad)" stroke-width="9" stroke-linecap="round" />
+            <path d="M -90 55 Q 0 105 90 55" fill="none" stroke="{$theme['primary']}" stroke-width="6" stroke-linecap="round" opacity="0.85" />
+            <path d="M -65 75 Q 0 120 65 75" fill="none" stroke="{$theme['accent']}" stroke-width="4" stroke-linecap="round" opacity="0.7" />
+            <circle cx="-60" cy="48" r="4.5" fill="{$theme['accent']}" />
+            <circle cx="-30" cy="62" r="4.5" fill="{$theme['accent']}" />
+            <circle cx="0" cy="68" r="5.5" fill="{$theme['accent']}" />
+            <circle cx="30" cy="62" r="4.5" fill="{$theme['accent']}" />
+            <circle cx="60" cy="48" r="4.5" fill="{$theme['accent']}" />
+        </g>
+    </g>
+
+    <!-- Outer Golden Border Ring -->
+    <circle cx="200" cy="200" r="194" fill="none" stroke="url(#avatarGoldGrad)" stroke-width="8" />
+    <circle cx="200" cy="200" r="186" fill="none" stroke="{$theme['bg1']}" stroke-width="2" />
+</svg>
+SVG;
+    }
+
+    /**
      * Create the first-time welcome flyer and post for a newly registered user.
      */
     public function createWelcomePost(User $user): ?Post
     {
         try {
             $user->loadMissing(['country', 'state', 'localGovernment', 'spokenLanguages']);
+
+            // If user has no avatar, assign a cultural avatar first
+            if (!$user->avatar) {
+                $this->assignCulturalAvatar($user);
+            }
 
             $flyerRelativePath = $this->saveFlyer($user);
 
@@ -222,25 +353,23 @@ SVG;
      */
     protected function resolveAvatarDataUri(User $user): string
     {
-        if ($user->avatar) {
-            $path = Storage::disk('public')->path('avatars/' . $user->avatar);
-            if (file_exists($path)) {
-                $mime = mime_content_type($path) ?: 'image/jpeg';
-                $contents = file_get_contents($path);
-                if ($contents !== false) {
-                    return 'data:' . $mime . ';base64,' . base64_encode($contents);
-                }
+        if ($user->avatar && Storage::disk('public')->exists('avatars/' . $user->avatar)) {
+            $contents = Storage::disk('public')->get('avatars/' . $user->avatar);
+            if ($contents !== null && $contents !== false && strlen($contents) > 0) {
+                $extension = strtolower(pathinfo($user->avatar, PATHINFO_EXTENSION));
+                $mime = match ($extension) {
+                    'svg' => 'image/svg+xml',
+                    'png' => 'image/png',
+                    'webp' => 'image/webp',
+                    'gif' => 'image/gif',
+                    default => 'image/jpeg',
+                };
+                return 'data:' . $mime . ';base64,' . base64_encode($contents);
             }
         }
 
-        // Fallback to stylized SVG placeholder data URI
-        $initials = strtoupper(substr($user->name ?: 'KG', 0, 2));
-        $fallbackSvg = <<<SVG
-<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
-    <rect width="320" height="320" fill="#f59e0b" />
-    <text x="160" y="190" font-family="system-ui, sans-serif" font-weight="900" font-size="120" fill="#1c1917" text-anchor="middle">{$initials}</text>
-</svg>
-SVG;
+        // Fallback to cultural avatar SVG
+        $fallbackSvg = $this->generateCulturalAvatarSvg($user);
         return 'data:image/svg+xml;base64,' . base64_encode($fallbackSvg);
     }
 
@@ -267,4 +396,3 @@ SVG;
         return null;
     }
 }
-

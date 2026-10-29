@@ -834,25 +834,31 @@ class TimelineController extends Controller
         $user = Auth::user();
         $content = (string) $request->input('content');
 
-        // Enforce tagging rule: Non-Locked-In members cannot tag people (@username) on a post unless they Lock-In to the poster
-        $extractedMentions = ContentParserService::extractMentionUsernames($content);
-        if (!empty($extractedMentions) && !$post->canRepostAndTag($user)) {
-            return response()->json([
-                'success' => false,
-                'requires_lockin' => true,
-                'author_id' => $post->user_id,
-                'author_name' => $post->user->name,
-                'author_username' => $post->user->username,
-                'error' => "You must Lock-In to {$post->user->name} (@{$post->user->username}) before tagging members (@username) on their story.",
-            ], 403);
-        }
-
         $parentId = $request->input('parent_id');
         $parentResonance = null;
         if ($parentId) {
             $parentResonance = Resonance::where('post_id', $post->id)->find($parentId);
             if (!$parentResonance) {
                 return response()->json(['error' => 'Parent resonance not found for this post.'], 404);
+            }
+        }
+
+        // Enforce tagging rule: Non-Locked-In members cannot tag people (@username) on a post unless they Lock-In to the poster
+        $mentionedUsers = ContentParserService::getMentionedUsers($content);
+        if ($mentionedUsers->isNotEmpty() && !$post->canRepostAndTag($user)) {
+            // Allow directly addressing the parent resonance commenter or post author in conversational replies
+            $allowedIds = array_filter([$post->user_id, $parentResonance?->user_id]);
+            $disallowedMentions = $mentionedUsers->reject(fn($u) => in_array($u->id, $allowedIds));
+
+            if ($disallowedMentions->isNotEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'requires_lockin' => true,
+                    'author_id' => $post->user_id,
+                    'author_name' => $post->user->name,
+                    'author_username' => $post->user->username,
+                    'error' => "You must Lock-In to {$post->user->name} (@{$post->user->username}) before tagging members (@username) on their story.",
+                ], 403);
             }
         }
 

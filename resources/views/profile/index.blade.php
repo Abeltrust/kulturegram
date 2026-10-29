@@ -953,17 +953,12 @@
                                 $profilePostVideoSrc = \App\Models\CulturalClass::resolveMediaUrl($post->video);
                             @endphp
                             @if($profilePostImageSrc && !$profilePostVideoSrc && !$profilePostYoutubeId)
-                                <div class="relative rounded-xl sm:rounded-2xl overflow-hidden bg-stone-900/5 dark:bg-black/40 border border-stone-100 dark:border-stone-800 group cursor-pointer flex items-center justify-center min-h-[220px] max-h-[700px]"
-                                     onclick="openImageLightbox('{{ $profilePostImageSrc }}', 'Story photo by {{ addslashes($post->user->name) }}')">
+                                <div class="relative rounded-xl sm:rounded-2xl overflow-hidden bg-stone-900/5 dark:bg-black/40 border border-stone-100 dark:border-stone-800 group flex items-center justify-center min-h-[220px] max-h-[700px]">
                                     <div class="absolute inset-0 bg-cover bg-center filter blur-xl opacity-25 dark:opacity-20 scale-110 pointer-events-none"
                                          style="background-image: url('{{ $profilePostImageSrc }}');"></div>
                                     <img src="{{ $profilePostImageSrc }}" 
                                          alt="Story photo"
-                                         class="relative z-10 w-auto h-auto max-w-full max-h-[650px] object-contain rounded-xl sm:rounded-2xl mx-auto transition-transform duration-300 group-hover:scale-[1.01]">
-                                    <span class="absolute bottom-3 right-3 z-20 px-2.5 py-1 rounded-lg bg-black/65 backdrop-blur-md text-white text-[11px] font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 pointer-events-none">
-                                        <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
-                                        <span>View full</span>
-                                    </span>
+                                         class="relative z-10 w-auto h-auto max-w-full max-h-[650px] object-contain rounded-xl sm:rounded-2xl mx-auto">
                                 </div>
 
                                 @if(str_contains($post->image, 'flyers/') || (!empty($post->tags) && in_array('CulturalPassport', (array)$post->tags)))

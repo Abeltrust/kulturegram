@@ -45,6 +45,17 @@ class RegistrationTest extends TestCase
         $this->assertNull($user->state_id);
         $this->assertNull($user->local_government_id);
         $this->assertCount(0, $user->spokenLanguages);
+
+        // Verify cultural avatar was generated and assigned as profile picture
+        $this->assertNotNull($user->avatar);
+        $this->assertStringContainsString('cultural_avatar_', $user->avatar);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists('avatars/' . $user->avatar);
+
+        // Verify welcome post with flyer was created
+        $post = \App\Models\Post::where('user_id', $user->id)->first();
+        $this->assertNotNull($post);
+        $this->assertStringContainsString('flyers/welcome_flyer_', $post->image);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($post->image);
     }
 
     public function test_user_can_register_with_nigeria_state_lga_and_languages(): void

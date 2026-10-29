@@ -123,16 +123,11 @@
                         {{-- Media --}}
                         <div class="mt-3 flex flex-col gap-4">
                             @if($post->image)
-                                <div class="relative w-full bg-stone-900/5 dark:bg-black/40 rounded-xl overflow-hidden flex items-center justify-center border border-stone-100 dark:border-stone-800 group cursor-pointer min-h-[220px] max-h-[36rem]"
-                                     onclick="openImageLightbox('{{ asset('storage/' . $post->image) }}', 'Community post photo')">
+                                <div class="relative w-full bg-stone-900/5 dark:bg-black/40 rounded-xl overflow-hidden flex items-center justify-center border border-stone-100 dark:border-stone-800 group min-h-[220px] max-h-[36rem]">
                                     <div class="absolute inset-0 bg-cover bg-center filter blur-xl opacity-25 dark:opacity-20 scale-110 pointer-events-none"
                                          style="background-image: url('{{ asset('storage/' . $post->image) }}');"></div>
                                     <img src="{{ asset('storage/' . $post->image) }}"
-                                        class="relative z-10 w-auto h-auto max-w-full max-h-[34rem] object-contain mx-auto transition-transform duration-300 group-hover:scale-[1.01]" alt="post image">
-                                    <span class="absolute bottom-3 right-3 z-20 px-2.5 py-1 rounded-lg bg-black/65 backdrop-blur-md text-white text-[11px] font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 pointer-events-none">
-                                        <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
-                                        <span>View full</span>
-                                    </span>
+                                        class="relative z-10 w-auto h-auto max-w-full max-h-[34rem] object-contain mx-auto" alt="post image">
                                 </div>
                             @endif
                             @if($post->video)
