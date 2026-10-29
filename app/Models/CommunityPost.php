@@ -11,6 +11,11 @@ class CommunityPost extends Model
 
     protected $fillable = ['community_id', 'user_id', 'content', 'image', 'video', 'audio'];
 
+    protected $casts = [
+        'user_id' => 'integer',
+        'community_id' => 'integer',
+    ];
+
     public function community()
     {
         return $this->belongsTo(Community::class);

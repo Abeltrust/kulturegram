@@ -44,7 +44,7 @@
         resonated: {{ auth()->check() && auth()->user()->hasResonated($culture) ? 'true' : 'false' }},
         resonanceCount: {{ $culture->resonance_count }},
         csrfToken: '{{ csrf_token() }}',
-        activeSection: 'overview'
+        activeSection: '{{ request('section', 'overview') }}', mediaTypeFilter: 'all', mediaSectionFilter: 'all'
      })">
 
     {{-- Top Archival Navigation & Utility Bar --}}
@@ -364,17 +364,24 @@
                     <span>People & Custodians</span>
                 </button>
 
-                {{-- 6. Media & Artefacts --}}
-                @if($culture->image || $culture->media_files || $culture->audio_path || $culture->video_url || $culture->mediaAssets->count() > 0)
-                    <button @click="activeSection = 'media'"
-                            class="px-3.5 py-2 rounded-t-lg text-xs font-bold transition flex items-center gap-1.5 border-b-2"
-                            :class="activeSection === 'media' 
-                                ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-500/5' 
-                                : 'border-transparent text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'">
-                        <i data-lucide="film" class="w-3.5 h-3.5"></i>
-                        <span>Media & Artefacts</span>
-                    </button>
-                @endif
+                {{-- 6. Media & Artefacts (Wikipedia Style) --}}
+                <button @click="activeSection = 'media'"
+                        class="px-3.5 py-2 rounded-t-lg text-xs font-bold transition flex items-center gap-1.5 border-b-2"
+                        :class="activeSection === 'media' 
+                            ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-500/5' 
+                            : 'border-transparent text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'">
+                    <i data-lucide="film" class="w-3.5 h-3.5"></i>
+                    <span>Media, Videos & Books</span>
+                    @php
+                        $mediaBadgeCount = ($culture->image ? 1 : 0) 
+                            + (is_array($culture->media_files) ? count($culture->media_files) : 0)
+                            + $culture->mediaAssets->count()
+                            + ($culture->video_url || $culture->video_path ? 1 : 0);
+                    @endphp
+                    @if($mediaBadgeCount > 0)
+                        <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold">{{ $mediaBadgeCount }}</span>
+                    @endif
+                </button>
 
                 {{-- 7. Related Knowledge --}}
                 @if(!empty($relatedCultures) && count($relatedCultures) > 0)
@@ -679,6 +686,26 @@
                         <span>Historical Origin, Meaning & Context</span>
                     </h2>
 
+                    @php
+                        $histMedia = $culture->mediaAssets->where('section', 'history');
+                    @endphp
+                    @if($histMedia->count() > 0)
+                        <div class="p-3.5 rounded-xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-500/20 flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-300 font-bold text-[10px] uppercase">
+                                    Section Media &amp; Books
+                                </span>
+                                <span class="text-stone-700 dark:text-stone-300 font-medium">
+                                    {{ $histMedia->count() }} media item{{ $histMedia->count() === 1 ? '' : 's' }} (photos, videos &amp; books) documented for this history
+                                </span>
+                            </div>
+                            <button type="button" @click="activeSection = 'media'; mediaSectionFilter = 'history'" class="font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1">
+                                <span>Browse in Media Gallery</span>
+                                <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                            </button>
+                        </div>
+                    @endif
+
                     @if($culture->historical_period)
                         <div class="space-y-1">
                             <h3 class="text-xs font-bold uppercase tracking-wider text-stone-500">Historical Era</h3>
@@ -724,6 +751,26 @@
                         <i data-lucide="compass" class="w-4 h-4"></i>
                         <span>Living Practices & Intergenerational Transmission</span>
                     </h2>
+
+                    @php
+                        $practiceMedia = $culture->mediaAssets->where('section', 'practices');
+                    @endphp
+                    @if($practiceMedia->count() > 0)
+                        <div class="p-3.5 rounded-xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-500/20 flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-300 font-bold text-[10px] uppercase">
+                                    Section Media &amp; Books
+                                </span>
+                                <span class="text-stone-700 dark:text-stone-300 font-medium">
+                                    {{ $practiceMedia->count() }} media item{{ $practiceMedia->count() === 1 ? '' : 's' }} documented for these practices
+                                </span>
+                            </div>
+                            <button type="button" @click="activeSection = 'media'; mediaSectionFilter = 'practices'" class="font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1">
+                                <span>Browse in Media Gallery</span>
+                                <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                            </button>
+                        </div>
+                    @endif
 
                     @if($culture->rituals)
                         <div class="space-y-2">
@@ -775,6 +822,26 @@
                     </p>
                 </div>
 
+                @php
+                    $peopleMedia = $culture->mediaAssets->where('section', 'people');
+                @endphp
+                @if($peopleMedia->count() > 0)
+                    <div class="p-3.5 rounded-xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-500/20 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-300 font-bold text-[10px] uppercase">
+                                Section Media &amp; Books
+                            </span>
+                            <span class="text-stone-700 dark:text-stone-300 font-medium">
+                                {{ $peopleMedia->count() }} media item{{ $peopleMedia->count() === 1 ? '' : 's' }} documented for community lineage &amp; custodians
+                            </span>
+                        </div>
+                        <button type="button" @click="activeSection = 'media'; mediaSectionFilter = 'people'" class="font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1">
+                            <span>Browse in Media Gallery</span>
+                            <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                @endif
+
                 {{-- Record Submitter Attribution --}}
                 <div class="p-4 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50/70 dark:bg-stone-900/60 space-y-2">
                     <span class="text-[10px] font-bold uppercase tracking-widest text-stone-500">Submitting Guardian</span>
@@ -815,58 +882,301 @@
             </div>
         </div>
 
-        {{-- SECTION 6: MEDIA & ARTEFACTS --}}
-        @if($culture->image || $culture->media_files || $culture->audio_path || $culture->video_url || $culture->mediaAssets->count() > 0)
-            <div x-show="activeSection === 'media'" class="space-y-6">
-                <div class="rounded-2xl border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] p-5 sm:p-8 space-y-6">
+        {{-- SECTION 6: MEDIA, VIDEOS & BOOKS (Wikipedia Archive Style) --}}
+        @php
+            $allMediaAssets = $culture->mediaAssets ?? collect();
+            $photoAssets = $allMediaAssets->filter(fn($m) => in_array($m->media_type, ['photograph', 'artefact_image', 'scanned_document']) || (!$m->media_type && $m->file_path && $m->file_path !== 'reference' && $m->file_path !== 'external'));
+            $videoAssets = $allMediaAssets->where('media_type', 'video');
+            $bookAssets = $allMediaAssets->where('media_type', 'book');
+        @endphp
+
+        <div x-show="activeSection === 'media'" class="space-y-6">
+            <div class="rounded-2xl border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] p-5 sm:p-8 space-y-6">
+                
+                {{-- Header with Wikipedia-style Counters & Contribution Prompt --}}
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-100 dark:border-stone-800 pb-4">
                     <div>
-                        <h2 class="text-sm font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                        <h2 class="text-sm sm:text-base font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-2">
                             <i data-lucide="film" class="w-4 h-4"></i>
-                            <span>Photographs, Artefacts & Supporting Media</span>
+                            <span>Photographs, Field Videos & Books (Wikipedia Media)</span>
                         </h2>
-                        <p class="text-xs text-stone-500 mt-1">Every media asset tracks permissions, origin, and license rights</p>
+                        <p class="text-xs text-stone-500 mt-1">
+                            Media assets, corresponding recordings, and scholarly books organized by topical section.
+                        </p>
+                    </div>
+                    <button type="button" @click="activeSection = 'contribute'" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs shadow-sm transition active:scale-95 shrink-0">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                        <span>Contribute Media / Book</span>
+                    </button>
+                </div>
+
+                {{-- Interactive Media Type & Section Filter Bar --}}
+                <div class="space-y-2.5">
+                    <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                        <span class="text-stone-400 font-semibold text-[11px] mr-1">Type:</span>
+                        <button type="button" @click="mediaTypeFilter = 'all'"
+                                class="px-3 py-1 rounded-full font-bold transition"
+                                :class="mediaTypeFilter === 'all' ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-black shadow-xs' : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'">
+                            All Media
+                        </button>
+                        <button type="button" @click="mediaTypeFilter = 'photos'"
+                                class="px-3 py-1 rounded-full font-bold transition flex items-center gap-1"
+                                :class="mediaTypeFilter === 'photos' ? 'bg-amber-500 text-white shadow-xs' : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'">
+                            <i data-lucide="image" class="w-3 h-3"></i>
+                            <span>Photos & Artefacts</span>
+                        </button>
+                        <button type="button" @click="mediaTypeFilter = 'videos'"
+                                class="px-3 py-1 rounded-full font-bold transition flex items-center gap-1"
+                                :class="mediaTypeFilter === 'videos' ? 'bg-blue-600 text-white shadow-xs' : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'">
+                            <i data-lucide="video" class="w-3 h-3"></i>
+                            <span>Videos & Recordings</span>
+                        </button>
+                        <button type="button" @click="mediaTypeFilter = 'books'"
+                                class="px-3 py-1 rounded-full font-bold transition flex items-center gap-1"
+                                :class="mediaTypeFilter === 'books' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'">
+                            <i data-lucide="book" class="w-3 h-3"></i>
+                            <span>Books & Bibliography ({{ $bookAssets->count() }})</span>
+                        </button>
                     </div>
 
-                    {{-- Primary Image --}}
+                    <div class="flex flex-wrap items-center gap-1.5 text-xs pt-1">
+                        <span class="text-stone-400 font-semibold text-[11px] mr-1">Topic Section:</span>
+                        @foreach(['all' => 'All Sections', 'overview' => 'Overview', 'history' => 'History & Context', 'practices' => 'Practices & Rituals', 'people' => 'People & Custodians', 'sources' => 'Sources & Books'] as $secKey => $secLabel)
+                            <button type="button" @click="mediaSectionFilter = '{{ $secKey }}'"
+                                    class="px-2.5 py-0.5 rounded-lg text-[11px] font-semibold border transition"
+                                    :class="mediaSectionFilter === '{{ $secKey }}' ? 'border-amber-500 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold' : 'border-stone-200 dark:border-stone-800 text-stone-500 hover:border-stone-400'">
+                                {{ $secLabel }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- 1. PHOTOGRAPHS & ARTEFACTS GALLERY --}}
+                <div x-show="mediaTypeFilter === 'all' || mediaTypeFilter === 'photos'" class="space-y-4">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 flex items-center gap-1.5">
+                        <i data-lucide="image" class="w-3.5 h-3.5 text-amber-500"></i>
+                        <span>Photographic & Artefact Archive</span>
+                    </h3>
+
+                    {{-- Primary Cover Image --}}
                     @if($culture->image)
-                        <div class="rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900">
+                        <div x-show="mediaSectionFilter === 'all' || mediaSectionFilter === 'overview'" class="rounded-2xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900">
                             <div class="relative overflow-hidden bg-stone-900/5 dark:bg-black/40 flex items-center justify-center min-h-[220px] max-h-[520px] group cursor-pointer"
-                                 onclick="openImageLightbox('{{ Storage::url($culture->image) }}', '{{ addslashes($culture->name) }} - Archival Record')">
+                                 onclick="openImageLightbox('{{ Storage::url($culture->image) }}', '{{ addslashes($culture->name) }} - Primary Archival Record')">
                                 <div class="absolute inset-0 bg-cover bg-center filter blur-xl opacity-25 dark:opacity-20 scale-110 pointer-events-none"
                                      style="background-image: url('{{ Storage::url($culture->image) }}');"></div>
                                 <img src="{{ Storage::url($culture->image) }}" alt="{{ $culture->name }}" class="relative z-10 w-auto h-auto max-w-full max-h-[500px] object-contain mx-auto transition-transform duration-300 group-hover:scale-[1.01]">
                                 <span class="absolute bottom-3 right-3 z-20 px-2.5 py-1 rounded-lg bg-black/65 backdrop-blur-md text-white text-[11px] font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1.5 pointer-events-none">
                                     <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
-                                    <span>View full</span>
+                                    <span>View full photograph</span>
                                 </span>
                             </div>
-                            <div class="p-3 text-xs flex justify-between items-center text-stone-500">
-                                <span>Primary Archival Photo</span>
-                                <span class="font-mono text-[10px]">{{ $culture->license_type ?? 'Archive Commons' }}</span>
+                            <div class="p-3.5 text-xs flex flex-wrap justify-between items-center gap-2 text-stone-600 dark:text-stone-400 bg-stone-50/80 dark:bg-stone-900/80 border-t border-stone-200 dark:border-stone-800">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 font-bold text-[10px]">Overview</span>
+                                    <span class="font-bold text-stone-900 dark:text-stone-100">Primary Cultural Photo</span>
+                                </div>
+                                <span class="font-mono text-[10px] text-stone-500">{{ $culture->license_type ?? 'Cultural Archive Commons' }}</span>
                             </div>
                         </div>
                     @endif
 
-                    {{-- Gallery Images --}}
+                    {{-- Supporting Gallery Files --}}
                     @if(!empty($culture->media_files) && is_array($culture->media_files))
-                        <div class="space-y-2">
-                            <h3 class="text-xs font-bold uppercase tracking-wider text-stone-500">Supporting Documentation Images</h3>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                @foreach($culture->media_files as $file)
-                                    <div class="rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-100 dark:bg-stone-900 group cursor-pointer relative"
-                                         onclick="openImageLightbox('{{ Storage::url($file) }}', 'Supporting cultural media - {{ addslashes($culture->name) }}')">
-                                        <img src="{{ Storage::url($file) }}" alt="Supporting cultural media" class="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                        <div x-show="mediaSectionFilter === 'all' || mediaSectionFilter === 'overview'" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            @foreach($culture->media_files as $file)
+                                <div class="rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-100 dark:bg-stone-900 group cursor-pointer relative shadow-xs"
+                                     onclick="openImageLightbox('{{ Storage::url($file) }}', 'Supporting cultural media - {{ addslashes($culture->name) }}')">
+                                    <img src="{{ Storage::url($file) }}" alt="Supporting cultural media" class="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                    <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <i data-lucide="maximize-2" class="w-5 h-5 text-white drop-shadow"></i>
+                                    </div>
+                                    <div class="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold">
+                                        Overview
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    {{-- Contributed Community Images Linked to Sections --}}
+                    @if($photoAssets->count() > 0)
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                            @foreach($photoAssets as $asset)
+                                <div x-show="mediaSectionFilter === 'all' || mediaSectionFilter === '{{ $asset->section ?? 'overview' }}'"
+                                     class="rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/60 flex flex-col justify-between shadow-xs">
+                                    <div class="relative overflow-hidden bg-stone-200 dark:bg-stone-800 group cursor-pointer"
+                                         onclick="openImageLightbox('{{ Storage::url($asset->file_path) }}', '{{ addslashes($asset->caption ?: $culture->name) }}')">
+                                        <img src="{{ Storage::url($asset->file_path) }}" alt="{{ $asset->caption }}" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
                                         <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                             <i data-lucide="maximize-2" class="w-5 h-5 text-white drop-shadow"></i>
                                         </div>
+                                        <span class="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-black/70 text-amber-400 backdrop-blur-xs uppercase tracking-wide">
+                                            {{ ucfirst($asset->section ?? 'Overview') }}
+                                        </span>
                                     </div>
-                                @endforeach
-                            </div>
+                                    <div class="p-3 text-xs space-y-1">
+                                        <p class="font-semibold text-stone-800 dark:text-stone-200 line-clamp-2 leading-snug">
+                                            {{ $asset->caption ?: 'Field photograph / artefact' }}
+                                        </p>
+                                        <div class="flex items-center justify-between text-[10px] text-stone-500 pt-1 border-t border-stone-100 dark:border-stone-800/60">
+                                            <span>By: {{ $asset->creator_attribution ?: 'Community Contributor' }}</span>
+                                            <span>{{ $asset->license_type ?: 'CC BY-SA' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     @endif
                 </div>
+
+                {{-- 2. CORRESPONDING VIDEOS & RECORDINGS --}}
+                <div x-show="mediaTypeFilter === 'all' || mediaTypeFilter === 'videos'" class="space-y-4 pt-4 border-t border-stone-100 dark:border-stone-800">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 flex items-center gap-1.5">
+                        <i data-lucide="video" class="w-3.5 h-3.5 text-blue-500"></i>
+                        <span>Corresponding Field Videos & Recordings</span>
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {{-- Legacy Video on Culture --}}
+                        @if($culture->video_url || $culture->video_path)
+                            <div x-show="mediaSectionFilter === 'all' || mediaSectionFilter === 'overview'" class="p-3.5 rounded-2xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/60 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 font-bold text-[10px] uppercase">Overview</span>
+                                    <span class="text-[11px] text-stone-400">Primary Cultural Video</span>
+                                </div>
+                                @if($culture->video_path)
+                                    <video src="{{ Storage::url($culture->video_path) }}" controls class="w-full rounded-xl max-h-56 bg-black"></video>
+                                @elseif($culture->video_url)
+                                    @php
+                                        $embedUrl = $culture->video_url;
+                                        if (str_contains($embedUrl, 'youtube.com/watch?v=')) {
+                                            $embedUrl = str_replace('watch?v=', 'embed/', $embedUrl);
+                                        } elseif (str_contains($embedUrl, 'youtu.be/')) {
+                                            $embedUrl = str_replace('youtu.be/', 'www.youtube.com/embed/', $embedUrl);
+                                        }
+                                    @endphp
+                                    <div class="aspect-video w-full rounded-xl overflow-hidden bg-black">
+                                        <iframe src="{{ $embedUrl }}" class="w-full h-full" allowfullscreen></iframe>
+                                    </div>
+                                @endif
+                                <p class="text-xs font-semibold text-stone-700 dark:text-stone-300">{{ $culture->video_description ?: 'Archival video documenting traditional practice' }}</p>
+                            </div>
+                        @endif
+
+                        {{-- Contributed Videos Linked to Sections --}}
+                        @foreach($videoAssets as $asset)
+                            <div x-show="mediaSectionFilter === 'all' || mediaSectionFilter === '{{ $asset->section ?? 'overview' }}'"
+                                 class="p-3.5 rounded-2xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/60 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 font-bold text-[10px] uppercase">
+                                        Linked to: {{ ucfirst($asset->section ?? 'Overview') }}
+                                    </span>
+                                    <span class="text-[10px] text-stone-400">By: {{ $asset->creator_attribution ?: 'Community' }}</span>
+                                </div>
+                                @if($asset->file_path && $asset->file_path !== 'external')
+                                    <video src="{{ Storage::url($asset->file_path) }}" controls class="w-full rounded-xl max-h-56 bg-black"></video>
+                                @elseif($asset->external_url)
+                                    @php
+                                        $vUrl = $asset->external_url;
+                                        if (str_contains($vUrl, 'youtube.com/watch?v=')) {
+                                            $vUrl = str_replace('watch?v=', 'embed/', $vUrl);
+                                        } elseif (str_contains($vUrl, 'youtu.be/')) {
+                                            $vUrl = str_replace('youtu.be/', 'www.youtube.com/embed/', $vUrl);
+                                        }
+                                    @endphp
+                                    <div class="aspect-video w-full rounded-xl overflow-hidden bg-black">
+                                        <iframe src="{{ $vUrl }}" class="w-full h-full" allowfullscreen></iframe>
+                                    </div>
+                                @endif
+                                <p class="text-xs font-semibold text-stone-800 dark:text-stone-200">{{ $asset->caption ?: 'Field video recording' }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- 3. WIKIPEDIA-STYLE BOOKS & SCHOLARLY REFERENCES --}}
+                <div x-show="mediaTypeFilter === 'all' || mediaTypeFilter === 'books'" class="space-y-4 pt-4 border-t border-stone-100 dark:border-stone-800">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 flex items-center gap-1.5">
+                            <i data-lucide="book" class="w-3.5 h-3.5 text-emerald-500"></i>
+                            <span>Books, Monographs & Bibliography (Wikipedia Citation Format)</span>
+                        </h3>
+                        <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">{{ $bookAssets->count() }} Reference{{ $bookAssets->count() === 1 ? '' : 's' }}</span>
+                    </div>
+
+                    @if($bookAssets->count() > 0)
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            @foreach($bookAssets as $asset)
+                                <div x-show="mediaSectionFilter === 'all' || mediaSectionFilter === '{{ $asset->section ?? 'overview' }}'"
+                                     class="p-4 rounded-2xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/60 space-y-3 flex flex-col justify-between hover:border-amber-500/40 transition">
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold uppercase">
+                                                Citing Section: {{ ucfirst($asset->section ?? 'Overview') }}
+                                            </span>
+                                            @if($asset->book_year)
+                                                <span class="text-[11px] font-mono font-bold text-stone-500">{{ $asset->book_year }}</span>
+                                            @endif
+                                        </div>
+
+                                        <h4 class="font-serif italic font-bold text-sm text-stone-900 dark:text-stone-100">
+                                            "{{ $asset->book_title }}"
+                                        </h4>
+
+                                        <div class="text-xs text-stone-600 dark:text-stone-400 space-y-0.5">
+                                            @if($asset->book_author)
+                                                <p><span class="font-bold text-stone-700 dark:text-stone-300">Author:</span> {{ $asset->book_author }}</p>
+                                            @endif
+                                            @if($asset->book_publisher)
+                                                <p><span class="font-bold text-stone-700 dark:text-stone-300">Publisher:</span> {{ $asset->book_publisher }}</p>
+                                            @endif
+                                            @if($asset->book_isbn)
+                                                <p><span class="font-mono text-[10px] bg-stone-200 dark:bg-stone-800 px-1.5 py-0.5 rounded text-stone-600 dark:text-stone-300">ISBN: {{ $asset->book_isbn }}</span></p>
+                                            @endif
+                                        </div>
+
+                                        @if($asset->book_excerpt)
+                                            <blockquote class="p-2.5 rounded-xl bg-amber-500/5 border-l-2 border-amber-500 text-[11px] text-stone-700 dark:text-stone-300 italic leading-relaxed">
+                                                {{ $asset->book_excerpt }}
+                                            </blockquote>
+                                        @endif
+                                    </div>
+
+                                    <div class="pt-2 border-t border-stone-200 dark:border-stone-800 flex items-center justify-between text-[11px]">
+                                        <span class="text-stone-400">Added by: {{ $asset->creator_attribution ?: 'Community' }}</span>
+                                        @if($asset->external_url)
+                                            <a href="{{ $asset->external_url }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 font-bold text-amber-600 dark:text-amber-400 hover:underline">
+                                                <span>Library Link</span>
+                                                <i data-lucide="external-link" class="w-3 h-3"></i>
+                                            </a>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="p-4 rounded-xl border border-dashed border-stone-300 dark:border-stone-800 text-center text-xs text-stone-500">
+                            No books or publications have been linked yet.
+                            <button type="button" @click="activeSection = 'contribute'; contributionType = 'book_reference'" class="text-amber-600 font-bold hover:underline ml-1">
+                                Be the first to cite a book for this tradition!
+                            </button>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Bottom Wikipedia Style Quick Action --}}
+                <div class="p-4 rounded-xl bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-amber-500/10 border border-amber-500/20 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                    <div>
+                        <span class="font-bold text-stone-900 dark:text-stone-100 block">Do you possess photos, documentary recordings, or books about this tradition?</span>
+                        <span class="text-stone-500">Contribute them directly to any section to preserve authentic cultural knowledge.</span>
+                    </div>
+                    <button type="button" @click="activeSection = 'contribute'" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold transition shadow-xs shrink-0">
+                        Add to Wikipedia Archive
+                    </button>
+                </div>
             </div>
-        @endif
+        </div>
 
         {{-- SECTION 7: RELATED KNOWLEDGE --}}
         @if(!empty($relatedCultures) && count($relatedCultures) > 0)
@@ -974,63 +1284,261 @@
             </div>
         </div>
 
-        {{-- SECTION 9: CONTRIBUTE --}}
+        {{-- SECTION 9: CONTRIBUTE (Wikipedia Style) --}}
         <div x-show="activeSection === 'contribute'" class="space-y-6">
             <div class="rounded-2xl border border-stone-200/90 dark:border-stone-800 bg-white dark:bg-[#131218] p-5 sm:p-8 space-y-6">
-                <div>
-                    <h2 class="text-sm font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-2">
-                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                        <span>Submit Community Contribution or Correction</span>
-                    </h2>
-                    <p class="text-xs text-stone-500 mt-1">
-                        Help keep this cultural knowledge accurate. Submitted context is reviewed by community members before merging into the main record.
-                    </p>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-100 dark:border-stone-800 pb-4">
+                    <div>
+                        <h2 class="text-sm sm:text-base font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                            <span>Contribute Knowledge, Media & Books (Wikipedia Style)</span>
+                        </h2>
+                        <p class="text-xs text-stone-500 mt-1">
+                            Contribute photos, field videos, book citations, or factual context directly to any section of this cultural record.
+                        </p>
+                    </div>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold shrink-0">
+                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                        <span>Living Wikipedia Archive</span>
+                    </span>
                 </div>
 
-                <form action="{{ route('cultural-hub.contribute', $culture->id) }}" method="POST" class="space-y-4 max-w-2xl">
+                <form action="{{ route('cultural-hub.contribute', $culture->id) }}" method="POST" enctype="multipart/form-data" class="space-y-5 max-w-3xl" x-data="{
+                    targetSection: 'overview',
+                    contributionType: 'additional_context',
+                    showImageUpload: true,
+                    showVideoUpload: false,
+                    showBookReference: false,
+                    imagePreview: null,
+                    previewImage(e) {
+                        const file = e.target.files[0];
+                        if (file) {
+                            this.imagePreview = URL.createObjectURL(file);
+                        }
+                    }
+                }">
                     @csrf
-                    <div>
-                        <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">Contribution Type *</label>
-                        <select name="revision_type" required class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2 text-stone-800 dark:text-stone-200">
-                            <option value="additional_context">Provide Additional Context / History</option>
-                            <option value="correction">Suggest Factual Correction</option>
-                            <option value="alternative_account">Provide Alternative Regional Account</option>
-                            <option value="additional_source">Cite Supporting Primary Source</option>
-                            <option value="new_media">Submit New Audio / Visual Documentation</option>
-                        </select>
+
+                    <!-- 1. Target Topic Section (Wikipedia Section Linking) -->
+                    <div class="p-4 rounded-xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-500/20 space-y-2">
+                        <label class="block text-xs font-bold text-stone-800 dark:text-stone-200">
+                            1. Which section of this cultural record are you talking about? *
+                        </label>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            <label class="flex items-center gap-2 p-2.5 rounded-lg border text-xs font-medium cursor-pointer transition"
+                                   :class="targetSection === 'overview' ? 'border-amber-500 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold' : 'border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:border-amber-400'">
+                                <input type="radio" name="target_section" value="overview" x-model="targetSection" class="text-amber-500 hidden">
+                                <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+                                <span>Overview</span>
+                            </label>
+                            <label class="flex items-center gap-2 p-2.5 rounded-lg border text-xs font-medium cursor-pointer transition"
+                                   :class="targetSection === 'history' ? 'border-amber-500 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold' : 'border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:border-amber-400'">
+                                <input type="radio" name="target_section" value="history" x-model="targetSection" class="text-amber-500 hidden">
+                                <i data-lucide="history" class="w-3.5 h-3.5"></i>
+                                <span>History & Origins</span>
+                            </label>
+                            <label class="flex items-center gap-2 p-2.5 rounded-lg border text-xs font-medium cursor-pointer transition"
+                                   :class="targetSection === 'practices' ? 'border-amber-500 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold' : 'border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:border-amber-400'">
+                                <input type="radio" name="target_section" value="practices" x-model="targetSection" class="text-amber-500 hidden">
+                                <i data-lucide="compass" class="w-3.5 h-3.5"></i>
+                                <span>Practices & Rituals</span>
+                            </label>
+                            <label class="flex items-center gap-2 p-2.5 rounded-lg border text-xs font-medium cursor-pointer transition"
+                                   :class="targetSection === 'people' ? 'border-amber-500 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold' : 'border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:border-amber-400'">
+                                <input type="radio" name="target_section" value="people" x-model="targetSection" class="text-amber-500 hidden">
+                                <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                                <span>People & Lineage</span>
+                            </label>
+                            <label class="flex items-center gap-2 p-2.5 rounded-lg border text-xs font-medium cursor-pointer transition"
+                                   :class="targetSection === 'media' ? 'border-amber-500 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold' : 'border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:border-amber-400'">
+                                <input type="radio" name="target_section" value="media" x-model="targetSection" class="text-amber-500 hidden">
+                                <i data-lucide="film" class="w-3.5 h-3.5"></i>
+                                <span>Media Gallery</span>
+                            </label>
+                            <label class="flex items-center gap-2 p-2.5 rounded-lg border text-xs font-medium cursor-pointer transition"
+                                   :class="targetSection === 'sources' ? 'border-amber-500 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold' : 'border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:border-amber-400'">
+                                <input type="radio" name="target_section" value="sources" x-model="targetSection" class="text-amber-500 hidden">
+                                <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                                <span>Sources & Books</span>
+                            </label>
+                        </div>
+                        <p class="text-[11px] text-stone-500">
+                            Media and references you attach below will be saved under the media section and tagged to <span class="font-bold text-amber-600 uppercase" x-text="targetSection"></span>.
+                        </p>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">Contribution Title (Optional)</label>
-                        <input type="text" name="title" placeholder="e.g., Elder dialect variation in neighboring village" class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2 text-stone-800 dark:text-stone-200">
+                    <!-- 2. Contribution Nature -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">Contribution Type *</label>
+                            <select name="revision_type" x-model="contributionType" required class="w-full text-xs rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2 text-stone-800 dark:text-stone-200">
+                                <option value="additional_context">Provide Additional Context / History</option>
+                                <option value="new_media">Upload Photographs / Artefacts</option>
+                                <option value="book_reference">Add Book / Scholarly Reference (Wikipedia)</option>
+                                <option value="correction">Suggest Factual Correction</option>
+                                <option value="alternative_account">Provide Regional / Clan Variation</option>
+                                <option value="additional_source">Cite Supporting Primary Source</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">Contribution Heading (Optional)</label>
+                            <input type="text" name="title" placeholder="e.g., Elder dialect variation or Field photographs" class="w-full text-xs rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2 text-stone-800 dark:text-stone-200">
+                        </div>
                     </div>
 
+                    <!-- 3. Written Testimony / Narrative -->
                     <div>
-                        <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">Proposed Testimony / Narrative *</label>
-                        <textarea name="proposed_content" required rows="4" placeholder="Detail the account, variation, or correction clearly..." class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2 text-stone-800 dark:text-stone-200"></textarea>
+                        <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">Testimony / Descriptive Narrative *</label>
+                        <textarea name="proposed_content" required rows="4" placeholder="Detail the account, variation, historical background, or description of the media you are contributing..." class="w-full text-xs rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-3 text-stone-800 dark:text-stone-200 leading-relaxed"></textarea>
                     </div>
 
+                    <!-- 4. Media Section Attachments (Image, Video, Books) -->
+                    <div class="space-y-3 pt-2 border-t border-stone-200 dark:border-stone-800">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 flex items-center gap-1.5">
+                                <i data-lucide="paperclip" class="w-3.5 h-3.5 text-amber-500"></i>
+                                <span>Media & Literature for this Section (Wikipedia Style)</span>
+                            </span>
+                            <div class="flex items-center gap-1.5 text-xs">
+                                <button type="button" @click="showImageUpload = !showImageUpload" :class="showImageUpload ? 'bg-amber-500 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400'" class="px-2.5 py-1 rounded-lg font-bold text-[11px] transition">
+                                    Photo
+                                </button>
+                                <button type="button" @click="showVideoUpload = !showVideoUpload" :class="showVideoUpload ? 'bg-amber-500 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400'" class="px-2.5 py-1 rounded-lg font-bold text-[11px] transition">
+                                    Video
+                                </button>
+                                <button type="button" @click="showBookReference = !showBookReference" :class="showBookReference ? 'bg-amber-500 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400'" class="px-2.5 py-1 rounded-lg font-bold text-[11px] transition">
+                                    Book / Citation
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 4a. Photo / Artefact Attachment -->
+                        <div x-show="showImageUpload" x-transition class="p-4 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/60 space-y-3">
+                            <div class="flex items-center gap-2 text-xs font-bold text-stone-800 dark:text-stone-200">
+                                <i data-lucide="image" class="w-4 h-4 text-amber-500"></i>
+                                <span>Photographic / Artefact Documentation</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-stone-600 dark:text-stone-400 mb-1">Upload Photo (PNG, JPG, WEBP up to 15MB)</label>
+                                    <input type="file" name="image" accept="image/*" @change="previewImage($event)" class="w-full text-xs text-stone-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-white hover:file:bg-amber-600">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-stone-600 dark:text-stone-400 mb-1">Image Caption / Context</label>
+                                    <input type="text" name="image_caption" placeholder="e.g., Ceremonial attire worn during the harvest rite" class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-1.5 text-stone-800 dark:text-stone-200">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-stone-600 dark:text-stone-400 mb-1">Photographer / Creator Credit</label>
+                                    <input type="text" name="image_attribution" placeholder="e.g., Photo by Amara Okafor, 2024" class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-1.5 text-stone-800 dark:text-stone-200">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-stone-600 dark:text-stone-400 mb-1">Copyright / License</label>
+                                    <select name="license_type" class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-1.5 text-stone-800 dark:text-stone-200">
+                                        <option value="Community Commons (CC BY-SA 4.0)">Community Commons (CC BY-SA 4.0)</option>
+                                        <option value="Public Domain">Public Domain</option>
+                                        <option value="Personal Archive / Permission Granted">Personal Archive / Permission Granted</option>
+                                        <option value="Traditional Knowledge Cultural Rights">Traditional Knowledge Cultural Rights</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <template x-if="imagePreview">
+                                <div class="mt-2">
+                                    <span class="text-[10px] uppercase font-bold text-stone-400 block mb-1">Image Preview:</span>
+                                    <img :src="imagePreview" class="h-28 rounded-lg object-contain border border-stone-200 dark:border-stone-800 bg-black/10">
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- 4b. Video Attachment -->
+                        <div x-show="showVideoUpload" x-transition class="p-4 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/60 space-y-3">
+                            <div class="flex items-center gap-2 text-xs font-bold text-stone-800 dark:text-stone-200">
+                                <i data-lucide="video" class="w-4 h-4 text-blue-500"></i>
+                                <span>Corresponding Video Documentation</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-stone-600 dark:text-stone-400 mb-1">External Video URL (YouTube, Vimeo, Archive.org)</label>
+                                    <input type="url" name="video_url" placeholder="https://www.youtube.com/watch?v=..." class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-1.5 text-stone-800 dark:text-stone-200">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-stone-600 dark:text-stone-400 mb-1">Or Upload Video File (MP4, WEBM up to 50MB)</label>
+                                    <input type="file" name="video" accept="video/mp4,video/webm,video/quicktime" class="w-full text-xs text-stone-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-stone-600 dark:text-stone-400 mb-1">Video Caption / Title</label>
+                                <input type="text" name="video_caption" placeholder="e.g., Live demonstration of ancient indigo dyeing process" class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-1.5 text-stone-800 dark:text-stone-200">
+                            </div>
+                        </div>
+
+                        <!-- 4c. Book & Scholarly Publication (Wikipedia Style) -->
+                        <div x-show="showBookReference || contributionType === 'book_reference'" x-transition class="p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 dark:bg-amber-950/20 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2 text-xs font-bold text-amber-700 dark:text-amber-300">
+                                    <i data-lucide="book" class="w-4 h-4 text-amber-500"></i>
+                                    <span>Book / Publication Reference (Wikipedia Bibliography)</span>
+                                </div>
+                                <span class="text-[10px] font-mono text-stone-400">Cited in section: <span class="uppercase font-bold text-amber-600" x-text="targetSection"></span></span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-stone-700 dark:text-stone-300 mb-1">Book / Monograph Title *</label>
+                                    <input type="text" name="book_title" placeholder="e.g., The History of the Yorubas" class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-1.5 text-stone-800 dark:text-stone-200">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-stone-700 dark:text-stone-300 mb-1">Author(s) / Editor(s)</label>
+                                    <input type="text" name="book_author" placeholder="e.g., Samuel Johnson, O. Biobaku" class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-1.5 text-stone-800 dark:text-stone-200">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-stone-700 dark:text-stone-300 mb-1">Publication Year</label>
+                                    <input type="text" name="book_year" placeholder="e.g., 1921 or 1998" class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-1.5 text-stone-800 dark:text-stone-200">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-stone-700 dark:text-stone-300 mb-1">Publisher / Press</label>
+                                    <input type="text" name="book_publisher" placeholder="e.g., Oxford University Press" class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-1.5 text-stone-800 dark:text-stone-200">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-stone-700 dark:text-stone-300 mb-1">ISBN / Catalog #</label>
+                                    <input type="text" name="book_isbn" placeholder="e.g., 978-0415301404" class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-1.5 text-stone-800 dark:text-stone-200">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-stone-700 dark:text-stone-300 mb-1">Key Excerpt / Citation / Page # (Wikipedia Quote)</label>
+                                <textarea name="book_excerpt" rows="2" placeholder="e.g., Page 45: 'The oral traditions of the drum language recount that...'" class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-2 text-stone-800 dark:text-stone-200"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-stone-700 dark:text-stone-300 mb-1">Digital Link / Archive Catalog URL (Optional)</label>
+                                <input type="url" name="book_url" placeholder="https://books.google.com/... or https://archive.org/..." class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-1.5 text-stone-800 dark:text-stone-200">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. General Evidence / Provenance Basis -->
                     <div>
-                        <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">Evidence / Source Basis (Optional)</label>
-                        <input type="text" name="evidence_notes" placeholder="e.g., Oral interview with village elder, or book citation" class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2 text-stone-800 dark:text-stone-200">
+                        <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">General Evidence / Provenance Basis (Optional)</label>
+                        <input type="text" name="evidence_notes" placeholder="e.g., Oral interview with village elder Baba Alabi, or museum field record" class="w-full text-xs rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2 text-stone-800 dark:text-stone-200">
                     </div>
 
                     @guest
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">Your Name (Optional)</label>
-                                <input type="text" name="contributor_name" placeholder="Community Member" class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2 text-stone-800 dark:text-stone-200">
+                                <input type="text" name="contributor_name" placeholder="Community Member" class="w-full text-xs rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2 text-stone-800 dark:text-stone-200">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">Email for Follow-up (Optional)</label>
-                                <input type="email" name="contributor_email" placeholder="contact@example.org" class="w-full text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2 text-stone-800 dark:text-stone-200">
+                                <input type="email" name="contributor_email" placeholder="contact@example.org" class="w-full text-xs rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2 text-stone-800 dark:text-stone-200">
                             </div>
                         </div>
                     @endguest
 
-                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm">
+                    <button type="submit" class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 shadow-md shadow-amber-500/20 active:scale-95">
                         <i data-lucide="send" class="w-4 h-4"></i>
-                        <span>Submit for Archival Review</span>
+                        <span>Save & Link to Media Section</span>
                     </button>
                 </form>
             </div>
@@ -1097,6 +1605,8 @@
             resonanceCount: config.resonanceCount,
             csrfToken: config.csrfToken,
             activeSection: config.activeSection || 'overview',
+            mediaTypeFilter: 'all',
+            mediaSectionFilter: 'all',
             fontSize: 17,
             openCitationModal: false,
             isSubmittingLock: false,

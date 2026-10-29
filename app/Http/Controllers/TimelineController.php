@@ -259,7 +259,7 @@ class TimelineController extends Controller
      */
     public function edit(Request $request, Post $post)
     {
-        if ($post->user_id !== Auth::id() && !Auth::user()->is_admin) {
+        if ($post->user_id != Auth::id() && !Auth::user()->is_admin) {
             abort(403, 'You are not authorized to edit this story.');
         }
 
@@ -291,7 +291,7 @@ class TimelineController extends Controller
      */
     public function update(Request $request, Post $post)
     {
-        if ($post->user_id !== Auth::id() && !Auth::user()->is_admin) {
+        if ($post->user_id != Auth::id() && !Auth::user()->is_admin) {
             abort(403, 'You are not authorized to edit this story.');
         }
 
@@ -740,7 +740,7 @@ class TimelineController extends Controller
      */
     public function destroy(Request $request, Post $post)
     {
-        if ($post->user_id !== Auth::id() && !Auth::user()->is_admin) {
+        if ($post->user_id != Auth::id() && !Auth::user()->is_admin) {
             abort(403, 'You are not authorized to delete this story.');
         }
 
@@ -756,9 +756,19 @@ class TimelineController extends Controller
             $post->user->decrement('posts_count');
         }
 
-        // Delete associated resonances and interactions
+        // If this post was a repost, decrement shares_count on original post
+        if ($post->shared_post_id) {
+            Post::where('id', $post->shared_post_id)->where('shares_count', '>', 0)->decrement('shares_count');
+        }
+
+        // Delete associated resonances, interactions, and comments
         $post->resonances()->delete();
         $post->interactions()->delete();
+        $post->comments()->delete();
+
+        // Nullify any cultural class references
+        \App\Models\CulturalClass::where('timeline_post_id', $post->id)->update(['timeline_post_id' => null]);
+
         $postId = $post->id;
         $post->delete();
 

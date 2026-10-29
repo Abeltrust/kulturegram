@@ -686,35 +686,145 @@ class CulturalHubController extends Controller
     public function submitContribution(Request $request, Culture $culture)
     {
         $request->validate([
-            'revision_type' => 'required|string|in:correction,additional_context,alternative_account,additional_source,new_media,suggested_relationship',
+            'revision_type' => 'nullable|string|in:correction,additional_context,alternative_account,additional_source,new_media,book_reference,suggested_relationship',
+            'target_section' => 'nullable|string|in:overview,history,practices,people,media,sources',
             'title' => 'nullable|string|max:255',
             'proposed_content' => 'required|string',
             'evidence_notes' => 'nullable|string',
             'contributor_name' => 'nullable|string|max:255',
             'contributor_email' => 'nullable|email|max:255',
+            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:15360',
+            'image_caption' => 'nullable|string|max:500',
+            'image_attribution' => 'nullable|string|max:255',
+            'license_type' => 'nullable|string|max:100',
+            'video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:51200',
+            'video_url' => 'nullable|url|max:500',
+            'video_caption' => 'nullable|string|max:500',
+            'book_title' => 'nullable|string|max:255',
+            'book_author' => 'nullable|string|max:255',
+            'book_year' => 'nullable|string|max:50',
+            'book_publisher' => 'nullable|string|max:255',
+            'book_isbn' => 'nullable|string|max:100',
+            'book_excerpt' => 'nullable|string',
+            'book_url' => 'nullable|url|max:500',
         ]);
 
+        $contributorName = $request->input('contributor_name', Auth::check() ? Auth::user()->name : 'Anonymous Community Member');
+        $contributorEmail = $request->input('contributor_email', Auth::check() ? Auth::user()->email : null);
+        $targetSection = $request->input('target_section', 'overview') ?: 'overview';
+        $revisionType = $request->input('revision_type', 'additional_context') ?: 'additional_context';
+
+        $createdMediaId = null;
+        $imagePath = null;
+        $videoPath = null;
+
+        // 1. Handle Image Contribution
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('cultural-media/images', 'public');
+            $imgMedia = $culture->mediaAssets()->create([
+                'media_type' => 'photograph',
+                'section' => $targetSection,
+                'file_path' => $imagePath,
+                'caption' => $request->input('image_caption') ?: ($request->input('title') ?: 'Community contributed cultural photograph'),
+                'creator_attribution' => $request->input('image_attribution') ?: $contributorName,
+                'license_type' => $request->input('license_type') ?: 'Community Commons (CC BY-SA)',
+                'access_restriction' => 'public',
+                'processing_status' => 'ready',
+            ]);
+            $createdMediaId = $imgMedia->id;
+        }
+
+        // 2. Handle Video Contribution (File or External Link)
+        if ($request->hasFile('video') || $request->filled('video_url')) {
+            if ($request->hasFile('video')) {
+                $videoPath = $request->file('video')->store('cultural-media/videos', 'public');
+            }
+            $vidMedia = $culture->mediaAssets()->create([
+                'media_type' => 'video',
+                'section' => $targetSection,
+                'file_path' => $videoPath ?: 'external',
+                'external_url' => $request->input('video_url'),
+                'caption' => $request->input('video_caption') ?: ($request->input('title') ?: 'Cultural Video Documentation'),
+                'creator_attribution' => $contributorName,
+                'license_type' => $request->input('license_type') ?: 'Standard Cultural Archive',
+                'access_restriction' => 'public',
+                'processing_status' => 'ready',
+            ]);
+            if (!$createdMediaId) {
+                $createdMediaId = $vidMedia->id;
+            }
+        }
+
+        // 3. Handle Book / Bibliography Reference (Wikipedia style)
+        if ($request->filled('book_title')) {
+            $bookMedia = $culture->mediaAssets()->create([
+                'media_type' => 'book',
+                'section' => $targetSection,
+                'file_path' => 'reference',
+                'external_url' => $request->input('book_url'),
+                'book_title' => $request->input('book_title'),
+                'book_author' => $request->input('book_author'),
+                'book_year' => $request->input('book_year'),
+                'book_publisher' => $request->input('book_publisher'),
+                'book_isbn' => $request->input('book_isbn'),
+                'book_excerpt' => $request->input('book_excerpt'),
+                'caption' => 'Bibliographical Reference: ' . $request->input('book_title'),
+                'creator_attribution' => $request->input('book_author') ?: $contributorName,
+                'access_restriction' => 'public',
+                'processing_status' => 'ready',
+            ]);
+            if (!$createdMediaId) {
+                $createdMediaId = $bookMedia->id;
+            }
+
+            // Also record in CulturalSource for academic citations
+            $culture->sources()->create([
+                'source_type' => 'written_account',
+                'external_url' => $request->input('book_url'),
+                'original_text' => $request->input('book_excerpt'),
+                'recording_creator' => $request->input('book_author'),
+                'recording_date' => $request->input('book_year'),
+                'source_notes' => 'Book / Monograph: ' . $request->input('book_title') . ($request->filled('book_publisher') ? ' (' . $request->input('book_publisher') . ')' : '') . ($request->filled('book_isbn') ? ' [ISBN: ' . $request->input('book_isbn') . ']' : ''),
+                'transcript_origin' => 'human_authored',
+                'transcript_review_status' => 'community_reviewed',
+                'access_restriction' => 'public',
+            ]);
+        }
+
+        // 4. Record Revision History
         $revision = $culture->revisions()->create([
             'user_id' => Auth::id(),
-            'contributor_name' => $request->input('contributor_name', Auth::check() ? Auth::user()->name : 'Anonymous Community Member'),
-            'contributor_email' => $request->input('contributor_email', Auth::check() ? Auth::user()->email : null),
-            'revision_type' => $request->input('revision_type'),
+            'contributor_name' => $contributorName,
+            'contributor_email' => $contributorEmail,
+            'revision_type' => $revisionType,
+            'target_section' => $targetSection,
             'title' => $request->input('title'),
             'proposed_content' => $request->input('proposed_content'),
+            'image_path' => $imagePath,
+            'video_url' => $request->input('video_url'),
+            'video_path' => $videoPath,
+            'book_title' => $request->input('book_title'),
+            'book_author' => $request->input('book_author'),
+            'book_year' => $request->input('book_year'),
+            'book_publisher' => $request->input('book_publisher'),
+            'book_isbn' => $request->input('book_isbn'),
+            'book_excerpt' => $request->input('book_excerpt'),
             'evidence_notes' => $request->input('evidence_notes'),
+            'cultural_media_id' => $createdMediaId,
             'status' => 'submitted',
         ]);
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Your contribution has been received for community review. Approved contributions will enrich this archive record.',
+                'message' => 'Your contribution and media have been saved under the ' . ucfirst($targetSection) . ' media section! Thank you for enriching this archive.',
                 'revision' => $revision,
+                'media_id' => $createdMediaId,
             ]);
         }
 
-        return redirect()->route('cultural-hub.show', $culture->id)
-            ->with('success', 'Your contribution has been received for community review. Thank you for helping preserve living heritage accurately.');
+        return redirect()->route('cultural-hub.show', ['culture' => $culture->id, 'section' => 'media'])
+            ->with('success', 'Your contribution has been successfully saved under the ' . ucfirst($targetSection) . ' media section! Thank you for helping build this living Wikipedia.');
     }
 
     /**
@@ -768,4 +878,4 @@ class CulturalHubController extends Controller
 
         return response()->json($result);
     }
-}
+}

@@ -31,6 +31,8 @@ class Post extends Model
     ];
 
     protected $casts = [
+        'user_id' => 'integer',
+        'shared_post_id' => 'integer',
         'tags' => 'array',
         'tagged_users' => 'array',
         'shares_count' => 'integer',

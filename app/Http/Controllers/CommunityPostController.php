@@ -52,7 +52,7 @@ class CommunityPostController extends Controller
      */
     public function edit(Community $community, CommunityPost $post)
     {
-        if ($post->user_id !== Auth::id() && !Auth::user()->is_admin && $community->user_id !== Auth::id()) {
+        if ((int)$post->user_id !== (int)Auth::id() && !Auth::user()->is_admin && (int)$community->user_id !== (int)Auth::id()) {
             abort(403, 'You are not allowed to edit this post.');
         }
 
@@ -74,7 +74,7 @@ class CommunityPostController extends Controller
      */
     public function update(Request $request, Community $community, CommunityPost $post)
     {
-        if ($post->user_id !== Auth::id() && !Auth::user()->is_admin && $community->user_id !== Auth::id()) {
+        if ((int)$post->user_id !== (int)Auth::id() && !Auth::user()->is_admin && (int)$community->user_id !== (int)Auth::id()) {
             abort(403, 'You are not allowed to update this post.');
         }
 
@@ -142,7 +142,7 @@ class CommunityPostController extends Controller
      */
     public function destroy(Request $request, Community $community, CommunityPost $post)
     {
-        if ($post->user_id !== Auth::id() && !Auth::user()->is_admin && $community->user_id !== Auth::id()) {
+        if ((int)$post->user_id !== (int)Auth::id() && !Auth::user()->is_admin && (int)$community->user_id !== (int)Auth::id()) {
             abort(403, 'You are not allowed to delete this post.');
         }
 

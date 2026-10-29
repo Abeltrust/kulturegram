@@ -15,14 +15,30 @@ class CulturalRevision extends Model
         'contributor_name',
         'contributor_email',
         'revision_type',
+        'target_section',
         'title',
         'proposed_content',
+        'image_path',
+        'video_url',
+        'video_path',
+        'book_title',
+        'book_author',
+        'book_year',
+        'book_publisher',
+        'book_isbn',
+        'book_excerpt',
         'evidence_notes',
         'status',
+        'cultural_media_id',
         'reviewer_id',
         'reviewer_notes',
         'reviewed_at',
     ];
+
+    public function culturalMedia()
+    {
+        return $this->belongsTo(CulturalMedia::class, 'cultural_media_id');
+    }
 
     protected $casts = [
         'reviewed_at' => 'datetime',

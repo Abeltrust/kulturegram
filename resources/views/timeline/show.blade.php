@@ -84,7 +84,7 @@
                 @endif
 
                 @auth
-                    @if(auth()->id() === $post->user_id || auth()->user()->is_admin)
+                    @if((int)auth()->id() === (int)$post->user_id || auth()->user()->is_admin)
                         <div class="relative" x-data="{ openMenu: false }">
                             <button type="button" 
                                 @click="openMenu = !openMenu" 

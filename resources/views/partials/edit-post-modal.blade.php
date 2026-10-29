@@ -1,7 +1,7 @@
 <!-- ==========================================
      EDIT TIMELINE POST MODAL
      ========================================== -->
-<div id="editTimelinePostModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+<div id="editTimelinePostModal" class="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4" style="display: none;">
     <div class="bg-white dark:bg-stone-900 rounded-3xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-stone-200 dark:border-stone-800 relative max-h-[90vh] overflow-y-auto my-auto animate-in fade-in zoom-in-95 duration-200">
         
         <!-- Header -->
@@ -161,7 +161,7 @@
 <!-- ==========================================
      EDIT COMMUNITY POST MODAL
      ========================================== -->
-<div id="editCommunityPostModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+<div id="editCommunityPostModal" class="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4" style="display: none;">
     <div class="bg-white dark:bg-stone-900 rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-stone-200 dark:border-stone-800 relative max-h-[90vh] overflow-y-auto my-auto animate-in fade-in zoom-in-95 duration-200">
         
         <!-- Header -->
@@ -251,7 +251,7 @@
 <!-- ==========================================
      GLOBAL DELETE POST CONFIRMATION MODAL
      ========================================== -->
-<div id="deletePostConfirmationModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+<div id="deletePostConfirmationModal" class="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4" style="display: none;">
     <div class="bg-white dark:bg-stone-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-stone-200 dark:border-stone-800 relative text-center animate-in fade-in zoom-in-95 duration-150">
         <div class="w-14 h-14 rounded-2xl bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto mb-4 border border-red-200 dark:border-red-900/50 shadow-inner">
             <i data-lucide="trash-2" class="w-7 h-7"></i>
@@ -276,10 +276,19 @@
     // State for deletion
     let pendingDeletionConfig = null;
 
+    function getCsrfToken() {
+        return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+    }
+
     // --- TIMELINE POST EDIT LOGIC ---
     function openEditTimelinePostModal(postId) {
         const modal = document.getElementById('editTimelinePostModal');
         if (!modal) return;
+
+        const form = document.getElementById('editTimelinePostForm');
+        if (form) {
+            form.action = `/timeline/${postId}`;
+        }
 
         // Reset fields
         document.getElementById('editTimelinePostId').value = postId;
@@ -293,11 +302,13 @@
         }
 
         modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        modal.style.display = 'flex';
 
         fetch(`/timeline/${postId}/edit`, {
             headers: {
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                'X-CSRF-TOKEN': getCsrfToken()
             }
         })
         .then(res => {
@@ -318,9 +329,9 @@
                     document.getElementById('editTimelinePostLanguage').value = p.language;
                 }
 
-                // Privacy radio
+                // Privacy radio scoped to this modal
                 const privacy = p.privacy || 'public';
-                const rad = document.querySelector(`input[name="privacy"][value="${privacy}"]`);
+                const rad = modal.querySelector(`input[name="privacy"][value="${privacy}"]`);
                 if (rad) rad.checked = true;
 
                 // Existing Media
@@ -353,7 +364,11 @@
 
     function closeEditTimelinePostModal() {
         const modal = document.getElementById('editTimelinePostModal');
-        if (modal) modal.classList.add('hidden');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.style.display = 'none';
+        }
     }
 
     function previewEditTimelineMedia(input, type) {
@@ -369,25 +384,30 @@
         const form = document.getElementById('editTimelinePostForm');
         const postId = document.getElementById('editTimelinePostId').value;
         const submitBtn = document.getElementById('editTimelineSubmitBtn');
-        const origBtnText = submitBtn.innerHTML;
+        const origBtnText = submitBtn ? submitBtn.innerHTML : 'Save Changes';
 
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>Saving...</span>';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>Saving...</span>';
+        }
         if (typeof lucide !== 'undefined') lucide.createIcons();
 
         const formData = new FormData(form);
 
         fetch(`/timeline/${postId}`, {
-            method: 'POST', // Blade spoofed PUT
+            method: 'POST', // Spoofed PUT via _method in form
             headers: {
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                'X-CSRF-TOKEN': getCsrfToken()
             },
             body: formData
         })
-        .then(res => {
-            if (!res.ok) throw new Error('Failed to update story.');
-            return res.json();
+        .then(async res => {
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.message || data.error || 'Failed to update story.');
+            }
+            return data;
         })
         .then(data => {
             if (data.success) {
@@ -406,10 +426,14 @@
                 }
 
                 closeEditTimelinePostModal();
-                alert(data.message || 'Story updated successfully!');
-                
-                // If page had media changes, reload or update media card
-                if (formData.get('image') || formData.get('video') || formData.get('audio') || formData.get('remove_image')) {
+
+                // If media was updated or removed, reload to refresh visual cards
+                const imageFile = form.querySelector('input[name="image"]')?.files?.[0];
+                const videoFile = form.querySelector('input[name="video"]')?.files?.[0];
+                const audioFile = form.querySelector('input[name="audio"]')?.files?.[0];
+                const removeImage = form.querySelector('input[name="remove_image"]')?.checked;
+
+                if (imageFile || videoFile || audioFile || removeImage) {
                     window.location.reload();
                 }
             } else {
@@ -418,12 +442,13 @@
         })
         .catch(err => {
             console.error('Update story error:', err);
-            // Fallback: standard form submit
-            form.submit();
+            alert(err.message || 'Failed to update story. Please check your inputs.');
         })
         .finally(() => {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = origBtnText;
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = origBtnText;
+            }
             if (typeof lucide !== 'undefined') lucide.createIcons();
         });
     }
@@ -432,6 +457,11 @@
     function openEditCommunityPostModal(communityId, postId) {
         const modal = document.getElementById('editCommunityPostModal');
         if (!modal) return;
+
+        const form = document.getElementById('editCommunityPostForm');
+        if (form) {
+            form.action = `/communities/${communityId}/posts/${postId}`;
+        }
 
         document.getElementById('editCommunityId').value = communityId;
         document.getElementById('editCommunityPostId').value = postId;
@@ -445,11 +475,13 @@
         }
 
         modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        modal.style.display = 'flex';
 
         fetch(`/communities/${communityId}/posts/${postId}/edit`, {
             headers: {
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                'X-CSRF-TOKEN': getCsrfToken()
             }
         })
         .then(res => {
@@ -490,7 +522,11 @@
 
     function closeEditCommunityPostModal() {
         const modal = document.getElementById('editCommunityPostModal');
-        if (modal) modal.classList.add('hidden');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.style.display = 'none';
+        }
     }
 
     function previewEditCommunityMedia(input, type) {
@@ -507,10 +543,12 @@
         const communityId = document.getElementById('editCommunityId').value;
         const postId = document.getElementById('editCommunityPostId').value;
         const submitBtn = document.getElementById('editCommunitySubmitBtn');
-        const origBtnText = submitBtn.innerHTML;
+        const origBtnText = submitBtn ? submitBtn.innerHTML : 'Save Changes';
 
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>Saving...</span>';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>Saving...</span>';
+        }
         if (typeof lucide !== 'undefined') lucide.createIcons();
 
         const formData = new FormData(form);
@@ -519,18 +557,20 @@
             method: 'POST', // Blade spoofed PUT
             headers: {
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                'X-CSRF-TOKEN': getCsrfToken()
             },
             body: formData
         })
-        .then(res => {
-            if (!res.ok) throw new Error('Failed to update community post.');
-            return res.json();
+        .then(async res => {
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.message || data.error || 'Failed to update community post.');
+            }
+            return data;
         })
         .then(data => {
             if (data.success) {
                 closeEditCommunityPostModal();
-                alert(data.message || 'Post updated successfully!');
                 window.location.reload();
             } else {
                 alert(data.error || 'Failed to update post.');
@@ -538,11 +578,13 @@
         })
         .catch(err => {
             console.error('Community post update error:', err);
-            form.submit();
+            alert(err.message || 'Failed to update community post.');
         })
         .finally(() => {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = origBtnText;
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = origBtnText;
+            }
             if (typeof lucide !== 'undefined') lucide.createIcons();
         });
     }
@@ -557,7 +599,12 @@
 
         document.getElementById('deletePostModalTitle').textContent = 'Delete Story?';
         document.getElementById('deletePostModalMessage').textContent = 'Are you sure you want to delete this story? This will permanently remove it from your timeline along with all reactions and responses.';
-        document.getElementById('deletePostConfirmationModal').classList.remove('hidden');
+        
+        const modal = document.getElementById('deletePostConfirmationModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        modal.style.display = 'flex';
+
         if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
@@ -571,12 +618,22 @@
 
         document.getElementById('deletePostModalTitle').textContent = 'Delete Community Post?';
         document.getElementById('deletePostModalMessage').textContent = 'Are you sure you want to delete this post from the community? This action cannot be undone.';
-        document.getElementById('deletePostConfirmationModal').classList.remove('hidden');
+        
+        const modal = document.getElementById('deletePostConfirmationModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        modal.style.display = 'flex';
+
         if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
     function closeDeletePostModal() {
-        document.getElementById('deletePostConfirmationModal').classList.add('hidden');
+        const modal = document.getElementById('deletePostConfirmationModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.style.display = 'none';
+        }
         pendingDeletionConfig = null;
     }
 
@@ -585,9 +642,9 @@
 
         const btn = document.getElementById('deletePostConfirmBtn');
         const btnText = document.getElementById('deletePostConfirmBtnText');
-        const origText = btnText.textContent;
-        btn.disabled = true;
-        btnText.textContent = 'Deleting...';
+        const origText = btnText ? btnText.textContent : 'Yes, Delete';
+        if (btn) btn.disabled = true;
+        if (btnText) btnText.textContent = 'Deleting...';
 
         const config = pendingDeletionConfig;
 
@@ -596,12 +653,15 @@
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                'X-CSRF-TOKEN': getCsrfToken()
             }
         })
-        .then(res => {
-            if (!res.ok) throw new Error('Deletion failed.');
-            return res.json();
+        .then(async res => {
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.message || data.error || 'Deletion failed.');
+            }
+            return data;
         })
         .then(data => {
             closeDeletePostModal();
@@ -613,30 +673,54 @@
                 card.style.transform = 'scale(0.95)';
                 setTimeout(() => card.remove(), 300);
             }
-            alert(data.message || 'Post deleted successfully.');
+
+            // If on the single post page, redirect to timeline
+            if (window.location.pathname.includes(`/timeline/${config.postId}`)) {
+                window.location.href = '{{ route("timeline.index") }}';
+            }
         })
         .catch(err => {
             console.error('Deletion error:', err);
-            // Fallback via form submission
-            const f = document.createElement('form');
-            f.method = 'POST';
-            f.action = config.url;
-            const csrf = document.createElement('input');
-            csrf.type = 'hidden';
-            csrf.name = '_token';
-            csrf.value = '{{ csrf_token() }}';
-            f.appendChild(csrf);
-            const m = document.createElement('input');
-            m.type = 'hidden';
-            m.name = '_method';
-            m.value = 'DELETE';
-            f.appendChild(m);
-            document.body.appendChild(f);
-            f.submit();
+            alert(err.message || 'Could not delete post. Please try again.');
         })
         .finally(() => {
-            btn.disabled = false;
-            btnText.textContent = origText;
+            if (btn) btn.disabled = false;
+            if (btnText) btnText.textContent = origText;
         });
     }
+
+    // Backdrop click and ESC listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        ['editTimelinePostModal', 'editCommunityPostModal', 'deletePostConfirmationModal'].forEach(function(modalId) {
+            const el = document.getElementById(modalId);
+            if (!el) return;
+            el.addEventListener('click', function(e) {
+                if (e.target === el) {
+                    if (modalId === 'editTimelinePostModal') closeEditTimelinePostModal();
+                    else if (modalId === 'editCommunityPostModal') closeEditCommunityPostModal();
+                    else if (modalId === 'deletePostConfirmationModal') closeDeletePostModal();
+                }
+            });
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeEditTimelinePostModal();
+                closeEditCommunityPostModal();
+                closeDeletePostModal();
+            }
+        });
+    });
+
+    // Expose functions on window for Alpine & inline event handlers
+    window.openEditTimelinePostModal = openEditTimelinePostModal;
+    window.closeEditTimelinePostModal = closeEditTimelinePostModal;
+    window.submitEditTimelinePost = submitEditTimelinePost;
+    window.openEditCommunityPostModal = openEditCommunityPostModal;
+    window.closeEditCommunityPostModal = closeEditCommunityPostModal;
+    window.submitEditCommunityPost = submitEditCommunityPost;
+    window.confirmDeleteTimelinePost = confirmDeleteTimelinePost;
+    window.confirmDeleteCommunityPost = confirmDeleteCommunityPost;
+    window.closeDeletePostModal = closeDeletePostModal;
+    window.executePostDeletion = executePostDeletion;
 </script>
