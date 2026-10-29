@@ -21,24 +21,36 @@
 @endphp
 
 @section('content')
-<div class="relative min-h-[calc(100vh-160px)] flex items-center justify-center py-10 px-4 overflow-hidden">
-    {{-- Ambient Amber Glowing Aura in Background --}}
-    <div class="absolute -top-32 -left-32 w-80 h-80 bg-amber-500/10 dark:bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute -bottom-32 -right-32 w-80 h-80 bg-amber-500/10 dark:bg-amber-500/5 rounded-full blur-3xl pointer-events-none"></div>
+<div class="relative min-h-[calc(100vh-160px)] flex items-center justify-center py-10 px-4 overflow-hidden bg-gradient-to-br from-[#fdfbf7] via-[#faf4eb] to-[#f4e9da] dark:from-[#120d0a] dark:via-[#19120e] dark:to-[#0f0c0a] transition-colors">
+    {{-- Cultural Geometric Tapestry & Ambient Sunset Glows --}}
+    @include('partials.cultural-background')
 
-    <div class="relative w-full max-w-lg bg-white/95 dark:bg-stone-900/95 backdrop-blur-md shadow-2xl rounded-3xl p-6 sm:p-9 border border-stone-200/90 dark:border-stone-800 z-10 transition-all"
+    <div class="relative w-full max-w-lg bg-white/95 dark:bg-[#181310]/95 backdrop-blur-xl shadow-2xl rounded-3xl p-6 sm:p-9 border border-amber-500/30 dark:border-amber-500/25 z-10 transition-all overflow-hidden"
         x-data="registerForm(@js($initialState))">
 
-        {{-- Brand Header Badge --}}
-        <div class="text-center mb-6">
-            <div class="w-14 h-14 mx-auto mb-3.5 rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-500/25 flex items-center justify-center">
-                <i data-lucide="sparkles" class="w-7 h-7"></i>
+        {{-- Traditional Cultural Geometric Ribbon at Top of Card --}}
+        <!-- <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-600 via-yellow-500 via-orange-500 via-amber-500 to-amber-700"></div> -->
+
+        {{-- Cultural Brand Medallion & Logo Header --}}
+        <div class="text-center mb-6 pt-1">
+            <div class="relative inline-block mb-3.5">
+                <div class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-amber-600/20 border-2 border-amber-500/40 p-2 shadow-xl shadow-amber-500/20 flex items-center justify-center backdrop-blur-sm group hover:scale-105 transition-transform duration-300">
+                    <img src="{{ asset('images/logo.png') }}" alt="Kulturegram Logo" class="w-full h-full object-contain rounded-xl drop-shadow-sm">
+                </div>
+                <!-- <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px] shadow-md border-2 border-white dark:border-stone-900" title="Living Heritage">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                </div> -->
             </div>
+
+            <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/25 mb-2.5">
+                <span>Living Heritage & Storytelling</span>
+            </div>
+
             <h2 class="text-2xl sm:text-3xl font-black text-amber-500 tracking-tight">
-                <span x-show="step === 1">Register</span>
-                <span x-show="step === 2" x-cloak>Your roots</span>
+                <span x-show="step === 1">Join Kulturegram</span>
+                <span x-show="step === 2" x-cloak>Your Cultural Roots</span>
             </h2>
-            <p class="text-xs sm:text-sm text-stone-500 dark:text-stone-400 mt-1 leading-relaxed">
+            <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-300 mt-1 leading-relaxed">
                 <span x-show="step === 1">Create your profile to celebrate heritage and connect with your circle.</span>
                 <span x-show="step === 2" x-cloak>Share your origin and spoken languages to discover your people.</span>
             </p>

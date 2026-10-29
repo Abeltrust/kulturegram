@@ -7,6 +7,10 @@
     
     <title>@yield('title', 'Kulturegram - Cultural Preservation Platform')</title>
     
+    <!-- Favicon & Brand Icons -->
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo.png') }}">
+    
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
@@ -430,12 +434,12 @@
     <header class="fixed top-0 left-0 right-0 h-[60px] sm:h-16 bg-white/95 dark:bg-stone-900/95 backdrop-blur-sm border-b border-stone-200 dark:border-stone-800 z-50 flex transition-colors duration-200">
         <div class="w-full flex items-center h-full px-4 md:px-6 gap-3 sm:gap-4">
             <!-- Left: Logo -->
-            <div class="flex items-center space-x-2.5 sm:space-x-3 flex-shrink-0">
-               <div class="w-[38px] h-[38px] bg-orange-500 shadow-md shadow-orange-500/25 border-t border-white/30 rounded-xl flex items-center justify-center shrink-0" style="width: 38px; height: 38px; min-width: 38px; min-height: 38px;">
-                    <i data-lucide="book-open" class="w-5 h-5 text-white"></i>
+            <a href="{{ route('timeline.index') }}" class="flex items-center space-x-2.5 sm:space-x-3 flex-shrink-0 group">
+                <div class="w-[38px] h-[38px] bg-gradient-to-br from-amber-500/20 to-orange-500/30 border border-amber-500/40 shadow-md shadow-amber-500/20 rounded-xl flex items-center justify-center shrink-0 p-0.5 group-hover:scale-105 transition-transform" style="width: 38px; height: 38px; min-width: 38px; min-height: 38px;">
+                    <img src="{{ asset('images/logo.png') }}" alt="Kulturegram Logo" class="w-full h-full object-contain rounded-lg">
                 </div>
-                <a href="{{ route('timeline.index') }}" id="kulturegram-brand-title" class="page-title text-[20px] sm:text-xl font-black text-amber-500 tracking-tight select-none">Kulturegram</a>
-            </div>
+                <span id="kulturegram-brand-title" class="page-title text-[20px] sm:text-xl font-black text-amber-500 tracking-tight select-none">Kulturegram</span>
+            </a>
 
             <!-- Center: Search Bar (Hidden on Mobile) -->
             @auth

@@ -20,9 +20,9 @@
         {{-- Modal Top Bar --}}
         <div class="flex items-center justify-between px-5 pt-4 pb-2 border-b border-stone-100 dark:border-stone-800 shrink-0">
             <div class="flex items-center gap-2">
-                <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500 text-white text-xs font-black">
-                    KG
-                </span>
+                <div class="w-7 h-7 rounded-lg overflow-hidden border border-amber-500/30 bg-amber-500/10 p-0.5 shadow-sm">
+                    <img src="{{ asset('images/logo.png') }}" alt="Kulturegram" class="w-full h-full object-contain rounded-md">
+                </div>
                 <span class="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
                     Welcome to Kulturegram
                 </span>

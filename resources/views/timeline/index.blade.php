@@ -10,8 +10,8 @@
                 class="bg-stone-50 dark:bg-stone-850 rounded-2xl p-6 sm:p-8 border border-stone-200 dark:border-stone-700 mb-8">
                 <div class="text-center mb-8">
                     <div
-                        class="w-14 h-14 sm:w-16 sm:h-16 glass-orange rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <i data-lucide="book-open" class="w-7 h-7 sm:w-8 sm:h-8 text-white"></i>
+                        class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-amber-600/20 border-2 border-amber-500/40 p-2 shadow-xl shadow-amber-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-sm group hover:scale-105 transition-transform duration-300">
+                        <img src="{{ asset('images/logo.png') }}" alt="Kulturegram Logo" class="w-full h-full object-contain rounded-xl drop-shadow-sm">
                     </div>
                     <h2 class="page-title text-2xl sm:text-3xl font-bold text-amber-500 mb-3">
                         Welcome to Kulturegram
