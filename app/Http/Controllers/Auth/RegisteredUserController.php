@@ -78,7 +78,9 @@ class RegisteredUserController extends Controller
         Auth::login($user);
 
         // Generate welcome cultural flyer & first-time introduction post on timeline
-        $welcomePost = $flyerService->createWelcomePost($user);
+        // If the user has a default profile avatar (did not upload photo), that default avatar is on their first post as the image
+        $hasCustomUploadedAvatar = $request->hasFile('avatar');
+        $welcomePost = $flyerService->createWelcomePost($user, $hasCustomUploadedAvatar);
 
         // Flash cultural flyer payload for the automatic welcome popup modal
         $user->load(['country', 'state', 'localGovernment', 'spokenLanguages']);

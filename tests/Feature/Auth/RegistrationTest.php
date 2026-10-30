@@ -51,10 +51,10 @@ class RegistrationTest extends TestCase
         $this->assertStringContainsString('cultural_avatar_', $user->avatar);
         \Illuminate\Support\Facades\Storage::disk('public')->assertExists('avatars/' . $user->avatar);
 
-        // Verify welcome post with flyer was created
+        // Verify welcome post has the default cultural avatar as the image
         $post = \App\Models\Post::where('user_id', $user->id)->first();
         $this->assertNotNull($post);
-        $this->assertStringContainsString('flyers/welcome_flyer_', $post->image);
+        $this->assertEquals('avatars/' . $user->avatar, $post->image);
         \Illuminate\Support\Facades\Storage::disk('public')->assertExists($post->image);
     }
 

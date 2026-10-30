@@ -345,21 +345,23 @@
                                                     <i data-lucide="award" class="w-4 h-4 text-amber-500"></i>
                                                 </div>
                                                 <div class="min-w-0">
-                                                    <p class="text-xs font-bold text-stone-900 dark:text-stone-100 truncate">Official Cultural Welcome Flyer</p>
+                                                    <p class="text-xs font-bold text-stone-900 dark:text-stone-100 truncate">
+                                                        {{ str_contains($post->image, 'flyers/') ? 'Official Cultural Welcome Flyer' : 'Official Cultural Profile Avatar' }}
+                                                    </p>
                                                     <p class="text-[11px] text-stone-500 dark:text-stone-400">Download and share to celebrate cultural identity</p>
                                                 </div>
                                             </div>
                                             <div class="flex items-center gap-2 shrink-0">
-                                                <a href="{{ $postImageSrc }}" download="kulturegram_{{ Str::slug($post->user->name) }}_flyer"
+                                                <a href="{{ $postImageSrc }}" download="kulturegram_{{ Str::slug($post->user->name) }}_{{ str_contains($post->image, 'flyers/') ? 'flyer' : 'avatar' }}"
                                                    class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95"
-                                                   title="Download Welcome Flyer">
+                                                   title="Download {{ str_contains($post->image, 'flyers/') ? 'Welcome Flyer' : 'Cultural Avatar' }}">
                                                     <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                                                    <span>Download Flyer</span>
+                                                    <span>{{ str_contains($post->image, 'flyers/') ? 'Download Flyer' : 'Download Avatar' }}</span>
                                                 </a>
                                                 <button type="button" 
                                                         onclick="shareFlyer('{{ addslashes($post->user->name) }}', '{{ route('timeline.show', $post->id) }}')"
                                                         class="px-3 py-1.5 rounded-xl bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 text-xs font-semibold transition flex items-center gap-1.5 active:scale-95"
-                                                        title="Share Story & Flyer">
+                                                        title="Share Story & Identity">
                                                     <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
                                                     <span class="hidden sm:inline">Share</span>
                                                 </button>

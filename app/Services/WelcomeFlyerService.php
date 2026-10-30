@@ -33,6 +33,7 @@ class WelcomeFlyerService
     {
         $initials = strtoupper(substr($user->name ?: 'KG', 0, 2));
         $seed = ($user->id ?: crc32($user->email ?: 'kulturegram')) % 6;
+        $uid = $user->id ?: rand(100, 9999);
 
         $themes = [
             0 => [ // Ancestral Bronze & Gold
@@ -72,30 +73,30 @@ class WelcomeFlyerService
         return <<<SVG
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
     <defs>
-        <linearGradient id="avatarBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="avatarBgGrad_{$uid}" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="{$theme['bg1']}" />
             <stop offset="100%" stop-color="{$theme['bg2']}" />
         </linearGradient>
 
-        <linearGradient id="avatarGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="avatarGoldGrad_{$uid}" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="{$theme['accent']}" />
             <stop offset="50%" stop-color="{$theme['primary']}" />
             <stop offset="100%" stop-color="{$theme['secondary']}" />
         </linearGradient>
 
-        <pattern id="avatarPat" width="20" height="20" patternUnits="userSpaceOnUse">
+        <pattern id="avatarPat_{$uid}" width="20" height="20" patternUnits="userSpaceOnUse">
             <path d="M 0 10 L 10 0 L 20 10 L 10 20 Z" fill="none" stroke="{$theme['patternColor']}" stroke-width="0.8" opacity="0.15" />
         </pattern>
 
-        <clipPath id="circleClip">
+        <clipPath id="circleClip_{$uid}">
             <circle cx="200" cy="200" r="190" />
         </clipPath>
     </defs>
 
     <!-- Base Circular Container -->
-    <g clip-path="url(#circleClip)">
-        <rect width="400" height="400" fill="url(#avatarBgGrad)" />
-        <rect width="400" height="400" fill="url(#avatarPat)" />
+    <g clip-path="url(#circleClip_{$uid})">
+        <rect width="400" height="400" fill="url(#avatarBgGrad_{$uid})" />
+        <rect width="400" height="400" fill="url(#avatarPat_{$uid})" />
 
         <!-- Radial Decorative Sunburst / Aura -->
         <circle cx="200" cy="200" r="160" fill="none" stroke="{$theme['primary']}" stroke-width="1.5" stroke-dasharray="8 6" opacity="0.3" />
@@ -103,13 +104,13 @@ class WelcomeFlyerService
 
         <!-- Cultural Headwear / Headdress Geometry -->
         <g transform="translate(200, 105)">
-            <path d="M -70 50 Q 0 -20 70 50 Q 0 25 -70 50 Z" fill="url(#avatarGoldGrad)" opacity="0.9" />
+            <path d="M -70 50 Q 0 -20 70 50 Q 0 25 -70 50 Z" fill="url(#avatarGoldGrad_{$uid})" opacity="0.9" />
             <circle cx="0" cy="18" r="8" fill="{$theme['accent']}" />
             <polygon points="-40,40 -20,20 0,35 20,20 40,40 0,55" fill="{$theme['secondary']}" opacity="0.85" />
         </g>
 
         <!-- Central Medallion Shield -->
-        <circle cx="200" cy="210" r="75" fill="{$theme['bg1']}" stroke="url(#avatarGoldGrad)" stroke-width="5" />
+        <circle cx="200" cy="210" r="75" fill="{$theme['bg1']}" stroke="url(#avatarGoldGrad_{$uid})" stroke-width="5" />
         <circle cx="200" cy="210" r="66" fill="none" stroke="{$theme['accent']}" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.7" />
 
         <!-- Initials -->
@@ -117,7 +118,7 @@ class WelcomeFlyerService
 
         <!-- Cultural Ceremonial Beaded Collar / Torq -->
         <g transform="translate(200, 295)">
-            <path d="M -110 30 Q 0 85 110 30" fill="none" stroke="url(#avatarGoldGrad)" stroke-width="9" stroke-linecap="round" />
+            <path d="M -110 30 Q 0 85 110 30" fill="none" stroke="url(#avatarGoldGrad_{$uid})" stroke-width="9" stroke-linecap="round" />
             <path d="M -90 55 Q 0 105 90 55" fill="none" stroke="{$theme['primary']}" stroke-width="6" stroke-linecap="round" opacity="0.85" />
             <path d="M -65 75 Q 0 120 65 75" fill="none" stroke="{$theme['accent']}" stroke-width="4" stroke-linecap="round" opacity="0.7" />
             <circle cx="-60" cy="48" r="4.5" fill="{$theme['accent']}" />
@@ -129,7 +130,7 @@ class WelcomeFlyerService
     </g>
 
     <!-- Outer Golden Border Ring -->
-    <circle cx="200" cy="200" r="194" fill="none" stroke="url(#avatarGoldGrad)" stroke-width="8" />
+    <circle cx="200" cy="200" r="194" fill="none" stroke="url(#avatarGoldGrad_{$uid})" stroke-width="8" />
     <circle cx="200" cy="200" r="186" fill="none" stroke="{$theme['bg1']}" stroke-width="2" />
 </svg>
 SVG;
@@ -137,8 +138,9 @@ SVG;
 
     /**
      * Create the first-time welcome flyer and post for a newly registered user.
+     * If user did not upload a picture, their default profile avatar is used directly as the post image.
      */
-    public function createWelcomePost(User $user): ?Post
+    public function createWelcomePost(User $user, ?bool $hasUploadedAvatar = null): ?Post
     {
         try {
             $user->loadMissing(['country', 'state', 'localGovernment', 'spokenLanguages']);
@@ -148,21 +150,31 @@ SVG;
                 $this->assignCulturalAvatar($user);
             }
 
+            if ($hasUploadedAvatar === null) {
+                $hasUploadedAvatar = $user->avatar && !str_starts_with($user->avatar, 'cultural_avatar_');
+            }
+
+            // Always generate and save the cultural flyer for download and sharing
             $flyerRelativePath = $this->saveFlyer($user);
 
             $location = $this->resolveLocationText($user);
 
-            $content = "✨ Hi everyone! I am now on Kulturegram! 🌍🎉\n\n"
+            $content = "Hi everyone! I am now on Kulturegram!\n\n"
                 . "Proud of my cultural roots and heritage from " . $location . ". "
                 . "Excited to connect, share my story, and celebrate our diverse living heritage with this vibrant community! "
-                . "Connect with me and vibe with my journey! 💛\n\n"
+                . "Connect with me and vibe with my journey! \n\n"
                 . "#WelcomeToKulturegram #LivingHeritage #CulturalPassport #ConnectAndShare";
+
+            // If the user did NOT upload a picture during registration, use their default profile avatar as the post image
+            $postImage = (!$hasUploadedAvatar && $user->avatar)
+                ? 'avatars/' . $user->avatar
+                : $flyerRelativePath;
 
             $post = Post::create([
                 'user_id' => $user->id,
                 'content' => $content,
                 'type' => 'image',
-                'image' => $flyerRelativePath,
+                'image' => $postImage,
                 'location' => $location,
                 'tags' => ['WelcomeToKulturegram', 'LivingHeritage', 'CulturalPassport', 'Kulturegram'],
                 'privacy' => 'public',
@@ -208,7 +220,7 @@ SVG;
         }
         $languagesText = htmlspecialchars(!empty($languages) ? implode(' • ', array_slice($languages, 0, 3)) : 'Cultural Explorer', ENT_QUOTES, 'UTF-8');
 
-        $avatarDataUri = $this->resolveAvatarDataUri($user);
+        $avatarElement = $this->renderAvatarElementForFlyer($user);
         $logoDataUri = $this->resolveLogoDataUri();
 
         $logoElement = $logoDataUri
@@ -280,8 +292,8 @@ SVG;
         <circle cx="540" cy="430" r="172" fill="none" stroke="url(#goldGrad)" stroke-width="8" />
         <circle cx="540" cy="430" r="160" fill="#292524" />
 
-        <!-- User Image -->
-        <image href="{$avatarDataUri}" x="380" y="270" width="320" height="320" preserveAspectRatio="xMidYMid slice" clip-path="url(#avatarClip)" />
+        <!-- User Avatar / Photo Element -->
+        {$avatarElement}
 
         <!-- Flag Badge Overlay -->
         <g transform="translate(650, 530)">
@@ -335,6 +347,42 @@ SVG;
     }
 
     /**
+     * Render the avatar element for the flyer SVG.
+     * If the avatar is an SVG (cultural avatar), embeds the SVG elements directly so it renders natively in all browsers.
+     * If the avatar is a raster photo (JPEG/PNG), embeds a bitmap image data-URI.
+     */
+    protected function renderAvatarElementForFlyer(User $user): string
+    {
+        $avatarPath = $user->avatar ? 'avatars/' . $user->avatar : null;
+        $isSvg = $user->avatar && str_ends_with(strtolower($user->avatar), '.svg');
+
+        if ($isSvg && Storage::disk('public')->exists($avatarPath)) {
+            $svgContent = Storage::disk('public')->get($avatarPath);
+            if ($svgContent) {
+                // Strip outer <svg ...> and </svg> tags
+                $inner = preg_replace('/<\?xml[^>]*\?>/i', '', $svgContent);
+                $inner = preg_replace('/<svg[^>]*>/i', '', $inner);
+                $inner = preg_replace('/<\/svg>/i', '', $inner);
+                // Center is (540, 430), diameter is 320 (radius 160). 400x400 scaled by 0.8 is 320x320.
+                return '<g transform="translate(380, 270) scale(0.8)" clip-path="url(#avatarClip)">' . trim($inner) . '</g>';
+            }
+        }
+
+        // If user has an uploaded raster photo (PNG/JPEG/etc.)
+        $dataUri = $this->resolveAvatarDataUri($user);
+        if ($dataUri && !str_starts_with($dataUri, 'data:image/svg+xml')) {
+            return '<image href="' . $dataUri . '" x="380" y="270" width="320" height="320" preserveAspectRatio="xMidYMid slice" clip-path="url(#avatarClip)" />';
+        }
+
+        // Fallback: render fresh cultural avatar inline
+        $fallbackSvg = $this->generateCulturalAvatarSvg($user);
+        $inner = preg_replace('/<\?xml[^>]*\?>/i', '', $fallbackSvg);
+        $inner = preg_replace('/<svg[^>]*>/i', '', $inner);
+        $inner = preg_replace('/<\/svg>/i', '', $inner);
+        return '<g transform="translate(380, 270) scale(0.8)" clip-path="url(#avatarClip)">' . trim($inner) . '</g>';
+    }
+
+    /**
      * Resolve user location text string.
      */
     protected function resolveLocationText(User $user): string
@@ -368,9 +416,7 @@ SVG;
             }
         }
 
-        // Fallback to cultural avatar SVG
-        $fallbackSvg = $this->generateCulturalAvatarSvg($user);
-        return 'data:image/svg+xml;base64,' . base64_encode($fallbackSvg);
+        return '';
     }
 
     /**
