@@ -25,6 +25,227 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <script>
+        /** Global searchSelect Alpine component helper */
+        function searchSelect({ source }) {
+            return {
+                value: null,
+                query: '',
+                open: false,
+                active: 0,
+                get items() { return typeof source === 'function' ? (source() || []) : (source || []); },
+                get selected() {
+                    return this.items.find(i => String(i.id) === String(this.value)) || null;
+                },
+                get filtered() {
+                    const showingSelection = this.selected && this.query === this.selected.name;
+                    const q = showingSelection ? '' : this.query.trim().toLowerCase();
+                    if (!q) return this.items;
+                    return this.items
+                        .filter(i => (i.name || '').toLowerCase().includes(q))
+                        .sort((a, b) => (b.name || '').toLowerCase().startsWith(q) - (a.name || '').toLowerCase().startsWith(q));
+                },
+                init() {
+                    this.$nextTick(() => this.syncQuery());
+                    this.$watch('value', () => this.syncQuery());
+                },
+                syncQuery() { this.query = this.selected ? this.selected.name : ''; },
+                toggleList() {
+                    if (this.open) {
+                        this.close();
+                    } else {
+                        this.openList();
+                    }
+                },
+                openList() {
+                    if (this.open) return;
+                    this.open = true;
+                    this.active = Math.max(0, this.filtered.findIndex(i => String(i.id) === String(this.value)));
+                    this.$nextTick(() => { 
+                        if (this.$refs.input) this.$refs.input.select(); 
+                        this.scrollActive(); 
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
+                    });
+                },
+                close() {
+                    if (!this.open) return;
+                    this.open = false;
+                    this.syncQuery();
+                },
+                choose(item) {
+                    if (!item) return;
+                    this.value = item.id;
+                    this.open = false;
+                    this.syncQuery();
+                    this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+                },
+                clear() {
+                    this.value = null;
+                    this.query = '';
+                    if (this.$refs.input) this.$refs.input.focus();
+                    this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); });
+                },
+                move(delta) {
+                    if (!this.open) return this.openList();
+                    const n = this.filtered.length;
+                    if (!n) return;
+                    this.active = (this.active + delta + n) % n;
+                    this.scrollActive();
+                },
+                scrollActive() {
+                    this.$nextTick(() => {
+                        const el = this.$root.querySelectorAll('[role=option]')[this.active];
+                        if (el) el.scrollIntoView({ block: 'nearest' });
+                    });
+                }
+            };
+        }
+
+        /** Global customSelect Alpine component helper */
+        function customSelect(config) {
+            const rawOptions = config.options || [];
+            const items = Array.isArray(rawOptions) ? rawOptions.map(opt => {
+                if (typeof opt === 'object' && opt !== null) {
+                    return {
+                        id: String(opt.id !== undefined ? opt.id : (opt.value !== undefined ? opt.value : opt.name)),
+                        name: String(opt.name !== undefined ? opt.name : (opt.label !== undefined ? opt.label : opt.id)),
+                        flag: opt.flag || null,
+                    };
+                }
+                return { id: String(opt), name: String(opt), flag: null };
+            }) : Object.entries(rawOptions).map(([key, val]) => ({
+                id: String(key),
+                name: String(val),
+                flag: null
+            }));
+
+            return {
+                value: config.initialValue !== undefined && config.initialValue !== null ? String(config.initialValue) : '',
+                query: '',
+                open: false,
+                active: 0,
+                items: items,
+                searchable: config.searchable !== undefined ? Boolean(config.searchable) : items.length > 5,
+
+                get selected() {
+                    return this.items.find(i => String(i.id) === String(this.value)) || null;
+                },
+
+                get filtered() {
+                    if (!this.searchable) return this.items;
+                    const showingSelection = this.selected && this.query === this.selected.name;
+                    const q = showingSelection ? '' : this.query.trim().toLowerCase();
+                    if (!q) return this.items;
+                    return this.items
+                        .filter(i => (i.name || '').toLowerCase().includes(q))
+                        .sort((a, b) => (b.name || '').toLowerCase().startsWith(q) - (a.name || '').toLowerCase().startsWith(q));
+                },
+
+                init() {
+                    this.syncQuery();
+                    const hidden = this.$refs.hiddenInput;
+                    if (hidden) {
+                        hidden.addEventListener('change', () => {
+                            if (this.value !== hidden.value) {
+                                this.value = hidden.value;
+                                this.syncQuery();
+                            }
+                        });
+                        try {
+                            const observer = new MutationObserver(() => {
+                                if (this.value !== hidden.value) {
+                                    this.value = hidden.value;
+                                    this.syncQuery();
+                                }
+                            });
+                            observer.observe(hidden, { attributes: true, attributeFilter: ['value'] });
+                        } catch (e) {}
+                    }
+                    this.$watch('value', (val) => {
+                        this.syncQuery();
+                        if (hidden && hidden.value !== val) {
+                            hidden.value = val;
+                            hidden.dispatchEvent(new Event('change', { bubbles: true }));
+                            hidden.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    });
+                    this.$nextTick(() => {
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
+                    });
+                },
+
+                syncQuery() {
+                    this.query = this.selected ? this.selected.name : '';
+                },
+
+                toggleList() {
+                    if (this.open) {
+                        this.close();
+                    } else {
+                        this.openList();
+                    }
+                },
+
+                openList() {
+                    if (this.open) return;
+                    this.open = true;
+                    this.active = Math.max(0, this.filtered.findIndex(i => String(i.id) === String(this.value)));
+                    this.$nextTick(() => {
+                        if (this.$refs.searchInput && this.searchable) {
+                            this.$refs.searchInput.select();
+                        }
+                        this.scrollActive();
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
+                    });
+                },
+
+                close() {
+                    if (!this.open) return;
+                    this.open = false;
+                    this.syncQuery();
+                },
+
+                choose(item) {
+                    if (!item) return;
+                    this.value = String(item.id);
+                    this.open = false;
+                    this.syncQuery();
+                    this.$nextTick(() => {
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
+                    });
+                },
+
+                clear() {
+                    this.value = '';
+                    this.query = '';
+                    this.open = false;
+                    this.$nextTick(() => {
+                        if (this.$refs.searchInput) this.$refs.searchInput.focus();
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
+                    });
+                },
+
+                move(delta) {
+                    if (!this.open) return this.openList();
+                    const n = this.filtered.length;
+                    if (!n) return;
+                    this.active = (this.active + delta + n) % n;
+                    this.scrollActive();
+                },
+
+                scrollActive() {
+                    this.$nextTick(() => {
+                        const el = this.$root.querySelectorAll('[role=option]')[this.active];
+                        if (el) el.scrollIntoView({ block: 'nearest' });
+                    });
+                }
+            };
+        }
+
+        window.searchSelect = searchSelect;
+        window.customSelect = customSelect;
+    </script>
     
     <style>
         /* Consistent Header & Page Title Colors across Mobile & Desktop (System Amber, No Hover) */
@@ -224,7 +445,7 @@
             border-color: #fbbf24; /* amber-400 */
         }
 
-        /* Glowing Amber Outline on Focus */
+        /* Clean, Crisp Amber Border on Focus (Zero Glow) */
         .stnd-input:focus,
         input[type="text"]:focus,
         input[type="email"]:focus,
@@ -237,10 +458,33 @@
         select:focus {
             outline: none !important;
             border-color: #f59e0b !important; /* amber-500 */
-            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.28) !important;
+            box-shadow: none !important;
         }
 
-        /* Modern Select Inputs with Amber Chevron */
+        /* Eliminate all glow, rings, and halos across all interactive elements */
+        *:focus,
+        *:focus-visible,
+        input:focus,
+        textarea:focus,
+        select:focus,
+        button:focus,
+        a:focus {
+            outline: none !important;
+            box-shadow: none !important;
+            --tw-ring-shadow: 0 0 #0000 !important;
+            --tw-ring-offset-shadow: 0 0 #0000 !important;
+        }
+
+        /* Eliminate colored glow shadows across the interface */
+        [class*="shadow-amber-"],
+        [class*="shadow-orange-"],
+        [class*="shadow-red-"],
+        [class*="shadow-yellow-"] {
+            --tw-shadow-color: transparent !important;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        /* Modern Select Inputs with Amber Chevron & Zero Glow */
         select:not([multiple]) {
             appearance: none !important;
             -webkit-appearance: none !important;
@@ -250,6 +494,17 @@
             background-size: 1.15rem !important;
             padding-right: 2.5rem !important;
             cursor: pointer;
+        }
+
+        select option {
+            background-color: #ffffff;
+            color: #1c1917;
+            padding: 0.5rem;
+        }
+
+        .dark select option {
+            background-color: #1c1917;
+            color: #f5f5f4;
         }
 
         /* Modal Animations */
@@ -626,14 +881,14 @@
                 <!-- 1. Home / Timeline -->
                 <a href="{{ route('timeline.index') }}" 
                    class="flex flex-col items-center justify-center h-full transition-all {{ request()->routeIs('timeline.*') ? 'text-amber-600 dark:text-amber-500' : 'text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200' }}">
-                    <i data-lucide="home" class="w-5 h-5 {{ request()->routeIs('timeline.*') ? 'scale-110 drop-shadow-[0_0_8px_rgba(217,119,6,0.3)]' : '' }}"></i>
+                    <i data-lucide="home" class="w-5 h-5 {{ request()->routeIs('timeline.*') ? 'scale-110' : '' }}"></i>
                     <span class="text-[10px] mt-1 font-bold tracking-tight">Home</span>
                 </a>
 
                 <!-- 2. Search / Discover -->
                 <a href="{{ route('discover.index') }}" 
                    class="flex flex-col items-center justify-center h-full transition-all {{ request()->routeIs('discover.*') ? 'text-amber-600 dark:text-amber-500' : 'text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200' }}">
-                    <i data-lucide="compass" class="w-5 h-5 {{ request()->routeIs('discover.*') ? 'scale-110 drop-shadow-[0_0_8px_rgba(217,119,6,0.3)]' : '' }}"></i>
+                    <i data-lucide="compass" class="w-5 h-5 {{ request()->routeIs('discover.*') ? 'scale-110' : '' }}"></i>
                     <span class="text-[10px] mt-1 font-bold tracking-tight">Search</span>
                 </a>
 
@@ -642,13 +897,13 @@
                     @auth
                         @if(request()->routeIs('cultural-hub.index'))
                             <a href="{{ route('cultural-hub.create') }}" 
-                               class="flex flex-col items-center justify-center -mt-7 bg-orange-500 hover:bg-orange-600 w-14 h-14 rounded-full shadow-lg shadow-orange-500/30 border-4 border-white dark:border-stone-900 border-t-white/40 text-white transform active:scale-95 hover:scale-105 transition-all z-50 cursor-pointer"
+                               class="flex flex-col items-center justify-center -mt-7 bg-orange-500 hover:bg-orange-600 w-14 h-14 rounded-full shadow-md border-4 border-white dark:border-stone-900 border-t-white/40 text-white transform active:scale-95 hover:scale-105 transition-all z-50 cursor-pointer"
                                title="Contribute Culture">
                                 <i data-lucide="plus" class="w-7 h-7"></i>
                             </a>
                         @else
                             <button type="button" onclick="openCreatePostModal()" 
-                                class="flex flex-col items-center justify-center -mt-7 bg-orange-500 hover:bg-orange-600 w-14 h-14 rounded-full shadow-lg shadow-orange-500/30 border-4 border-white dark:border-stone-900 border-t-white/40 text-white transform active:scale-95 hover:scale-105 transition-all z-50 cursor-pointer"
+                                class="flex flex-col items-center justify-center -mt-7 bg-orange-500 hover:bg-orange-600 w-14 h-14 rounded-full shadow-md border-4 border-white dark:border-stone-900 border-t-white/40 text-white transform active:scale-95 hover:scale-105 transition-all z-50 cursor-pointer"
                                 title="Share Your Story">
                                 <i data-lucide="plus" class="w-7 h-7"></i>
                             </button>
@@ -665,7 +920,7 @@
                 <a href="{{ route('messages.index') }}" 
                    class="flex flex-col items-center justify-center h-full transition-all {{ request()->routeIs('messages.*') ? 'text-amber-600 dark:text-amber-500' : 'text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200' }}">
                     <div class="relative">
-                        <i data-lucide="message-circle" class="w-5 h-5 {{ request()->routeIs('messages.*') ? 'scale-110 drop-shadow-[0_0_8px_rgba(217,119,6,0.3)]' : '' }}"></i>
+                        <i data-lucide="message-circle" class="w-5 h-5 {{ request()->routeIs('messages.*') ? 'scale-110' : '' }}"></i>
                     </div>
                     <span class="text-[10px] mt-1 font-bold tracking-tight">Chat</span>
                 </a>
@@ -679,7 +934,7 @@
                     class="flex flex-col items-center justify-center h-full transition-all cursor-pointer {{ $isMoreActive ? 'text-amber-600 dark:text-amber-500 font-black' : 'text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200' }}"
                     title="More Portals">
                     <div class="relative">
-                        <i data-lucide="layout-grid" class="w-5 h-5 {{ $isMoreActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(217,119,6,0.3)]' : '' }}"></i>
+                        <i data-lucide="layout-grid" class="w-5 h-5 {{ $isMoreActive ? 'scale-110' : '' }}"></i>
                         @auth
                             @if(auth()->user()->notifications()->unread()->count() > 0)
                                 <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
@@ -981,7 +1236,7 @@
                 name="content" 
                 required 
                 placeholder="What's happening in your story today? Share your cultural insights, daily experiences, or heritage discoveries... Or click 'Speak Story' above to dictate naturally! (Tip: use @username to tag people and #hashtag to categorize)" 
-                class="w-full h-24 md:h-32 resize-none border-2 border-stone-200 dark:border-stone-700 bg-transparent text-stone-800 dark:text-stone-100 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:focus:border-amber-500 hover:border-amber-500 dark:hover:border-stone-600 placeholder-stone-400 dark:placeholder-stone-500 leading-relaxed p-2 md:p-3 transition-all text-sm md:text-base"></textarea>
+                class="w-full h-24 md:h-32 resize-none border-2 border-stone-200 dark:border-stone-700 bg-transparent text-stone-800 dark:text-stone-100 rounded-lg focus:border-amber-500 dark:focus:border-amber-500 hover:border-amber-500 dark:hover:border-stone-600 placeholder-stone-400 dark:placeholder-stone-500 leading-relaxed p-2 md:p-3 transition-all text-sm md:text-base outline-none"></textarea>
 
             <input type="hidden" name="oral_transcript" id="modalPostOralTranscript">
             <input type="hidden" name="is_ai_formatted" id="modalPostIsAiFormatted" value="0">
@@ -990,32 +1245,35 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs md:text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Life Chapter</label>
-                    <select 
+                    <x-custom-select 
                         name="chapter" 
-                        class="w-full border-2 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 rounded-lg px-2 md:px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 hover:border-amber-500 dark:hover:border-stone-600 transition-all text-sm md:text-base">
-                        <option value="">Select a chapter...</option>
-                        <option value="Cultural Tech Innovation">Cultural Tech Innovation</option>
-                        <option value="Software Architecture Mastery">Software Architecture Mastery</option>
-                        <option value="University & Cultural Awakening">University & Cultural Awakening</option>
-                        <option value="Roots & Foundation">Roots & Foundation</option>
-                        <option value="Community Building">Community Building</option>
-                        <option value="Heritage Preservation">Heritage Preservation</option>
-                    </select>
+                        id="modalPostChapter"
+                        :options="[
+                            'Cultural Tech Innovation',
+                            'Software Architecture Mastery',
+                            'University & Cultural Awakening',
+                            'Roots & Foundation',
+                            'Community Building',
+                            'Heritage Preservation'
+                        ]"
+                        placeholder="Select a chapter..." 
+                        icon="bookmark" />
                 </div>
 
                 <div>
                     <label class="block text-xs md:text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">Story Language</label>
                     @php
-                        $userPrefLang = auth()->user()->getPreferredLanguage();
+                        $userPrefLang = auth()->check() ? auth()->user()->getPreferredLanguage() : 'English';
                         $commonLanguages = ['English', 'Hausa', 'Yoruba', 'Igbo', 'Swahili', 'Nigerian Pidgin', 'French', 'Spanish', 'Arabic', 'Zulu', 'Amharic', 'Fulani', 'Twi', 'Edo'];
                     @endphp
-                    <select 
+                    <x-custom-select 
                         name="language" 
-                        class="w-full border-2 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 rounded-lg px-2 md:px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 hover:border-amber-500 dark:hover:border-stone-600 transition-all text-sm md:text-base">
-                        @foreach($commonLanguages as $lang)
-                            <option value="{{ $lang }}" {{ strtolower($userPrefLang) === strtolower($lang) ? 'selected' : '' }}>{{ $lang }}</option>
-                        @endforeach
-                    </select>
+                        id="modalPostLanguage"
+                        :options="$commonLanguages"
+                        :value="$userPrefLang"
+                        placeholder="Select story language..." 
+                        icon="languages"
+                        :searchable="true" />
                 </div>
             </div>
 

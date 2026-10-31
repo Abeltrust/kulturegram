@@ -69,13 +69,19 @@
 
                     {{-- Review Status --}}
                     <div>
-                        <select name="review_status" class="w-full py-2 px-3 text-xs rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-800/50 text-stone-900 dark:text-stone-100">
-                            <option value="all">All Verification Statuses</option>
-                            <option value="published" {{ request('review_status') === 'published' ? 'selected' : '' }}>Published Archive</option>
-                            <option value="under_review" {{ request('review_status') === 'under_review' ? 'selected' : '' }}>Under Community Review</option>
-                            <option value="awaiting_contributions" {{ request('review_status') === 'awaiting_contributions' ? 'selected' : '' }}>Awaiting Evidence</option>
-                            <option value="disputed" {{ request('review_status') === 'disputed' ? 'selected' : '' }}>Disputed Accounts</option>
-                        </select>
+                        <x-custom-select 
+                            name="review_status" 
+                            :options="[
+                                'all' => 'All Verification Statuses',
+                                'published' => 'Published Archive',
+                                'under_review' => 'Under Community Review',
+                                'awaiting_contributions' => 'Awaiting Evidence',
+                                'disputed' => 'Disputed Accounts'
+                            ]"
+                            :value="request('review_status', 'all')"
+                            placeholder="All Verification Statuses" 
+                            icon="shield-check"
+                            :searchable="false" />
                     </div>
                 </div>
 
@@ -253,7 +259,7 @@
 
             <!-- Desktop Sidebar (Column 10-12) -->
             <aside class="hidden lg:block lg:col-span-3 sticky top-28 space-y-10 lg:order-last">
-                <div class="backdrop-blur-2xl bg-white/70 dark:bg-stone-900/70 rounded-[3rem] border border-white/40 dark:border-stone-800/50 p-10 shadow-2xl shadow-amber-500/5">
+                <div class="backdrop-blur-2xl bg-white/70 dark:bg-stone-900/70 rounded-[3rem] border border-white/40 dark:border-stone-800/50 p-10 shadow-xl">
                     <!-- Premium Search Filter -->
                     <form action="{{ route('cultural-hub.index') }}" method="GET" class="mb-10 p-1.5 bg-stone-100/50 dark:bg-stone-800/50 rounded-2xl flex items-center border border-stone-200 dark:border-stone-700 focus-within:border-amber-400 focus-within:ring-8 focus-within:ring-amber-400/5 transition-all group">
                         @if($category !== 'all')
@@ -304,20 +310,15 @@
         </div>
 
         @guest
-            <div class="bg-stone-900 dark:bg-white rounded-[4rem] p-16 mt-24 text-center relative overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.3)] dark:shadow-[0_50px_100px_rgba(0,0,0,0.1)]">
-                <div class="absolute inset-0 opacity-20 pointer-events-none">
-                    <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-500 rounded-full blur-[150px] translate-x-1/2 -translate-y-1/2 opacity-30 dark:opacity-20"></div>
-                    <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-orange-600 rounded-full blur-[150px] -translate-x-1/2 translate-y-1/2 opacity-30 dark:opacity-20"></div>
-                </div>
-                
+            <div class="bg-stone-900 dark:bg-white rounded-[4rem] p-16 mt-24 text-center relative overflow-hidden shadow-xl">
                 <div class="relative z-10">
-                    <div class="w-20 h-20 bg-amber-500 rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-2xl rotate-12">
+                    <div class="w-20 h-20 bg-amber-500 rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-lg rotate-12">
                         <i data-lucide="shield-check" class="w-10 h-10 text-white"></i>
                     </div>
                     <h3 class="text-4xl sm:text-5xl font-black text-white dark:text-stone-900 mb-6 tracking-tighter leading-none">The Human Legacy <br> Needs You</h3>
                     <p class="text-stone-400 dark:text-stone-500 text-lg max-w-2xl mx-auto mb-12 font-medium leading-relaxed">Join thousands of guardians in the global initiative to preserve our shared traditions. Unlock your potential to contribute to Kulturegram.</p>
                     <a href="{{ route('register') }}"
-                        class="inline-flex items-center space-x-4 px-12 py-6 bg-amber-500 text-white rounded-[2rem] font-black uppercase tracking-[0.3em] text-[10px] hover:scale-110 active:scale-95 transition-all shadow-2xl shadow-amber-500/50">
+                        class="inline-flex items-center space-x-4 px-12 py-6 bg-amber-500 text-white rounded-[2rem] font-black uppercase tracking-[0.3em] text-[10px] hover:scale-105 active:scale-95 transition-all shadow-lg">
                         <span>INITIATE MEMBERSHIP</span>
                         <i data-lucide="arrow-right" class="w-4 h-4"></i>
                     </a>

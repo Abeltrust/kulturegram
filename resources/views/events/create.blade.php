@@ -202,7 +202,7 @@
       <!-- Type -->
       <div>
         <label for="type" class="block text-gray-700 dark:text-stone-300 font-semibold mb-2">Event/Category Type</label>
-        <select name="type" id="type" x-model="formType" @change="syncOccasionFromType()" class="w-full border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:outline-none" required>
+        <select name="type" id="type" x-model="formType" @change="syncOccasionFromType()" class="w-full border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-xl px-4 py-3 focus:border-amber-500 focus:outline-none" required>
             <optgroup label="Educational Hub">
                 <option value="class">Class / Lesson</option>
                 <option value="training">Training Program</option>
@@ -436,7 +436,7 @@
                 Cultural Color Palette
               </label>
               <select x-model="flyerPalette"
-                class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3.5 py-2 text-xs text-stone-900 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none">
+                class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3.5 py-2 text-xs text-stone-900 dark:text-stone-100 focus:border-amber-500 outline-none">
                 <option value="royal_gold">Royal Gold &amp; Obsidian (Classic Regal)</option>
                 <option value="emerald_ivory">Emerald &amp; Gold (Wedding / Naming Ceremony)</option>
                 <option value="terracotta_bronze">Terracotta &amp; Saharan Bronze (Ancestral Earth)</option>

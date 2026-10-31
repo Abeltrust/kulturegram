@@ -745,7 +745,7 @@
                                 Target Language *
                             </label>
                             <select name="target_language" x-model="targetLanguage" required
-                                    class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-3.5 py-3 text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none">
+                                    class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-3.5 py-3 text-sm text-stone-800 dark:text-stone-100 focus:border-amber-500 outline-none">
                                 @foreach ($commonLanguages as $lang)
                                     <option value="{{ $lang }}">{{ $lang }}</option>
                                 @endforeach
@@ -758,7 +758,7 @@
                             </label>
                             <input type="text" name="cultural_focus" x-model="culturalFocus"
                                    placeholder="e.g. Conversational Greetings"
-                                   class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-4 py-3 text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none">
+                                   class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-4 py-3 text-sm text-stone-800 dark:text-stone-100 focus:border-amber-500 outline-none">
                         </div>
                     </div>
 
@@ -768,7 +768,7 @@
                             <label class="block text-xs font-black uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1.5">
                                 Difficulty Level
                             </label>
-                            <select name="level" class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-3.5 py-3 text-sm text-stone-800 dark:text-stone-100 focus:ring-2 focus:ring-amber-500 outline-none">
+                            <select name="level" class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 px-3.5 py-3 text-sm text-stone-800 dark:text-stone-100 focus:border-amber-500 outline-none">
                                 <option value="all_levels">All Levels / General</option>
                                 <option value="beginner">Beginner Friendly</option>
                                 <option value="intermediate">Intermediate</option>

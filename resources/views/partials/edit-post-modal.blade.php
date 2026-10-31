@@ -33,7 +33,7 @@
                     name="content" 
                     required 
                     rows="4" 
-                    class="w-full text-sm sm:text-base border-2 border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-850 text-stone-800 dark:text-stone-100 rounded-2xl p-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none leading-relaxed transition"></textarea>
+                    class="w-full text-sm sm:text-base border-2 border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-850 text-stone-800 dark:text-stone-100 rounded-2xl p-3 focus:border-amber-500 outline-none leading-relaxed transition"></textarea>
             </div>
 
             <!-- Chapter & Language -->
@@ -42,31 +42,32 @@
                     <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider mb-1.5">
                         Life Chapter
                     </label>
-                    <select 
-                        id="editTimelinePostChapter" 
+                    <x-custom-select 
                         name="chapter" 
-                        class="w-full text-xs sm:text-sm border-2 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 rounded-xl p-2.5 focus:ring-2 focus:ring-amber-500 outline-none">
-                        <option value="">None / General</option>
-                        <option value="Cultural Tech Innovation">Cultural Tech Innovation</option>
-                        <option value="Software Architecture Mastery">Software Architecture Mastery</option>
-                        <option value="University & Cultural Awakening">University & Cultural Awakening</option>
-                        <option value="Roots & Foundation">Roots & Foundation</option>
-                        <option value="Community Building">Community Building</option>
-                        <option value="Heritage Preservation">Heritage Preservation</option>
-                    </select>
+                        id="editTimelinePostChapter"
+                        :options="[
+                            '' => 'None / General',
+                            'Cultural Tech Innovation' => 'Cultural Tech Innovation',
+                            'Software Architecture Mastery' => 'Software Architecture Mastery',
+                            'University & Cultural Awakening' => 'University & Cultural Awakening',
+                            'Roots & Foundation' => 'Roots & Foundation',
+                            'Community Building' => 'Community Building',
+                            'Heritage Preservation' => 'Heritage Preservation'
+                        ]"
+                        placeholder="Select a chapter..." 
+                        icon="bookmark" />
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 uppercase tracking-wider mb-1.5">
                         Story Language
                     </label>
-                    <select 
-                        id="editTimelinePostLanguage" 
+                    <x-custom-select 
                         name="language" 
-                        class="w-full text-xs sm:text-sm border-2 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 rounded-xl p-2.5 focus:ring-2 focus:ring-amber-500 outline-none">
-                        @foreach(['English', 'Hausa', 'Yoruba', 'Igbo', 'Swahili', 'Nigerian Pidgin', 'French', 'Spanish', 'Arabic', 'Zulu', 'Amharic', 'Fulani', 'Twi', 'Edo'] as $lang)
-                            <option value="{{ $lang }}">{{ $lang }}</option>
-                        @endforeach
-                    </select>
+                        id="editTimelinePostLanguage"
+                        :options="['English', 'Hausa', 'Yoruba', 'Igbo', 'Swahili', 'Nigerian Pidgin', 'French', 'Spanish', 'Arabic', 'Zulu', 'Amharic', 'Fulani', 'Twi', 'Edo']"
+                        placeholder="Select story language..." 
+                        icon="languages"
+                        :searchable="true" />
                 </div>
             </div>
 
@@ -82,7 +83,7 @@
                         id="editTimelinePostLocation" 
                         name="location" 
                         placeholder="e.g. Lagos, Nigeria"
-                        class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm border-2 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none">
+                        class="w-full pl-9 pr-3 py-2 text-xs sm:text-sm border-2 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100 rounded-xl focus:border-amber-500 outline-none">
                 </div>
             </div>
 
@@ -320,13 +321,19 @@
                 const p = data.post;
                 document.getElementById('editTimelinePostContent').value = p.content || '';
                 if (document.getElementById('editTimelinePostChapter')) {
-                    document.getElementById('editTimelinePostChapter').value = p.chapter || '';
+                    const chapterEl = document.getElementById('editTimelinePostChapter');
+                    chapterEl.value = p.chapter || '';
+                    chapterEl.dispatchEvent(new Event('change', { bubbles: true }));
+                    chapterEl.dispatchEvent(new Event('input', { bubbles: true }));
                 }
                 if (document.getElementById('editTimelinePostLocation')) {
                     document.getElementById('editTimelinePostLocation').value = p.location || '';
                 }
                 if (document.getElementById('editTimelinePostLanguage') && p.language) {
-                    document.getElementById('editTimelinePostLanguage').value = p.language;
+                    const langEl = document.getElementById('editTimelinePostLanguage');
+                    langEl.value = p.language;
+                    langEl.dispatchEvent(new Event('change', { bubbles: true }));
+                    langEl.dispatchEvent(new Event('input', { bubbles: true }));
                 }
 
                 // Privacy radio scoped to this modal

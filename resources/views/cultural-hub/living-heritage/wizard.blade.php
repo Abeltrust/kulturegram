@@ -375,11 +375,12 @@
                         <label class="block text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-stone-400 mb-1">
                             Category *
                         </label>
-                        <select x-model="cultureCategory" class="w-full stnd-input px-3.5 py-2.5 text-xs">
-                            @foreach($categories as $cat)
-                                <option value="{{ $cat }}">{{ $cat }}</option>
-                            @endforeach
-                        </select>
+                        <x-custom-select 
+                            x-model="cultureCategory" 
+                            :options="$categories" 
+                            icon="tag" 
+                            placeholder="Select category..." 
+                            :searchable="false" />
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-stone-400 mb-1">

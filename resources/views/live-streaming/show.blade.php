@@ -31,7 +31,7 @@
                             <i data-lucide="arrow-left" class="w-5 h-5"></i>
                         </a>
                         <div>
-                            <h1 class="text-white font-bold text-lg md:text-sm drop-shadow-md flex items-center gap-2">
+                            <h1 class="text-white font-bold text-lg md:text-sm flex items-center gap-2">
                                 {{ $stream->title }}
                                 @if(auth()->id() === $stream->user_id && $stream->is_live)
                                     <span

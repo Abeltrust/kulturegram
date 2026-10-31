@@ -16,14 +16,14 @@
             </div>
 
             <div class="relative z-10 flex flex-col items-center text-center p-8 max-w-md">
-                <div class="w-24 h-24 mb-6 rounded-3xl bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center text-amber-500 shadow-xl shadow-amber-500/10 animate-pulse">
+                <div class="w-24 h-24 mb-6 rounded-3xl bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center text-amber-500 shadow-md animate-pulse">
                     <i data-lucide="messages-square" class="w-12 h-12"></i>
                 </div>
                 <h2 class="text-2xl font-black text-stone-900 dark:text-stone-100 mb-2 tracking-tight">Your Messages</h2>
                 <p class="text-stone-500 dark:text-stone-400 font-medium leading-relaxed">
                     Select a conversation from the sidebar to start chatting or create a new message.
                 </p>
-                <button class="mt-8 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-2xl shadow-lg shadow-amber-500/30 transition-all hover:scale-105 active:scale-95 flex items-center gap-2">
+                <button class="mt-8 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-2xl shadow-md transition-all hover:scale-105 active:scale-95 flex items-center gap-2">
                     <i data-lucide="plus" class="w-5 h-5"></i>
                     New Conversation
                 </button>

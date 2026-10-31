@@ -79,7 +79,7 @@
                                 <a href="{{ route('communities.index', ['filter' => $key]) }}"
                                    class="flex items-center justify-between px-8 py-4 hover:bg-amber-500/10 transition-colors group">
                                     <div class="flex items-center space-x-4">
-                                        <div class="w-2 h-2 rounded-full {{ $filter === $key ? 'bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.8)]' : 'bg-stone-200 dark:bg-stone-700' }}"></div>
+                                        <div class="w-2 h-2 rounded-full {{ $filter === $key ? 'bg-amber-500' : 'bg-stone-200 dark:bg-stone-700' }}"></div>
                                         <span class="text-xs font-black uppercase tracking-widest {{ $filter === $key ? 'text-amber-600' : 'text-stone-600 dark:text-stone-400' }}">
                                             {{ $label }}
                                         </span>
@@ -235,7 +235,7 @@
 
             <!-- Desktop Sidebar (Column 10-12) -->
             <aside class="hidden lg:block lg:col-span-3 sticky top-28 space-y-10 lg:order-last">
-                <div class="backdrop-blur-2xl bg-white/70 dark:bg-stone-900/70 rounded-[3rem] border border-white/40 dark:border-stone-800/50 p-10 shadow-2xl shadow-amber-500/5">
+                <div class="backdrop-blur-2xl bg-white/70 dark:bg-stone-900/70 rounded-[3rem] border border-white/40 dark:border-stone-800/50 p-10 shadow-xl">
                     <!-- Premium Search Filter -->
                     <form action="{{ route('communities.index') }}" method="GET" class="mb-10 p-1.5 bg-stone-100/50 dark:bg-stone-800/50 rounded-2xl flex items-center border border-stone-200 dark:border-stone-700 focus-within:border-amber-400 focus-within:ring-8 focus-within:ring-amber-400/5 transition-all group">
                         @if($filter !== 'all')

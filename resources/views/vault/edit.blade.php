@@ -53,7 +53,7 @@
                     Cultural Significance (Optional)
                 </label>
                 <textarea name="cultural_significance" id="cultural_significance" rows="3"
-                    class="w-full border border-stone-300 dark:border-stone-700 dark:bg-stone-800 dark:text-gray-100 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                    class="w-full border border-stone-300 dark:border-stone-700 dark:bg-stone-800 dark:text-gray-100 rounded-xl px-4 py-3 focus:border-amber-500 focus:outline-none"
                     placeholder="Why is this meaningful to your heritage or family?">{{ old('cultural_significance', $vaultItem->cultural_significance) }}</textarea>
                 @error('cultural_significance')
                     <p class="text-red-500 text-xs sm:text-sm mt-1">{{ $message }}</p>
@@ -63,13 +63,19 @@
             {{-- Access Level --}}
             <div>
                 <label for="access_level" class="block text-gray-700 dark:text-gray-300 font-semibold mb-2">Access Level</label>
-                <select name="access_level" id="access_level"
-                    class="w-full border border-stone-300 dark:border-stone-700 dark:bg-stone-800 dark:text-gray-100 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                    <option value="private" {{ old('access_level', $vaultItem->access_level) == 'private' ? 'selected' : '' }}>Private (Only You)</option>
-                    <option value="family" {{ old('access_level', $vaultItem->access_level) == 'family' ? 'selected' : '' }}>Family / Trusted Circle</option>
-                    <option value="research" {{ old('access_level', $vaultItem->access_level) == 'research' ? 'selected' : '' }}>Cultural Researchers</option>
-                    <option value="public" {{ old('access_level', $vaultItem->access_level) == 'public' ? 'selected' : '' }}>Public Archive</option>
-                </select>
+                <x-custom-select 
+                    name="access_level" 
+                    id="access_level"
+                    :options="[
+                        'private' => 'Private (Only You)',
+                        'family' => 'Family / Trusted Circle',
+                        'research' => 'Cultural Researchers',
+                        'public' => 'Public Archive'
+                    ]"
+                    :value="old('access_level', $vaultItem->access_level)"
+                    placeholder="Choose access level..." 
+                    icon="lock"
+                    :searchable="false" />
                 @error('access_level')
                     <p class="text-red-500 text-xs sm:text-sm mt-1">{{ $message }}</p>
                 @enderror

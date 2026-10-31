@@ -979,7 +979,7 @@
                                      onclick="openImageLightbox('{{ Storage::url($file) }}', 'Supporting cultural media - {{ addslashes($culture->name) }}')">
                                     <img src="{{ Storage::url($file) }}" alt="Supporting cultural media" class="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105">
                                     <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                        <i data-lucide="maximize-2" class="w-5 h-5 text-white drop-shadow"></i>
+                                        <i data-lucide="maximize-2" class="w-5 h-5 text-white"></i>
                                     </div>
                                     <div class="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold">
                                         Overview
@@ -999,7 +999,7 @@
                                          onclick="openImageLightbox('{{ Storage::url($asset->file_path) }}', '{{ addslashes($asset->caption ?: $culture->name) }}')">
                                         <img src="{{ Storage::url($asset->file_path) }}" alt="{{ $asset->caption }}" class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105">
                                         <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <i data-lucide="maximize-2" class="w-5 h-5 text-white drop-shadow"></i>
+                                            <i data-lucide="maximize-2" class="w-5 h-5 text-white"></i>
                                         </div>
                                         <span class="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-black/70 text-amber-400 backdrop-blur-xs uppercase tracking-wide">
                                             {{ ucfirst($asset->section ?? 'Overview') }}
@@ -1257,15 +1257,23 @@
                         <h3 class="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">Guardian / Moderator Review Control</h3>
                         <form action="{{ route('cultural-hub.review-status', $culture->id) }}" method="POST" class="flex flex-wrap items-center gap-2">
                             @csrf
-                            <label class="text-xs text-stone-500">Record Status:</label>
-                            <select name="review_status" class="text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-1.5 font-bold">
-                                <option value="published" {{ $culture->review_status === 'published' ? 'selected' : '' }}>Published Archive</option>
-                                <option value="under_review" {{ $culture->review_status === 'under_review' ? 'selected' : '' }}>Under Community Review</option>
-                                <option value="awaiting_contributions" {{ $culture->review_status === 'awaiting_contributions' ? 'selected' : '' }}>Awaiting Evidence</option>
-                                <option value="disputed" {{ $culture->review_status === 'disputed' ? 'selected' : '' }}>Disputed Accounts</option>
-                                <option value="restricted" {{ $culture->review_status === 'restricted' ? 'selected' : '' }}>Restricted Sacred Knowledge</option>
-                            </select>
-                            <button type="submit" class="px-3 py-1.5 rounded-lg bg-stone-900 dark:bg-stone-100 text-white dark:text-black text-xs font-bold transition">
+                            <label class="text-xs text-stone-500 font-medium">Record Status:</label>
+                            <div class="w-64">
+                                <x-custom-select 
+                                    name="review_status" 
+                                    :options="[
+                                        'published' => 'Published Archive',
+                                        'under_review' => 'Under Community Review',
+                                        'awaiting_contributions' => 'Awaiting Evidence',
+                                        'disputed' => 'Disputed Accounts',
+                                        'restricted' => 'Restricted Sacred Knowledge'
+                                    ]"
+                                    :value="$culture->review_status"
+                                    placeholder="Choose status..." 
+                                    icon="shield-check"
+                                    :searchable="false" />
+                            </div>
+                            <button type="submit" class="px-4 py-2.5 rounded-xl bg-stone-900 dark:bg-stone-100 text-white dark:text-black text-xs font-bold transition">
                                 Update Status
                             </button>
                         </form>

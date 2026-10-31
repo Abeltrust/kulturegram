@@ -53,16 +53,23 @@
 
       <!-- Category -->
       <div class="mb-6">
-        <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-stone-100">Category</h3>
-        <select name="category" class="w-full border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:outline-none" required>
-            <option value="heritage" {{ old('category', $community->category) == 'heritage' ? 'selected' : '' }}>Heritage & History</option>
-            <option value="art" {{ old('category', $community->category) == 'art' ? 'selected' : '' }}>Art & Crafts</option>
-            <option value="music" {{ old('category', $community->category) == 'music' ? 'selected' : '' }}>Music & Dance</option>
-            <option value="language" {{ old('category', $community->category) == 'language' ? 'selected' : '' }}>Language & Literature</option>
-            <option value="culinary" {{ old('category', $community->category) == 'culinary' ? 'selected' : '' }}>Culinary & Food</option>
-            <option value="technology" {{ old('category', $community->category) == 'technology' ? 'selected' : '' }}>Technology & Innovation</option>
-            <option value="general" {{ old('category', $community->category) == 'general' ? 'selected' : '' }}>General Community</option>
-        </select>
+        <label for="category" class="block mb-2 text-sm font-semibold text-gray-900 dark:text-stone-100">Category</label>
+        <x-custom-select 
+            name="category" 
+            id="category"
+            :options="[
+                'heritage' => 'Heritage & History',
+                'art' => 'Art & Crafts',
+                'music' => 'Music & Dance',
+                'language' => 'Language & Literature',
+                'culinary' => 'Culinary & Food',
+                'technology' => 'Technology & Innovation',
+                'general' => 'General Community'
+            ]"
+            :value="old('category', $community->category)"
+            placeholder="Select community category..." 
+            icon="users"
+            :searchable="false" />
         @error('category')
           <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
         @enderror
@@ -72,7 +79,7 @@
       <div class="mb-6">
         <label for="rules" class="block text-gray-700 dark:text-stone-300 font-semibold mb-2">Community Rules & Guidelines (Optional)</label>
         <textarea name="rules" id="rules" rows="3"
-          class="w-full border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+          class="w-full border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 rounded-xl px-4 py-3 focus:border-amber-500 focus:outline-none"
           placeholder="Respect each other, stay on topic...">{{ old('rules', $community->rules) }}</textarea>
       </div>
 

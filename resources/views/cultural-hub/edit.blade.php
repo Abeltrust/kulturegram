@@ -159,14 +159,14 @@
                     <label class="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
                         Primary Category *
                     </label>
-                    <select name="category" required
-                            class="w-full text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 p-3">
-                        @foreach($categories as $cat)
-                            <option value="{{ $cat }}" {{ (old('category', $culture->category) === $cat) ? 'selected' : '' }}>
-                                {{ $cat }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <x-custom-select 
+                        name="category" 
+                        :options="$categories" 
+                        :value="old('category', $culture->category)"
+                        placeholder="Select primary category..." 
+                        icon="tag" 
+                        :searchable="true" 
+                        :required="true" />
                 </div>
 
                 {{-- Region --}}
@@ -205,12 +205,18 @@
                     <label class="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
                         Knowledge Access Control *
                     </label>
-                    <select name="sensitivity_level" required
-                            class="w-full text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 p-3">
-                        <option value="public" {{ (old('sensitivity_level', $culture->sensitivity_level) === 'public') ? 'selected' : '' }}>Public Archive</option>
-                        <option value="community_only" {{ (old('sensitivity_level', $culture->sensitivity_level) === 'community_only') ? 'selected' : '' }}>Community Custodians Only</option>
-                        <option value="restricted" {{ (old('sensitivity_level', $culture->sensitivity_level) === 'restricted') ? 'selected' : '' }}>Restricted Sacred Knowledge</option>
-                    </select>
+                    <x-custom-select 
+                        name="sensitivity_level" 
+                        :options="[
+                            'public' => 'Public Archive',
+                            'community_only' => 'Community Custodians Only',
+                            'restricted' => 'Restricted Sacred Knowledge'
+                        ]" 
+                        :value="old('sensitivity_level', $culture->sensitivity_level)"
+                        placeholder="Choose access control..." 
+                        icon="shield" 
+                        :searchable="false" 
+                        :required="true" />
                 </div>
             </div>
 
@@ -290,14 +296,14 @@
                     <label class="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
                         Cultural Rights / License *
                     </label>
-                    <select name="license_type" required
-                            class="w-full text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 p-3">
-                        @foreach($licenses as $lic)
-                            <option value="{{ $lic }}" {{ (old('license_type', $culture->license_type) === $lic) ? 'selected' : '' }}>
-                                {{ $lic }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <x-custom-select 
+                        name="license_type" 
+                        :options="$licenses" 
+                        :value="old('license_type', $culture->license_type)"
+                        placeholder="Choose license..." 
+                        icon="file-text" 
+                        :searchable="false" 
+                        :required="true" />
                 </div>
             </div>
         </div>

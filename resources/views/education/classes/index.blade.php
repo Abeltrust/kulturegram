@@ -93,13 +93,13 @@
             <div class="sm:col-span-6 relative">
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="Search by topic, greeting, phrase, or instructor..."
-                       class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 pl-10 pr-4 py-2.5 text-xs sm:text-sm text-stone-800 dark:text-stone-200 focus:ring-2 focus:ring-amber-500 outline-none">
+                       class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 pl-10 pr-4 py-2.5 text-xs sm:text-sm text-stone-800 dark:text-stone-200 focus:border-amber-500 outline-none">
                 <i data-lucide="search" class="w-4 h-4 text-stone-400 absolute left-3.5 top-3"></i>
             </div>
 
             <div class="sm:col-span-3">
                 <select name="price_type" onchange="this.form.submit()"
-                        class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2.5 text-xs sm:text-sm text-stone-800 dark:text-stone-200 focus:ring-2 focus:ring-amber-500 outline-none">
+                        class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2.5 text-xs sm:text-sm text-stone-800 dark:text-stone-200 focus:border-amber-500 outline-none">
                     <option value="all" {{ request('price_type') === 'all' ? 'selected' : '' }}>Pricing: All</option>
                     <option value="free" {{ request('price_type') === 'free' ? 'selected' : '' }}>Free Classes Only</option>
                     <option value="paid" {{ request('price_type') === 'paid' ? 'selected' : '' }}>Paid Masterclasses</option>
@@ -108,7 +108,7 @@
 
             <div class="sm:col-span-3 flex gap-2">
                 <select name="level" onchange="this.form.submit()"
-                        class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2.5 text-xs sm:text-sm text-stone-800 dark:text-stone-200 focus:ring-2 focus:ring-amber-500 outline-none">
+                        class="w-full rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 px-3 py-2.5 text-xs sm:text-sm text-stone-800 dark:text-stone-200 focus:border-amber-500 outline-none">
                     <option value="all" {{ request('level') === 'all' ? 'selected' : '' }}>Level: All</option>
                     <option value="beginner" {{ request('level') === 'beginner' ? 'selected' : '' }}>Beginner</option>
                     <option value="intermediate" {{ request('level') === 'intermediate' ? 'selected' : '' }}>Intermediate</option>

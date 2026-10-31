@@ -231,7 +231,7 @@
 
                 <!-- Continue Button -->
                 <button type="button" id="register-continue" @click="next()"
-                    class="w-full bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer text-sm">
+                    class="w-full bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer text-sm">
                     <span>Continue to Roots</span>
                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </button>
@@ -425,7 +425,7 @@
 
                 <!-- Actions -->
                 <button type="submit" id="register-submit" :disabled="submitting"
-                    class="w-full bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-amber-500/20 transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer text-sm">
+                    class="w-full bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl shadow-md transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer text-sm">
                     <svg x-show="submitting" x-cloak class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
                         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" class="opacity-25"></circle>
                         <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
@@ -755,6 +755,13 @@
                     this.$watch('value', () => this.syncQuery());
                 },
                 syncQuery() { this.query = this.selected ? this.selected.name : ''; },
+                toggleList() {
+                    if (this.open) {
+                        this.close();
+                    } else {
+                        this.openList();
+                    }
+                },
                 openList() {
                     if (this.open) return;
                     this.open = true;

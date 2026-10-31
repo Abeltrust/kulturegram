@@ -46,7 +46,7 @@
                         <i data-lucide="mail" class="w-4 h-4"></i>
                     </span>
                     <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus
-                        class="pl-10 py-3 block w-full stnd-input px-4 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-200 dark:placeholder-stone-500 transition focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500"
+                        class="pl-10 py-3 block w-full stnd-input px-4 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-200 dark:placeholder-stone-500 transition focus:border-amber-500 focus:outline-none"
                         placeholder="your@email.com">
                 </div>
                 @error('email')
@@ -74,7 +74,7 @@
                         <i data-lucide="lock" class="w-4 h-4"></i>
                     </span>
                     <input id="password" :type="show ? 'text' : 'password'" name="password" required
-                        class="pl-10 pr-10 py-3 block w-full stnd-input px-4 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-200 dark:placeholder-stone-500 transition focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500"
+                        class="pl-10 pr-10 py-3 block w-full stnd-input px-4 dark:bg-stone-800 dark:border-stone-700 dark:text-stone-200 dark:placeholder-stone-500 transition focus:border-amber-500 focus:outline-none"
                         placeholder="Enter your password">
                     <button type="button" @click="show = !show; $nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); })"
                         class="absolute inset-y-0 right-3.5 flex items-center text-stone-400 hover:text-amber-600 transition"

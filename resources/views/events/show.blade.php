@@ -45,7 +45,7 @@
                 </div>
 
                 <div class="absolute bottom-6 left-6 right-6 z-20">
-                    <h1 class="page-title text-3xl sm:text-4xl md:text-5xl font-black text-amber-500 leading-tight mb-2 drop-shadow-md">
+                    <h1 class="page-title text-3xl sm:text-4xl md:text-5xl font-black text-amber-500 leading-tight mb-2">
                         {{ $event->title }}
                     </h1>
                 </div>

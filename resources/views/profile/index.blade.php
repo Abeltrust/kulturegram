@@ -1882,7 +1882,7 @@
                             <div class="w-8 h-8 sm:w-11 sm:h-11 rounded-2xl border-2 border-amber-400 bg-stone-900/80 backdrop-blur-md overflow-hidden flex items-center justify-center shadow-lg">
                                 <i data-lucide="user" class="w-4 h-4 sm:w-5 sm:h-5 text-amber-400"></i>
                             </div>
-                            <span class="text-[10px] font-bold text-amber-300 drop-shadow pb-0.5 bg-black/60 px-2 py-0.5 rounded-md hidden sm:inline">
+                            <span class="text-[10px] font-bold text-amber-300 pb-0.5 bg-black/60 px-2 py-0.5 rounded-md hidden sm:inline">
                                 Avatar overlap area
                             </span>
                         </div>

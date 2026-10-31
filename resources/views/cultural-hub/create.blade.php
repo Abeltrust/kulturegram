@@ -206,12 +206,14 @@
                     <label class="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
                         Primary Category *
                     </label>
-                    <select name="category" required
-                            class="w-full text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 p-3">
-                        @foreach($categories as $cat)
-                            <option value="{{ $cat }}" {{ old('category') === $cat ? 'selected' : '' }}>{{ $cat }}</option>
-                        @endforeach
-                    </select>
+                    <x-custom-select 
+                        name="category" 
+                        :options="$categories" 
+                        :value="old('category', $categories[0] ?? '')"
+                        placeholder="Select primary category..." 
+                        icon="tag" 
+                        :searchable="true" 
+                        :required="true" />
                 </div>
 
                 {{-- Region --}}
@@ -255,12 +257,18 @@
                     <label class="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
                         Knowledge Access Control *
                     </label>
-                    <select name="sensitivity_level" required
-                            class="w-full text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 p-3">
-                        <option value="public">Public Archive (Open for educational and cultural discovery)</option>
-                        <option value="community_only">Community Custodians Only</option>
-                        <option value="restricted">Restricted Sacred Knowledge</option>
-                    </select>
+                    <x-custom-select 
+                        name="sensitivity_level" 
+                        :options="[
+                            'public' => 'Public Archive (Open for educational and cultural discovery)',
+                            'community_only' => 'Community Custodians Only',
+                            'restricted' => 'Restricted Sacred Knowledge'
+                        ]" 
+                        :value="old('sensitivity_level', 'public')"
+                        placeholder="Choose access control..." 
+                        icon="shield" 
+                        :searchable="false" 
+                        :required="true" />
                 </div>
             </div>
 
@@ -497,13 +505,19 @@
                     <label class="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
                         Cultural Rights / License Type *
                     </label>
-                    <select name="license_type" required
-                            class="w-full text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 p-3">
-                        <option value="Community Heritage Commons">Community Heritage Commons (Preserved for non-commercial education)</option>
-                        <option value="CC BY-NC 4.0">Creative Commons Attribution-NonCommercial (CC BY-NC)</option>
-                        <option value="Public Domain">Public Domain / Ancient Folklore</option>
-                        <option value="All Rights Reserved">Custodian Rights Reserved</option>
-                    </select>
+                    <x-custom-select 
+                        name="license_type" 
+                        :options="[
+                            'Community Heritage Commons' => 'Community Heritage Commons (Preserved for non-commercial education)',
+                            'CC BY-NC 4.0' => 'Creative Commons Attribution-NonCommercial (CC BY-NC)',
+                            'Public Domain' => 'Public Domain / Ancient Folklore',
+                            'All Rights Reserved' => 'Custodian Rights Reserved'
+                        ]" 
+                        :value="old('license_type', 'Community Heritage Commons')"
+                        placeholder="Choose license..." 
+                        icon="file-text" 
+                        :searchable="false" 
+                        :required="true" />
                 </div>
 
                 {{-- Attribution Credit --}}
