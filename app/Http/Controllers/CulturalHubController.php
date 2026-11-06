@@ -823,8 +823,13 @@ class CulturalHubController extends Controller
             ]);
         }
 
-        return redirect()->route('cultural-hub.show', ['culture' => $culture->id, 'section' => 'media'])
-            ->with('success', 'Your contribution has been successfully saved under the ' . ucfirst($targetSection) . ' media section! Thank you for helping build this living Wikipedia.');
+        $redirectParams = ['culture' => $culture->id];
+        if ($createdMediaId) {
+            $redirectParams['section'] = 'media';
+        }
+
+        return redirect()->route('cultural-hub.show', $redirectParams)
+            ->with('success', 'Your contribution has been successfully saved' . ($createdMediaId ? ' under the ' . ucfirst($targetSection) . ' media section' : '') . '! Thank you for helping build this living Wikipedia.');
     }
 
     /**

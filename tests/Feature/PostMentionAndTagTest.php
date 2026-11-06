@@ -122,6 +122,13 @@ class PostMentionAndTagTest extends TestCase
             'privacy' => 'public',
         ]);
 
+        \App\Models\Interaction::create([
+            'user_id' => $commenter->id,
+            'interactable_type' => User::class,
+            'interactable_id' => $postAuthor->id,
+            'type' => 'lockin',
+        ]);
+
         $response = $this->actingAs($commenter)->postJson(route('timeline.resonance', $post), [
             'content' => 'Check this out @zainab, this reminds me of our grandmother!',
         ]);

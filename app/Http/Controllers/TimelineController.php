@@ -200,13 +200,17 @@ class TimelineController extends Controller
         // Dispatch notifications for all tagged & mentioned users
         if (!empty($allTaggedIds)) {
             $taggedUserModels = User::whereIn('id', $allTaggedIds)->get();
+            $mentionedIds = $mentionedUsers->pluck('id')->all();
             foreach ($taggedUserModels as $taggedUser) {
                 if ($taggedUser->id !== Auth::id()) {
+                    $isMention = in_array($taggedUser->id, $mentionedIds);
                     $this->safeNotify($taggedUser, [
                         'from_user_id' => Auth::id(),
                         'type' => 'mention',
-                        'title' => 'Tagged in a Story',
-                        'message' => Auth::user()->name . ' tagged you in a story: "' . Str::limit($post->content, 60) . '"',
+                        'title' => $isMention ? 'Mentioned in a Story' : 'Tagged in a Story',
+                        'message' => $isMention
+                            ? Auth::user()->name . ' mentioned you in a story: "' . Str::limit($post->content, 60) . '"'
+                            : Auth::user()->name . ' tagged you in a story: "' . Str::limit($post->content, 60) . '"',
                         'data' => [
                             'post_id' => $post->id,
                             'author_name' => Auth::user()->name,

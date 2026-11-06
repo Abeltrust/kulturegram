@@ -63,6 +63,13 @@ class MessageAjaxAndEventTest extends TestCase
         $sender = User::factory()->create();
         $recipient = User::factory()->create();
 
+        \App\Models\Interaction::create([
+            'user_id' => $sender->id,
+            'interactable_type' => User::class,
+            'interactable_id' => $recipient->id,
+            'type' => 'lockin',
+        ]);
+
         $conversation = Conversation::create(['type' => 'direct']);
         $conversation->participants()->attach([$sender->id, $recipient->id]);
 
@@ -91,6 +98,13 @@ class MessageAjaxAndEventTest extends TestCase
     {
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
+
+        \App\Models\Interaction::create([
+            'user_id' => $user1->id,
+            'interactable_type' => User::class,
+            'interactable_id' => $user2->id,
+            'type' => 'lockin',
+        ]);
 
         $conversation = Conversation::create(['type' => 'direct']);
         $conversation->participants()->attach([$user1->id, $user2->id]);
