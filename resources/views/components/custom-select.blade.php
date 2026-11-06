@@ -27,7 +27,8 @@
 
 @php
     $inputId = $id ?: ($name ? 'kg-select-' . Str::slug($name) . '-' . Str::random(4) : 'kg-select-' . Str::random(6));
-    $initialVal = old($name, $selected ?? $value ?? '');
+    $rawVal = !empty($name) ? old($name, $selected ?? $value ?? '') : ($selected ?? $value ?? '');
+    $initialVal = is_array($rawVal) ? (string)(reset($rawVal) ?: '') : (string)($rawVal ?? '');
 
     // Normalize options for passing to Alpine JS
     $normalizedOptions = [];
@@ -60,7 +61,7 @@
 
 <div x-data="customSelect({
         options: @js($normalizedOptions),
-        initialValue: @js((string)$initialVal),
+        initialValue: @js($initialVal),
         searchable: {{ $isSearchable }}
     })"
     x-modelable="value"
